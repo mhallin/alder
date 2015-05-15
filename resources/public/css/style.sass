@@ -1,0 +1,107 @@
+body
+  margin: 8px
+  display: flex
+  min-height: calc(100vh - 16px)
+  flex-direction: column
+
+*, *:after, *:before
+  box-sizing: border-box
+
+  
+#app
+  display: flex
+  flex: 1
+
+  
+.alder-root
+  width: 100%
+  display: flex
+  flex-direction: row
+
+  
+.graph-canvas
+  display: flex
+  flex-grow: 1
+  margin-right: 16px
+  z-index: 2
+  position: relative
+  cursor: default
+
+  
+.palette
+  min-width: 300px
+  padding-left: 16px
+  z-index: 1
+
+  
+.graph-canvas__node
+  position: absolute
+  border: 1px solid #ddd
+  border-radius: 4px
+
+  cursor: -webkit-grab
+  cursor: grab
+
+  background: #fff
+  text-align: center
+  line-height: 2.5
+  font-weight: lighter
+  box-shadow: 0 0 3px #eee
+
+  user-select: none
+  -webkit-user-select: none
+  -moz-user-select: none
+  -ms-user-select: none
+
+
+.graph-canvas__connections
+  flex-grow: 1
+  z-index: 3
+  pointer-events: none
+
+
+.graph-canvas__connection
+  stroke-width: 2
+  stroke: #000
+  fill: none
+  pointer-events: visibleStroke
+  cursor: pointer
+
+
+.graph-canvas__node-outputs
+  position: absolute
+  right: 6px
+  top: 0
+  height: 100%
+
+.graph-canvas__node-inputs
+  @extend .graph-canvas__node-outputs
+
+  left: -6px
+  right: initial
+
+
+.graph-canvas__node-slot
+  position: absolute
+  background-color: #fff
+  border: 1px solid #ddd
+  border-radius: 100%
+  box-shadow: 0 0 3px #eee
+  cursor: default
+  
+
+.prototype-node
+  @extend .graph-canvas__node
+
+  position: relative
+  margin-bottom: 8px
+
+ 
+.state-debug
+  position: absolute
+  left: 8px
+  bottom: 8px
+  white-space: pre-wrap
+  font-family: Menlo, monospace
+  font-size: 11px
+
