@@ -112,6 +112,9 @@
                         [to-node-id to-node to-slot-id]]
                        owner]
   (reify
+    om/IDisplayName
+    (display-name [_] "Connection")
+    
     om/IRender
     (render [_]
       (let [[_ from-slot-frame] (-> from-node
@@ -132,6 +135,9 @@
 
 (defn temporary-connection-view [[from-coord to-coord] owner]
   (reify
+    om/IDisplayName
+    (display-name [_] "TemporaryConnectio")
+    
     om/IRender
     (render [_]
       (html
@@ -141,6 +147,9 @@
 
 (defn graph-canvas-view [data owner]
   (reify
+    om/IDisplayName
+    (display-name [_] "GraphCanvas")
+    
     om/IRender
     (render [_]
       (html
@@ -148,9 +157,11 @@
         (om/build-all node-render/node-component
                       (:nodes (:node-graph data))
                       {:opts {:on-mouse-down node-start-drag
-                              :on-slot-mouse-down slot-start-drag}})
+                              :on-slot-mouse-down slot-start-drag}
+                       :key 0})
         (om/build-all node-render/inspector-component
-                      (-> data :node-graph :nodes))
+                      (-> data :node-graph :nodes)
+                      {:key 0})
         [:svg.graph-canvas__connections
          (om/build-all connection-view
                        (map (fn [[[from-node-id from-slot-id] [to-node-id to-slot-id]]]
@@ -186,15 +197,22 @@
 
 (defn palette-view [data owner]
   (reify
+    om/IDisplayName
+    (display-name [_] "Palette")
+    
     om/IRender
     (render [_]
       (html [:div.palette
              (om/build-all node-render/prototype-node-component
                            node/all-node-types
-                           {:opts {:on-mouse-down prototype-node-start-drag}})]))))
+                           {:opts {:on-mouse-down prototype-node-start-drag}
+                            :key :default-title})]))))
 
 (defn root-component [data owner]
   (reify
+    om/IDisplayName
+    (display-name [_] "Root")
+    
     om/IRender
     (render [_]
       (html [:div.alder-root

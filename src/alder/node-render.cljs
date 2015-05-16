@@ -56,6 +56,9 @@
                                  (node/current-input-value node input)
                                  #(set-input-value node input (.-value (.-target %))))])]
       (reify
+        om/IDisplayName
+        (display-name [_] "NodeInspector")
+        
         om/IRender
         (render [_]
           (html
@@ -80,6 +83,9 @@
 (defn node-component [[node-id node] owner {:keys [on-mouse-down
                                                    on-slot-mouse-down] :as opts}]
   (reify
+    om/IDisplayName
+    (display-name [_] "Node")
+    
     om/IRender
     (render [_]
       (let [frame (:frame node)
@@ -94,6 +100,9 @@
 
 (defn prototype-node-component [node-type owner {:keys [on-mouse-down] :as opts}]
   (reify
+    om/IDisplayName
+    (display-name [_] "PrototypeNode")
+    
     om/IRender
     (render [_]
       (let [title (:default-title node-type)
