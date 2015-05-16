@@ -18,6 +18,7 @@
   (let [[min max] (:range input)]
     [:input.node-inspector__input
      {:type :number
+      :step :any
       :value value
       :min min
       :max max

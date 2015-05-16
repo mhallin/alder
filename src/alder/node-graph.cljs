@@ -36,13 +36,13 @@
 
 (defn connect-nodes [node-graph from to]
   (println "connect" from to)
-  (set-connection node-graph from to #(.connect %1 %2))
+  (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2))
   (update-in node-graph [:connections]
                (fn [conns] (conj conns [from to]))))
 
 (defn disconnect-nodes [node-graph from to]
   (println "disconnect" from to)
-  (set-connection node-graph from to #(.disconnect %1 %2))
+  (set-connection node-graph from to #(.call (aget %1 "disconnect") %1 %2))
   (update-in node-graph [:connections]
              (fn [conns] (vec (remove #(= % [from to]) conns)))))
 

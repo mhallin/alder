@@ -15,7 +15,7 @@
              true
              "Audio Out"
              [90 40]
-             #(.-destination %)))
+             (fn [ctx] (aget ctx "destination"))))
 
 (def oscillator-node-type
   (NodeType. {:frequency {:type :param
@@ -36,7 +36,7 @@
              false
              "Osc"
              [60 40]
-             #(.createOscillator %)))
+             (fn [ctx] (.call (aget ctx "createOscillator") ctx))))
 
 (def gain-node-type
   (NodeType. {:gain {:type :param
@@ -53,7 +53,7 @@
              false
              "Gain"
              [70 40]
-             #(.createGain %)))
+             (fn [ctx] (.call (aget ctx "createGain") ctx))))
 
 (def all-node-types
   [audio-destination-node-type oscillator-node-type gain-node-type])
@@ -68,7 +68,7 @@
        (case input-type
          :param (set! (.-value (aget audio-node input-name)) default-value)
          :constant (aset audio-node input-name default-value)
-         ())))))
+         nil)))))
 
 
 (defn make-node [context position node-type]
