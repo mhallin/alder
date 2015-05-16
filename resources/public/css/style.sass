@@ -1,3 +1,10 @@
+.__no_user_select
+  user-select: none
+  -webkit-user-select: none
+  -moz-user-select: none
+  -ms-user-select: none
+
+
 body
   margin: 8px
   display: flex
@@ -33,8 +40,10 @@ body
   padding-left: 16px
   z-index: 1
 
-  
+
 .graph-canvas__node
+  @extend .__no_user_select
+
   position: absolute
   border: 1px solid #ddd
   border-radius: 4px
@@ -48,11 +57,36 @@ body
   font-weight: lighter
   box-shadow: 0 0 3px #eee
 
-  user-select: none
-  -webkit-user-select: none
-  -moz-user-select: none
-  -ms-user-select: none
 
+.node-inspector
+  @extend .__no_user_select
+
+  position: absolute
+  border: 1px solid #ddd
+  border-radius: 4px
+
+  background: #fff
+  padding: 8px
+  box-shadow: 0 0 3px #eee
+  font-weight: lighter
+  font-size: 12px
+  z-index: 4
+
+.node-inspector__input-container
+  clear: right
+  margin-bottom: 8px
+
+  &:last-child
+    margin-bottom: 0
+
+.node-inspector__input-title
+  display: inline-block
+  margin-top: 4px
+
+.node-inspector__input
+  width: 80px
+  float: right
+  height: 20px
 
 .graph-canvas__connections
   flex-grow: 1
@@ -104,4 +138,3 @@ body
   white-space: pre-wrap
   font-family: Menlo, monospace
   font-size: 11px
-

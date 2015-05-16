@@ -22,7 +22,7 @@
           mouse-y (.-clientY event)]
       (when-let [slot-path (:slot-path dragging-data)]
         (let [offset (:offset dragging-data)
-              position (geometry/point-sub [mouse-x mouse-y] offset)              ]
+              position (geometry/point-sub [mouse-x mouse-y] offset)]
           (when-let [hit (-> @app-state :node-graph
                              (node-graph/hit-test-slot position))]
             (swap! app-state
@@ -149,6 +149,8 @@
                       (:nodes (:node-graph data))
                       {:opts {:on-mouse-down node-start-drag
                               :on-slot-mouse-down slot-start-drag}})
+        (om/build-all node-render/inspector-component
+                      (-> data :node-graph :nodes))
         [:svg.graph-canvas__connections
          (om/build-all connection-view
                        (map (fn [[[from-node-id from-slot-id] [to-node-id to-slot-id]]]

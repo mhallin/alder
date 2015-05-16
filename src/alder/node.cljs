@@ -21,11 +21,15 @@
   (NodeType. {:frequency {:type :param
                           :name "frequency"
                           :default 220
-                          :title "Frequency (Hz)"}
+                          :title "Frequency"
+                          :data-type :number
+                          :range [0 22050]}
               :waveform {:type :constant
                          :name "type"
                          :default "square"
-                         :title "Waveform"}}
+                         :title "Waveform"
+                         :data-type :string
+                         :choices ["sine" "square" "sawtooth" "triangle"]}}
              {:signal {:type :node
                        :index 0
                        :title "Signal"}}
@@ -38,7 +42,8 @@
   (NodeType. {:gain {:type :param
                      :name "gain"
                      :default 1
-                     :title "Gain"}
+                     :title "Gain"
+                     :data-type :number}
               :signal-in {:type :node
                           :index 0
                           :title "Signal"}}
@@ -135,3 +140,26 @@
   (let [[_ slot-local-frame] (slot-id (node-slot-frames node))
         node-origin (-> node :frame geometry/rectangle-origin)]
     (geometry/rectangle-move-by slot-local-frame node-origin)))
+
+
+(defn editable-inputs [node]
+  (remove #(= (:type %) :node)
+          (vals (-> node :node-type :inputs))))
+
+
+(defn current-input-value [node input]
+  (let [audio-node (:audio-node node)
+        input-name (:name input)]
+    (case (:type input)
+      :param (.-value (aget audio-node input-name))
+      :constant (aget audio-node input-name)
+      nil)))
+
+
+(defn set-input-value [node input value]
+  (let [audio-node (:audio-node node)
+        input-name (:name input)]
+    (case (:type input)
+      :param (set! (.-value (aget audio-node input-name)) value)
+      :constant (aset audio-node input-name value)
+      nil)))
