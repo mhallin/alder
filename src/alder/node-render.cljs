@@ -8,7 +8,7 @@
 (defn render-choice-input [input value on-change]
   [:select.node-inspector__input
    {:value value
-    :on-change on-change}
+    :on-change #(on-change (-> % .-target .-value))}
    (map (fn [val] [:option
                    {:value val}
                    val])
@@ -22,16 +22,23 @@
       :value value
       :min min
       :max max
-      :on-change on-change}]))
+      :on-change #(on-change (-> % .-target .-value js/parseFloat))}]))
 
 (defn render-string-input [input value on-change]
   [:input.node-inspector__input
    {:value value
-    :on-change on-change}])
+    :on-change #(on-change (-> % .-target .-value))}])
+
+(defn render-gate-input [input value on-change]
+  [:button.node-inspector__input
+   {:on-mouse-down #(on-change 1.0)
+    :on-mouse-up #(on-change 0.0)}
+   "Trig"])
 
 (defn render-input [input value on-change]
   (let [render-fn (cond (:choices input) render-choice-input
                         (= (:data-type input) :number) render-number-input
+                        (= (:type input) :gate) render-gate-input
                         :else render-string-input)]
     (render-fn input value on-change)))
 
@@ -54,7 +61,7 @@
                 (or (:inspector-title input) (:title input))]
                (render-input input
                                  (node/current-input-value node input)
-                                 #(set-input-value node input (.-value (.-target %))))])]
+                                 #(set-input-value node input %))])]
       (reify
         om/IDisplayName
         (display-name [_] "NodeInspector")

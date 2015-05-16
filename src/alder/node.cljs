@@ -162,4 +162,5 @@
     (case (:type input)
       :param (set! (.-value (aget audio-node input-name)) value)
       :constant (aset audio-node input-name value)
+      :gate (.call (aget audio-node input-name) audio-node value)
       nil)))
