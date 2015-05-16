@@ -1,5 +1,6 @@
 (ns alder.node
-  (:require [alder.geometry :as geometry]))
+  (:require [alder.geometry :as geometry]
+            [alder.audio.adsr :as adsr]))
 
 (defrecord NodeType
     [inputs outputs built-in default-title default-size constructor])
@@ -55,8 +56,40 @@
              [70 40]
              (fn [ctx] (.call (aget ctx "createGain") ctx))))
 
+(def adsr-node-type
+  (NodeType. {:gate {:type :gate
+                     :name "gate"
+                     :title "Gate"}
+              :attack {:type :constant
+                       :name "attack"
+                       :default 0.1
+                       :title "Attack"
+                       :data-type :number}
+              :decay {:type :constant
+                      :name "decay"
+                      :default 0.1
+                      :title "Decay"
+                      :data-type :number}
+              :sustain {:type :constant
+                        :name "sustain"
+                        :default 0.8
+                        :title "Sustain"
+                        :data-type :number}
+              :release {:type :constant
+                        :name "release"
+                        :default 0.1
+                        :title "Release"
+                        :data-type :number}}
+             {:envelope {:type :node
+                         :index 0
+                         :title "Envelope"}}
+             false
+             "ADSR"
+             [70 90]
+             #(adsr/make-adsr-node %)))
+
 (def all-node-types
-  [audio-destination-node-type oscillator-node-type gain-node-type])
+  [audio-destination-node-type oscillator-node-type gain-node-type adsr-node-type])
 
 
 (defn- assign-default-node-inputs [node]
