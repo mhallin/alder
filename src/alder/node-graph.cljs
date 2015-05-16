@@ -26,23 +26,24 @@
         to-audio-node (:audio-node to-node)
 
         output-data (-> from-node :node-type :outputs output-id)
+        output-index (:index output-data)
+
         input-data (-> to-node :node-type :inputs input-id)
         input-name (:name input-data)]
     (case (:type input-data)
-      :param (f from-audio-node (aget to-audio-node input-name))
-      :node (f from-audio-node to-audio-node))
-
-    ))
+      :param (f from-audio-node (aget to-audio-node input-name) output-index)
+      :node (f from-audio-node to-audio-node output-index)
+      :gate (f from-audio-node to-audio-node output-index))))
 
 (defn connect-nodes [node-graph from to]
   (println "connect" from to)
-  (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2))
+  (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2 %3))
   (update-in node-graph [:connections]
                (fn [conns] (conj conns [from to]))))
 
 (defn disconnect-nodes [node-graph from to]
   (println "disconnect" from to)
-  (set-connection node-graph from to #(.call (aget %1 "disconnect") %1 %2))
+  (set-connection node-graph from to #(.call (aget %1 "disconnect") %1 %2 %3))
   (update-in node-graph [:connections]
              (fn [conns] (vec (remove #(= % [from to]) conns)))))
 
