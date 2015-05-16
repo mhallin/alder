@@ -58,3 +58,14 @@
                                 [id slot-id]))
                             (:nodes node-graph))]
     (first matching)))
+
+(defn remove-node [node-graph node-id]
+  (let [connections (filter (fn [[[from-id _] [to-id _]]]
+                              (or (= from-id node-id) (= to-id node-id)))
+                            (:connections node-graph))
+        node-graph (reduce (fn [acc [from to]]
+                             (disconnect-nodes acc from to))
+                           node-graph
+                           connections)]
+    (update-in node-graph [:nodes]
+               #(dissoc % node-id))))

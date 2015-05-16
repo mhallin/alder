@@ -14,12 +14,14 @@
 (defonce app-state (atom {:node-graph (node-graph/make-node-graph)
                           :context (AudioContext.)
                           :dragging nil
-                          :id-counter 0}))
+                          :id-counter 0
+                          :trash-area-rectangle nil}))
 
 (defn end-drag [event]
   (when-let [dragging-data (:dragging @app-state)]
     (let [mouse-x (.-clientX event)
-          mouse-y (.-clientY event)]
+          mouse-y (.-clientY event)
+          mouse-point [mouse-x mouse-y]]
       (when-let [slot-path (:slot-path dragging-data)]
         (let [offset (:offset dragging-data)
               position (geometry/point-sub [mouse-x mouse-y] offset)]
@@ -30,7 +32,14 @@
                                (fn [node-graph]
                                  (node-graph/connect-nodes node-graph
                                                            slot-path
-                                                           hit)))))))))
+                                                           hit)))))))
+
+      (when-let [node-id (:node-id dragging-data)]
+        (when (-> @app-state :trash-area-rectangle (geometry/rectangle-hit-test mouse-point))
+          (swap! app-state
+                 #(update-in % [:node-graph]
+                             (fn [node-graph]
+                               (node-graph/remove-node node-graph node-id))))))))
   (swap! app-state #(update-in % [:dragging] (fn [_] nil))))
 
 (defn update-drag [event]
@@ -196,17 +205,39 @@
       (node-start-drag node-id event))))
 
 (defn palette-view [data owner]
-  (reify
-    om/IDisplayName
-    (display-name [_] "Palette")
-    
-    om/IRender
-    (render [_]
-      (html [:div.palette
-             (om/build-all node-render/prototype-node-component
-                           node/all-node-types
-                           {:opts {:on-mouse-down prototype-node-start-drag}
-                            :key :default-title})]))))
+  (letfn [(update-trash-area-rectangle []
+            (let [trash-area (om/get-node owner "trash-area")
+            left (.-offsetLeft trash-area)
+            top (.-offsetTop trash-area)
+            width (.-offsetWidth trash-area)
+            height (.-offsetHeight trash-area)
+            rectangle (geometry/Rectangle. left top width height)]
+              (swap! app-state #(assoc-in % [:trash-area-rectangle] rectangle))))
+
+          (handle-resize [_]
+            (update-trash-area-rectangle))]
+    (reify
+      om/IDisplayName
+      (display-name [_] "Palette")
+
+      om/IDidMount
+      (did-mount [_]
+        (update-trash-area-rectangle)
+        (.addEventListener js/window "resize" handle-resize))
+
+      om/IWillUnmount
+      (will-unmount [_]
+        (.removeEventListener js/window "resize" handle-resize))
+      
+      om/IRender
+      (render [_]
+        (html [:div.palette
+               (om/build-all node-render/prototype-node-component
+                             node/all-node-types
+                             {:opts {:on-mouse-down prototype-node-start-drag}
+                              :key :default-title})
+               [:div.palette__trash-area
+                {:ref "trash-area"}]])))))
 
 (defn root-component [data owner]
   (reify
@@ -220,8 +251,7 @@
               :on-mouse-move #(update-drag %)}
              (om/build graph-canvas-view data)
              (om/build palette-view data)
-             [:div.state-debug (pr-str data)]
-             ]))))
+             [:div.state-debug (pr-str data)]]))))
 
 (om/root root-component
          app-state

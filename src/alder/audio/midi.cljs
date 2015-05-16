@@ -44,7 +44,13 @@
             (connect [destination index]
               (case index
                 0 (set! (.-gate audio-node) destination)
-                1 (set! (.-frequency audio-node) destination)))]
+                1 (set! (.-frequency audio-node) destination)))
+
+            (disconnect [destination index]
+              (case index
+                0 (set! (.-gate audio-node) nil)
+                1 (set! (.-frequency audio-node) nil)))]
       (set! (.-device audio-node) get-set-device)
       (set! (.-connect audio-node) connect)
+      (set! (.-disconnect audio-node) disconnect)
       audio-node)))
