@@ -1,6 +1,7 @@
 (ns alder.node
   (:require [alder.geometry :as geometry]
-            [alder.audio.adsr :as adsr]))
+            [alder.audio.adsr :as adsr]
+            [alder.audio.midi :as midi]))
 
 (defrecord NodeType
     [inputs outputs built-in default-title default-size constructor])
@@ -88,8 +89,34 @@
              [70 90]
              #(adsr/make-adsr-node %)))
 
+(def midi-note-node-type
+  (NodeType. {:device {:type :accessor
+                       :name "device"
+                       :default nil
+                       :title "Device"
+                       :data-type :midi-device}}
+             {:gate {:type :node
+                     :index 0
+                     :title "Gate"}
+              :frequency {:type :node
+                          :index 1
+                          :title "Frequency"}}
+             false
+             "MIDI Note"
+             [90 40]
+             #(midi/make-midi-note-node %)))
+
+(def has-midi-support (boolean (.-requestMIDIAccess js/navigator)))
+
 (def all-node-types
-  [audio-destination-node-type oscillator-node-type gain-node-type adsr-node-type])
+  (let [basic-nodes [audio-destination-node-type
+                     oscillator-node-type
+                     gain-node-type
+                     adsr-node-type]
+        midi-nodes (if has-midi-support
+                     [midi-note-node-type]
+                     [])]
+    (concat basic-nodes midi-nodes)))
 
 
 (defn- assign-default-node-inputs [node]
@@ -186,6 +213,7 @@
     (case (:type input)
       :param (.-value (aget audio-node input-name))
       :constant (aget audio-node input-name)
+      :accessor (.call (aget audio-node input-name) audio-node)
       nil)))
 
 
@@ -196,4 +224,5 @@
       :param (set! (.-value (aget audio-node input-name)) value)
       :constant (aset audio-node input-name value)
       :gate (.call (aget audio-node input-name) audio-node value)
+      :accessor (.call (aget audio-node input-name) audio-node value)
       nil)))

@@ -35,10 +35,45 @@
     :on-mouse-up #(on-change 0.0)}
    "Trig"])
 
+(defn midi-iterator->map [iterator]
+  (let [value (.next iterator)]
+    (if (and value (not (.-done value)))
+      (conj (midi-iterator->map iterator)
+            [(aget (.-value value) 0) (aget (.-value value) 1)])
+      {})))
+
+(defn midi-device-input-component [[input value on-change] owner]
+  (letfn [(devices-loaded [devices]
+            (om/set-state! owner :inputs
+                           (-> devices .-inputs .entries midi-iterator->map)))]
+    (reify
+      om/IDisplayName
+      (display-name [_] "MidiDeviceInput")
+
+      om/IWillMount
+      (will-mount [_]
+        (.then (.requestMIDIAccess js/navigator) devices-loaded))
+
+      om/IRender
+      (render [_]
+        (html
+         [:select.node-inspector__input
+          {:on-change (fn [event] (let [inputs (om/get-state owner :inputs)
+                                        id (.-value (.-target event))]
+                                    (on-change (inputs id))))
+           :value (when value (.-id value))}
+          [:option {:value nil} "(no input)"]
+          (map (fn [[id input]] [:option {:value id} (.-name input)])
+               (om/get-state owner :inputs))])))))
+
+(defn render-midi-device-input [input value on-change]
+  (om/build midi-device-input-component [input value on-change]))
+
 (defn render-input [input value on-change]
   (let [render-fn (cond (:choices input) render-choice-input
                         (= (:data-type input) :number) render-number-input
                         (= (:type input) :gate) render-gate-input
+                        (= (:data-type input) :midi-device) render-midi-device-input
                         :else render-string-input)]
     (render-fn input value on-change)))
 
