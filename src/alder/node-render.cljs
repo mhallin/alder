@@ -77,6 +77,66 @@
                         :else render-string-input)]
     (render-fn input value on-change)))
 
+(defn fft-component [analyser-node owner]
+  (let [width 160
+        height 100
+        noise-floor 90
+        fft-size 256
+        data-array (js/Float32Array. (.-frequencyBinCount analyser-node))]
+    (letfn [(update-frequency-data []
+              (.getFloatFrequencyData analyser-node data-array)
+              (let [bins (.-length data-array)
+                    bin-width (/ width bins)
+                    bars (map (fn [i]
+                                (let [v (aget data-array i)
+                                      h (js/Math.round
+                                         (* height (/ (max 0 (+ noise-floor v)) noise-floor)))
+                                      x (* i bin-width)
+                                      y (- height h)]
+                                  [x y bin-width h]))
+                              (range bins))]
+                (om/set-state! owner :graph-bars bars)))
+
+            (tick-animation []
+              (update-frequency-data)
+              (when (om/get-state owner :is-mounted)
+                (.requestAnimationFrame js/window tick-animation)))]
+
+      (reify
+        om/IDisplayName
+        (display-name [_] "FFTComponent")
+
+        om/IWillMount
+        (will-mount [_]
+          (set! (.-fftSize analyser-node) 256)
+          (om/set-state! owner :is-mounted true)
+          (update-frequency-data))
+
+        om/IDidMount
+        (did-mount [_]
+          (.requestAnimationFrame js/window tick-animation))
+
+        om/IWillUnmount
+        (will-unmount [_]
+          (om/set-state! owner :s-mounted false))
+
+        om/IRender
+        (render [_]
+          (when-let [graph-bars (om/get-state owner :graph-bars)]
+            (let []
+              (html
+               [:svg.node-inspector__fft
+                {:style {:width (str width "px")
+                         :height (str height "px")}}
+                (map-indexed (fn [i [x y w h]]
+                               [:rect
+                                {:x x :y y :width w :height h :key i}])
+                             graph-bars)]))))))))
+
+(defn render-inspector-field [node field-type]
+  (case field-type
+    :fft (om/build fft-component (:audio-node node))))
+
 (defn inspector-component [[node-id node] owner]
   (let [node-origin (-> node :frame geometry/rectangle-origin)
         node-width (-> node :frame :width)
@@ -109,7 +169,9 @@
                      :top (str inspector-y "px")
                      :width (str inspector-width "px")}}
             (map render-input-container
-                 (node/editable-inputs node))]))))))
+                 (node/editable-inputs node))
+            (map #(render-inspector-field node %)
+                 (-> node :node-type :extra-data :inspector-fields))]))))))
 
 
 (defn- render-slot-list [node-id node on-mouse-down]
