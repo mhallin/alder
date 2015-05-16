@@ -169,7 +169,8 @@
                               :on-slot-mouse-down slot-start-drag}
                        :key 0})
         (om/build-all node-render/inspector-component
-                      (-> data :node-graph :nodes)
+                      (->> data :node-graph :nodes
+                           (filter (fn [[_ node]] (node :inspector-visible))))
                       {:key 0})
         [:svg.graph-canvas__connections
          (om/build-all connection-view
