@@ -26,6 +26,9 @@
     (letfn [(connect [param]
               (set! (.-param audio-node) param))
 
+            (disconnect [param]
+              (set! (.-param audio-node) nil))
+
             (set-gate [value]
               (when (.-param audio-node)
                 (if (> value 0.0)
@@ -40,4 +43,5 @@
                             (.-release audio-node)))))]
       (set! (.-connect audio-node) connect)
       (set! (.-gate audio-node) set-gate)
+      (set! (.-disconnect audio-node) disconnect)
       audio-node)))
