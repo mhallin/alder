@@ -8,33 +8,52 @@
                  [org.clojure/clojurescript "0.0-3211"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [sablono "0.3.4"]
-                 [org.omcljs/om "0.8.8"]]
+                 [org.omcljs/om "0.8.8"]
+
+                 [ring/ring-core "1.3.2"]]
 
   :plugins [[lein-cljsbuild "1.0.5"]
-            [lein-figwheel "0.3.1"]]
+            [lein-figwheel "0.3.1"]
+            [lein-ring "0.9.3"]]
 
   :source-paths ["src"]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
   
-  :cljsbuild {
-    :builds [{:id "dev"
-              :source-paths ["src"]
+  :ring {:handler alder.core/app}
 
-              :figwheel { :on-jsload "alder.core/on-js-reload" }
+  :hooks [leiningen.cljsbuild]
 
-              :compiler {:main alder.core
-                         :asset-path "js/compiled/out"
-                         :output-to "resources/public/js/compiled/alder.js"
-                         :output-dir "resources/public/js/compiled/out"
-                         :source-map-timestamp true }}
-             {:id "min"
-              :source-paths ["src"]
-              :compiler {:output-to "resources/public/js/compiled/alder.js"
-                         :main alder.core                         
-                         :optimizations :advanced
-                         :pretty-print false}}]}
-
+  :profiles
+  {:dev
+   {:cljsbuild {:builds [{:id "dev"
+                          :source-paths ["src"]
+                          
+                          :figwheel { :on-jsload "alder.core/on-js-reload" }
+                          
+                          :compiler {:main alder.core
+                                     :asset-path "js/compiled/out"
+                                     :output-to "resources/public/js/compiled/alder.js"
+                                     :output-dir "resources/public/js/compiled/out"
+                                     :source-map-timestamp true }}
+                         {:id "min"
+                          :source-paths ["src"]
+                          :compiler {:output-to "resources/public/js/compiled/alder.js"
+                                     :main alder.core
+                                     :optimizations :advanced
+                                     :pretty-print false}}]}}
+   
+   :uberjar
+   {:env {:production true}
+    :omit-source :true
+    :aot :all
+    :cljsbuild {:builds [{:id "min"
+                          :source-paths ["src"]
+                          :compiler {:output-to "resources/public/js/compiled/alder.js"
+                                     :main alder.core
+                                     :optimizations :advanced
+                                     :pretty-print false}}]}}}
+  
   :figwheel {
              ;; :http-server-root "public" ;; default and assumes "resources" 
              ;; :server-port 3449 ;; default
