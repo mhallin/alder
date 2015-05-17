@@ -106,6 +106,19 @@
              [70 40]
              (fn [ctx] (.call (aget ctx "createAnalyser") ctx))))
 
+(def scope-analyser-node-type
+  (NodeType. {:signal-in {:type :node
+                          :index 0
+                          :title "Signal"}}
+             {:signal-out {:type :node
+                           :index 0
+                           :title "Signal"}}
+             {:inspector-fields [:waveform]}
+             false
+             "Scope"
+             [80 40]
+             (fn [ctx] (.call (aget ctx "createAnalyser") ctx))))
+
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
                        :name "device"
@@ -131,7 +144,8 @@
                      oscillator-node-type
                      gain-node-type
                      adsr-node-type
-                     fft-analyser-node-type]
+                     fft-analyser-node-type
+                     scope-analyser-node-type]
         midi-nodes (if has-midi-support
                      [midi-note-node-type]
                      [])]
