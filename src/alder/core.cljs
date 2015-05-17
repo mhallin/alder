@@ -9,7 +9,8 @@
 
 (enable-console-print!)
 
-(def AudioContext (or js/AudioContext js/webkitAudioContext))
+(def AudioContext (or (aget js/window "AudioContext")
+                      (aget js/window "webkitAudioContext")))
 
 (defonce app-state (atom {:node-graph (node-graph/make-node-graph)
                           :context (AudioContext.)

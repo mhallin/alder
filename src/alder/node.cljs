@@ -138,7 +138,7 @@
              [110 40]
              #(midi/make-midi-note-node %)))
 
-(def has-midi-support (boolean (midiapi/request-midi-access)))
+(def has-midi-support (midiapi/has-midi-access))
 
 (def all-node-types
   (let [basic-nodes [audio-destination-node-type
