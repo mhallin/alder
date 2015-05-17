@@ -13,3 +13,4 @@ pom.xml
 .nrepl-port
 .sass-cache
 /resources/public/css/style.css*
+/node_modules/
