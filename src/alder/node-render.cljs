@@ -4,7 +4,9 @@
             [sablono.core :as html :refer-macros [html]]
 
             [alder.node :as node]
-            [alder.geometry :as geometry]))
+            [alder.geometry :as geometry]
+            [alder.audio.aapi :as aapi]
+            [alder.audio.midiapi :as midiapi]))
 
 (defn render-choice-input [input value on-change]
   [:select.node-inspector__input
@@ -45,15 +47,17 @@
 
 (defn midi-device-input-component [[input value on-change] owner]
   (letfn [(devices-loaded [devices]
-            (om/set-state! owner :inputs
-                           (-> devices .-inputs .entries midi-iterator->map)))]
+            (let [inputs (aget devices "inputs")
+                  entries (.call (aget inputs "entries") inputs)]
+              (om/set-state! owner :inputs
+                             (midi-iterator->map entries))))]
     (reify
       om/IDisplayName
       (display-name [_] "MidiDeviceInput")
 
       om/IWillMount
       (will-mount [_]
-        (.then (.requestMIDIAccess js/navigator) devices-loaded))
+        (.then (midiapi/request-midi-access) devices-loaded))
 
       om/IRender
       (render [_]
@@ -80,13 +84,13 @@
 
 (defn fft-component [analyser-node owner]
   (let [fft-size 256]
-    (set! (.-fftSize analyser-node) fft-size)
+    (aapi/set-fft-size! analyser-node fft-size)
     (let [width 160
           height 100
           noise-floor 90
-          data-array (js/Float32Array. (.-frequencyBinCount analyser-node))]
+          data-array (js/Float32Array. (aapi/frequency-bin-count analyser-node))]
       (letfn [(update-frequency-data []
-                (.getFloatFrequencyData analyser-node data-array)
+                (aapi/get-float-frequency-data analyser-node data-array)
                 (let [bins (.-length data-array)
                       bin-width (/ width bins)
                       line-segments (map (fn [i]
@@ -137,12 +141,12 @@
 
 (defn waveform-component [analyser-node owner]
   (let [fft-size 256]
-    (set! (.-fftSize analyser-node) 256)
+    (aapi/set-fft-size! analyser-node fft-size)
     (let [width 160
           height 160
-          data-array (js/Float32Array. (.-fftSize analyser-node))]
+          data-array (js/Float32Array. fft-size)]
       (letfn [(update-waveform-data []
-                (.getFloatTimeDomainData analyser-node data-array)
+                (aapi/get-float-time-domain-data analyser-node data-array)
                 (let [steps (.-length data-array)
                       step-width (/ width steps)
                       line-segments (map (fn [i]

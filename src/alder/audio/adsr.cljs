@@ -1,20 +1,21 @@
-(ns alder.audio.adsr)
+(ns alder.audio.adsr
+  (:require [alder.audio.aapi :as aapi]))
 
 (defn note-on [context param value attack decay sustain]
-  (let [now (.-currentTime context)
+  (let [now (aapi/current-time context)
         decay-start (+ now attack)
         sustain-start (+ now attack sustain)
         sustain-value (* value sustain)]
-    (.cancelScheduledValues param now)
-    (.setValueAtTime param 0 now)
-    (.linearRampToValueAtTime param value decay-start)
-    (.linearRampToValueAtTime param sustain-value sustain-start)))
+    (aapi/cancel-scheduled-values param now)
+    (aapi/set-value-at-time param 0 now)
+    (aapi/linear-ramp-to-value-at-time param value decay-start)
+    (aapi/linear-ramp-to-value-at-time param sustain-value sustain-start)))
 
 (defn note-off [context param release]
-  (let [now (.-currentTime context)
+  (let [now (aapi/current-time context)
         release-end (+ now release)]
-    (.cancelScheduledValues param now)
-    (.linearRampToValueAtTime param 0 release-end)))
+    (aapi/cancel-scheduled-values param now)
+    (aapi/linear-ramp-to-value-at-time param 0 release-end)))
 
 (defn make-adsr-node [context]
   (let [audio-node #js {:attack nil
@@ -24,24 +25,24 @@
                         :param nil
                         :context context}]
     (letfn [(connect [param]
-              (set! (.-param audio-node) param))
+              (aset audio-node "param" param))
 
             (disconnect [param]
-              (set! (.-param audio-node) nil))
+              (aset audio-node "param" nil))
 
             (set-gate [value]
-              (when (.-param audio-node)
+              (when (aget audio-node "param")
                 (if (> value 0.0)
-                  (note-on (.-context audio-node)
-                           (.-param audio-node)
+                  (note-on (aget audio-node "context")
+                           (aget audio-node "param")
                            value
-                           (.-attack audio-node)
-                           (.-decay audio-node)
-                           (.-sustain audio-node))
-                  (note-off (.-context audio-node)
-                            (.-param audio-node)
-                            (.-release audio-node)))))]
-      (set! (.-connect audio-node) connect)
-      (set! (.-gate audio-node) set-gate)
-      (set! (.-disconnect audio-node) disconnect)
+                           (aget audio-node "attack")
+                           (aget audio-node "decay")
+                           (aget audio-node "sustain"))
+                  (note-off (aget audio-node "context")
+                            (aget audio-node "param")
+                            (aget audio-node "release")))))]
+      (aset audio-node "connect" connect)
+      (aset audio-node "disconnect" disconnect)
+      (aset audio-node "gate" set-gate)
       audio-node)))

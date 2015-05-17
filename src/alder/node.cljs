@@ -1,7 +1,8 @@
 (ns alder.node
   (:require [alder.geometry :as geometry]
             [alder.audio.adsr :as adsr]
-            [alder.audio.midi :as midi]))
+            [alder.audio.midi :as midi]
+            [alder.audio.midiapi :as midiapi]))
 
 (defrecord NodeType
     [inputs outputs extra-data built-in default-title default-size constructor])
@@ -137,7 +138,7 @@
              [110 40]
              #(midi/make-midi-note-node %)))
 
-(def has-midi-support (boolean (.-requestMIDIAccess js/navigator)))
+(def has-midi-support (boolean (midiapi/request-midi-access)))
 
 (def all-node-types
   (let [basic-nodes [audio-destination-node-type
