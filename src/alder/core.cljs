@@ -3,6 +3,7 @@
               [sablono.core :as html :refer-macros [html]]
 
               [alder.node :as node]
+              [alder.node-type :as node-type]
               [alder.node-graph :as node-graph]
               [alder.node-render :as node-render]
               [alder.geometry :as geometry]))
@@ -193,7 +194,7 @@
                  slot-center (geometry/rectangle-center slot-frame)]
              (om/build temporary-connection-view [slot-center current-pos])))]]))))
 
-(defn- prototype-node-start-drag [node-type event]
+(defn- prototype-node-start-drag [node-type-id event]
   (when (= (.-button event) 0)
     (let [node-id (node-graph/next-node-id)]
       (swap! app-state
@@ -201,7 +202,7 @@
                (update-in state [:node-graph]
                           #(node-graph/add-node %
                                                 node-id
-                                                node-type
+                                                node-type-id
                                                 [0 0]
                                                 (:context state)))))
       (node-start-drag node-id event))))
@@ -235,7 +236,7 @@
       (render [_]
         (html [:div.palette
                (om/build-all node-render/prototype-node-component
-                             node/all-node-types
+                             node-type/all-node-types
                              {:opts {:on-mouse-down prototype-node-start-drag}
                               :key :default-title})
                [:div.palette__trash-area

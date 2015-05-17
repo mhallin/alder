@@ -13,8 +13,8 @@
   {:nodes {}
    :connections []})
 
-(defn add-node [node-graph node-id node-type position context]
-  (let [node (node/make-node context position node-type)
+(defn add-node [node-graph node-id node-type-id position context]
+  (let [node (node/make-node context position node-type-id)
         node-graph (assoc-in node-graph [:nodes node-id] node)]
     node-graph))
 
@@ -25,10 +25,10 @@
         to-node (-> node-graph :nodes to-id)
         to-audio-node (:audio-node to-node)
 
-        output-data (-> from-node :node-type :outputs output-id)
+        output-data (-> from-node node/node-type :outputs output-id)
         output-index (:index output-data)
 
-        input-data (-> to-node :node-type :inputs input-id)
+        input-data (-> to-node node/node-type :inputs input-id)
         input-name (:name input-data)]
     (case (:type input-data)
       :param (f from-audio-node (aget to-audio-node input-name) output-index)

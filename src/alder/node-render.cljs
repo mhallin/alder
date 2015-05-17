@@ -229,7 +229,7 @@
             (map render-input-container
                  (node/editable-inputs node))
             (map #(render-inspector-field node %)
-                 (-> node :node-type :extra-data :inspector-fields))]))))))
+                 (-> node node/node-type :extra-data :inspector-fields))]))))))
 
 
 (defn- render-slot-list [node-id node on-mouse-down]
@@ -251,7 +251,7 @@
     om/IRender
     (render [_]
       (let [frame (:frame node)
-            title (-> node :node-type :default-title)]
+            title (-> node node/node-type :default-title)]
         (html [:div.graph-canvas__node
                {:style (geometry/rectangle->css frame)
                 :key (str "node__" node-id)
@@ -265,7 +265,7 @@
                (render-slot-list node-id node on-slot-mouse-down)])))))
 
 
-(defn prototype-node-component [node-type owner {:keys [on-mouse-down] :as opts}]
+(defn prototype-node-component [[node-type-id node-type] owner {:keys [on-mouse-down]}]
   (reify
     om/IDisplayName
     (display-name [_] "PrototypeNode")
@@ -277,6 +277,6 @@
         (html [:div.prototype-node
                {:style {:width (str width "px")
                         :height (str height "px")}
-                :on-mouse-down #(on-mouse-down node-type %)}
+                :on-mouse-down #(on-mouse-down node-type-id %)}
                title])))))
 
