@@ -2,7 +2,11 @@
   (:require [alder.audio.midiapi :as midiapi]))
 
 (defrecord NodeType
-    [inputs outputs extra-data built-in default-title default-size constructor])
+    [inputs outputs extra-data
+     built-in
+     default-title default-size
+     constructor
+     export-data])
 
 (def audio-destination-node-type
   (NodeType. {:signal {:type :node
@@ -13,7 +17,8 @@
              true
              "Audio Out"
              [110 40]
-             (fn [ctx] (aget ctx "destination"))))
+             (fn [ctx] (aget ctx "destination"))
+             {:constructor "context.destination"}))
 
 (def oscillator-node-type
   (NodeType. {:frequency {:type :param
@@ -35,7 +40,8 @@
              false
              "Osc"
              [70 40]
-             (fn [ctx] (.call (aget ctx "createOscillator") ctx))))
+             (fn [ctx] (.call (aget ctx "createOscillator") ctx))
+             {:constructor "context.createOscillator()"}))
 
 (def gain-node-type
   (NodeType. {:gain {:type :param
@@ -53,7 +59,8 @@
              false
              "Gain"
              [70 40]
-             (fn [ctx] (.call (aget ctx "createGain") ctx))))
+             (fn [ctx] (.call (aget ctx "createGain") ctx))
+             {:constructor "context.createGain()"}))
 
 (def adsr-node-type
   (NodeType. {:gate {:type :gate
@@ -86,7 +93,11 @@
              false
              "ADSR"
              [70 90]
-             #(js/ADSRNode. %)))
+             #(js/ADSRNode. %)
+             {:constructor "new ADSRNode(context)"
+              :dependencies {"ADSRNode" ["audio/adsr_node"
+                                         (str (.-origin js/location)
+                                              "/js/audio/adsr_node.js")]}}))
 
 (def fft-analyser-node-type
   (NodeType. {:signal-in {:type :node
@@ -99,7 +110,8 @@
              false
              "FFT"
              [70 40]
-             (fn [ctx] (.call (aget ctx "createAnalyser") ctx))))
+             (fn [ctx] (.call (aget ctx "createAnalyser") ctx))
+             {:constructor "context.createAnalyser()"}))
 
 (def scope-analyser-node-type
   (NodeType. {:signal-in {:type :node
@@ -112,7 +124,8 @@
              false
              "Scope"
              [80 40]
-             (fn [ctx] (.call (aget ctx "createAnalyser") ctx))))
+             (fn [ctx] (.call (aget ctx "createAnalyser") ctx))
+             {:constructor "context.createAnalyser()"}))
 
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
@@ -130,7 +143,11 @@
              false
              "MIDI Note"
              [110 40]
-             #(js/MIDINoteNode. %)))
+             #(js/MIDINoteNode. %)
+             {:constructor "new MIDINoteNode(context)"
+              :dependencies {"MIDINoteNode" ["audio/midi_note_node"
+                                             (str (.-origin js/location)
+                                                  "/js/audio/midi_note_node.js")]}}))
 
 (def has-midi-support (midiapi/has-midi-access))
 

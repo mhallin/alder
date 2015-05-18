@@ -6,6 +6,7 @@
               [alder.node-type :as node-type]
               [alder.node-graph :as node-graph]
               [alder.node-render :as node-render]
+              [alder.export-render :as export-render]
               [alder.geometry :as geometry]))
 
 (enable-console-print!)
@@ -17,7 +18,8 @@
                           :context (AudioContext.)
                           :dragging nil
                           :id-counter 0
-                          :trash-area-rectangle nil}))
+                          :trash-area-rectangle nil
+                          :show-export-window false}))
 
 (defn end-drag [event]
   (when-let [dragging-data (:dragging @app-state)]
@@ -207,6 +209,14 @@
                                                 (:context state)))))
       (node-start-drag node-id event))))
 
+(defn- show-export-window [event]
+  (.preventDefault event)
+  (swap! app-state #(assoc % :show-export-window true)))
+
+(defn- hide-export-window [event]
+  (.preventDefault event)
+  (swap! app-state #(assoc % :show-export-window false)))
+
 (defn palette-view [data owner]
   (letfn [(update-trash-area-rectangle []
             (let [trash-area (om/get-node owner "trash-area")
@@ -240,7 +250,11 @@
                              {:opts {:on-mouse-down prototype-node-start-drag}
                               :key :default-title})
                [:div.palette__trash-area
-                {:ref "trash-area"}]])))))
+                {:ref "trash-area"}]
+               [:a.palette__show-export-window
+                {:on-click show-export-window
+                 :href "#"}
+                "Export"]])))))
 
 (defn root-component [data owner]
   (reify
@@ -254,7 +268,11 @@
               :on-mouse-move #(update-drag %)}
              (om/build graph-canvas-view data)
              (om/build palette-view data)
-             [:div.state-debug (pr-str data)]]))))
+             [:div.state-debug (pr-str data)]
+             (when (:show-export-window data)
+               (om/build export-render/export-component
+                         (:node-graph data)
+                         {:opts {:on-close hide-export-window}}))]))))
 
 (om/root root-component
          app-state
