@@ -20,7 +20,7 @@ module.exports = function(grunt) {
 			audioAll: {
 				entry: './resources/public/js/audio/all.js',
 				output: {
-					path: 'resources/public/js/compiled',
+					path: 'resources/public/js/wp_compiled',
 					filename: 'audio_all.js',
 				},
 			},
