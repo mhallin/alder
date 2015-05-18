@@ -16,8 +16,17 @@ module.exports = function(grunt) {
 				browsers: ['last 1 version'],
 			},
 		},
+		webpack: {
+			audioAll: {
+				entry: './resources/public/js/audio/all.js',
+				output: {
+					path: 'resources/public/js/compiled',
+					filename: 'audio_all.js',
+				},
+			},
+		},
 		watch: {
-			files: ['resources/**/*.sass'],
+			files: ['resources/**/*.sass', 'resources/public/js/audio/**/*.js'],
 			tasks: ['default'],
 		},
 	});
@@ -25,8 +34,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-sass');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-autoprefixer');
+	grunt.loadNpmTasks('grunt-webpack');
 
-	grunt.registerTask('default', ['sass', 'autoprefixer']);
+	grunt.registerTask('default', ['sass', 'autoprefixer', 'webpack']);
 
 };
 

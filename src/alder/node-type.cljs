@@ -1,7 +1,5 @@
 (ns alder.node-type
-  (:require [alder.audio.adsr :as adsr]
-            [alder.audio.midi :as midi]
-            [alder.audio.midiapi :as midiapi]))
+  (:require [alder.audio.midiapi :as midiapi]))
 
 (defrecord NodeType
     [inputs outputs extra-data built-in default-title default-size constructor])
@@ -88,7 +86,7 @@
              false
              "ADSR"
              [70 90]
-             #(adsr/make-adsr-node %)))
+             #(js/ADSRNode. %)))
 
 (def fft-analyser-node-type
   (NodeType. {:signal-in {:type :node
@@ -132,7 +130,7 @@
              false
              "MIDI Note"
              [110 40]
-             #(midi/make-midi-note-node %)))
+             #(js/MIDINoteNode. %)))
 
 (def has-midi-support (midiapi/has-midi-access))
 

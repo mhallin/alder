@@ -5,9 +5,12 @@
 (defrecord Node
     [frame node-type-id audio-node])
 
+(defn node-type [node]
+  (-> node :node-type-id node-type/get-node-type))
+
 (defn- assign-default-node-inputs [node]
   (let [audio-node (:audio-node node)]
-   (doseq [[_ input] (-> node :node-type :inputs)]
+   (doseq [[_ input] (-> node node-type :inputs)]
      (let [input-name (:name input)
            input-type (:type input)
            default-value (:default input)]
@@ -29,9 +32,6 @@
       (println "starting audio node")
       (.start (:audio-node node)))
     node))
-
-(defn node-type [node]
-  (-> node :node-type-id node-type/get-node-type))
 
 (defn node-move-to [node position]
   (update-in node [:frame] #(geometry/rectangle-move-to % position)))
