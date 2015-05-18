@@ -23,6 +23,18 @@ module.exports = function(grunt) {
 					path: 'resources/public/js/wp_compiled',
 					filename: 'audio_all.js',
 				},
+				module: {
+					preLoaders: [
+						{
+							test: /\.js$/,
+							exclude: /node_modules/,
+							loader: 'jshint-loader',
+						},
+					],
+				},
+				jshint: {
+					globalstrict: true,
+				},
 			},
 		},
 		watch: {

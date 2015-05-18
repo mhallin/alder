@@ -1,3 +1,5 @@
+'use strict';
+
 function MIDINoteNode(context) {
 	this.gate = null;
 	this.frequency = null;
