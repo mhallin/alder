@@ -39,7 +39,11 @@
     (str construct "\n" props (if (string/blank? props) "" "\n"))))
 
 (defn- write-create-nodes [node-graph]
-  (string/join "\n" (map write-create-node (:nodes node-graph))))
+  (->> node-graph
+       :nodes
+       (filter (fn [[_ n]] (-> n node/node-type :export-data :constructor)))
+       (map write-create-node)
+       (string/join "\n")))
 
 (defn- write-connection [node-graph [[from-node-id from-slot-id] [to-node-id to-slot-id]]]
   (let [from-node-var (node-id->var from-node-id)
@@ -60,15 +64,19 @@
       :gate (str "  " from-node-var
                  ".connect(" to-node-var
                  ", " (:index from-slot)
-                 ");"))))
+                 ");")
+      :null-node "")))
 
 (defn- write-connections [node-graph]
-  (string/join "\n" (map (partial write-connection node-graph)
-                         (:connections node-graph))))
+  (->> node-graph
+       :connections
+       (map (partial write-connection node-graph))
+       (remove string/blank?)
+       (string/join "\n")))
 
 (defn- graph-without-internal-nodes [node-graph]
   (let [nodes (into {}
-                    (filter (fn [[_ n]] (-> n node/node-type :export-data :constructor))
+                    (remove (fn [[_ n]] (-> n node/node-type :export-data :ignore-export))
                             (:nodes node-graph)))
         node-ids (set (keys nodes))
         connections (filter (fn [[[id1 _] [id2 _]]]
@@ -78,11 +86,53 @@
         (assoc :nodes nodes)
         (assoc :connections connections))))
 
+(defn- write-connect-destinations [node-graph to-node-id]
+  (->> to-node-id
+       (node-graph/nodes-in-to node-graph)
+       (map (fn [[[from-id _] _]]
+              (str "    this." (node-id->var from-id)
+                   ".connect(destination, input);")))
+       (string/join "\n")))
+
+(defn- write-disconnect-destinations [node-graph to-node-id]
+  (->> to-node-id
+       (node-graph/nodes-in-to node-graph)
+       (map (fn [[[from-id _] _]]
+              (str "    this." (node-id->var from-id)
+                   ".disconnect();")))
+       (string/join "\n")))
+
+(defn- write-output-if-statements [node-graph f]
+  (->> node-graph
+       :nodes
+       (filter (fn [[_ n]] (-> n node/node-type :export-data :type (= :output))))
+       (map-indexed (fn [i [id _]]
+                      (str "  if (output === " i ") {\n"
+                           (f node-graph id) "\n"
+                           "  }\n")))
+       (string/join "\n")))
+
+(defn- write-connect-function [node-graph]
+  (str "GroupedNode.prototype.connect = function (destination, output, input) {\n"
+       "  var output = output || 0;\n"
+       "\n"
+       (write-output-if-statements node-graph write-connect-destinations)
+       "};\n"))
+
+(defn- write-disconnect-function [node-graph]
+  (str "GraupedNode.prototype.disconnect = function (output) {\n"
+       "  var output = output || 0;\n"
+       "\n"
+       (write-output-if-statements node-graph write-disconnect-destinations)
+       "};\n"))
+
 (defn javascript-node-graph [node-graph]
   (let [node-graph (graph-without-internal-nodes node-graph)
         dependencies (write-dependencies node-graph)
         create-nodes (write-create-nodes node-graph)
-        connections (write-connections node-graph)]
+        connections (write-connections node-graph)
+        connect-function (write-connect-function node-graph)
+        disconnect-function (write-disconnect-function node-graph)]
     (str "'use strict';\n"
          "\n"
          dependencies "\n"
@@ -92,6 +142,10 @@
          "\n"
          connections "\n"
          "}\n"
+         "\n"
+         connect-function
+         "\n"
+         disconnect-function
          "\n"
          "\n"
          "module.exports = GroupedNode;\n")))

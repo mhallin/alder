@@ -15,10 +15,10 @@
              {}
              nil
              true
-             "Audio Out"
-             [110 40]
+             "Listener"
+             [100 40]
              (fn [ctx] (aget ctx "destination"))
-             {}))
+             {:ignore-export true}))
 
 (def oscillator-node-type
   (NodeType. {:frequency {:type :param
@@ -109,7 +109,7 @@
              "FFT"
              [70 40]
              (fn [ctx] (.call (aget ctx "createAnalyser") ctx))
-             {}))
+             {:ignore-export true}))
 
 (def scope-analyser-node-type
   (NodeType. {:signal-in {:type :node
@@ -121,7 +121,19 @@
              "Scope"
              [80 40]
              (fn [ctx] (.call (aget ctx "createAnalyser") ctx))
-             {}))
+             {:ignore-export true}))
+
+(def output-node-type
+  (NodeType. {:signal-in {:type :null-node
+                          :index 0
+                          :title "Signal in"}}
+             {}
+             nil
+             false
+             "Output"
+             [80 40]
+             (fn [ctx] #js {})
+             {:type :output}))
 
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
@@ -149,6 +161,7 @@
 
 (def all-node-types
   (let [basic-nodes {:audio-destination audio-destination-node-type
+                     :output output-node-type
                      :oscillator oscillator-node-type
                      :gain gain-node-type
                      :adsr adsr-node-type
