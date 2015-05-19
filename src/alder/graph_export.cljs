@@ -25,7 +25,7 @@
                 ".value = " (:default input) ";")
     :constant (str "  " (node-id->var node-id)
                    "." (:name input)
-                   " = " (:default input) ";")
+                   " = " (pr-str (:default input)) ";")
     nil))
 
 (defn- write-create-node [[node-id node]]

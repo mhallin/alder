@@ -16,7 +16,7 @@
         [:div.modal-underlay__dialog
          [:div.export-component
           [:textarea.export-component__source
-           (graph-export/javascript-node-graph node-graph)]
+           {:value (graph-export/javascript-node-graph node-graph)}]
           [:a
            {:on-click on-close
             :href "#"}
