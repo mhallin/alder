@@ -18,7 +18,7 @@
              "Audio Out"
              [110 40]
              (fn [ctx] (aget ctx "destination"))
-             {:constructor "context.destination"}))
+             {}))
 
 (def oscillator-node-type
   (NodeType. {:frequency {:type :param
@@ -103,29 +103,25 @@
   (NodeType. {:signal-in {:type :node
                           :index 0
                           :title "Signal"}}
-             {:signal-out {:type :node
-                           :index 0
-                           :title "Signal"}}
+             {}
              {:inspector-fields [:fft]}
              false
              "FFT"
              [70 40]
              (fn [ctx] (.call (aget ctx "createAnalyser") ctx))
-             {:constructor "context.createAnalyser()"}))
+             {}))
 
 (def scope-analyser-node-type
   (NodeType. {:signal-in {:type :node
                           :index 0
                           :title "Signal"}}
-             {:signal-out {:type :node
-                           :index 0
-                           :title "Signal"}}
+             {}
              {:inspector-fields [:waveform]}
              false
              "Scope"
              [80 40]
              (fn [ctx] (.call (aget ctx "createAnalyser") ctx))
-             {:constructor "context.createAnalyser()"}))
+             {}))
 
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor

@@ -66,8 +66,21 @@
   (string/join "\n" (map (partial write-connection node-graph)
                          (:connections node-graph))))
 
+(defn- graph-without-internal-nodes [node-graph]
+  (let [nodes (into {}
+                    (filter (fn [[_ n]] (-> n node/node-type :export-data :constructor))
+                            (:nodes node-graph)))
+        node-ids (set (keys nodes))
+        connections (filter (fn [[[id1 _] [id2 _]]]
+                              (and (node-ids id1) (node-ids id2)))
+                            (:connections node-graph))]
+    (-> node-graph
+        (assoc :nodes nodes)
+        (assoc :connections connections))))
+
 (defn javascript-node-graph [node-graph]
-  (let [dependencies (write-dependencies node-graph)
+  (let [node-graph (graph-without-internal-nodes node-graph)
+        dependencies (write-dependencies node-graph)
         create-nodes (write-create-nodes node-graph)
         connections (write-connections node-graph)]
     (str "'use strict';\n"
