@@ -7,11 +7,39 @@
 (defn- node-id->var [node-id]
   (string/replace (str node-id) #"[:-]" ""))
 
-(defn- write-dependency [[class-name [file _]]]
-  (str "var " class-name " = require('" file "');"))
+(defn- node-graph-node [node-graph node-id]
+  (-> node-graph :nodes node-id))
+
+(defn- node-export-data [node]
+  (-> node node/node-type :export-data))
 
 (defn- node-dependencies [node]
-  (-> node node/node-type :export-data :dependencies))
+  (-> node node-export-data :dependencies))
+
+(defn- node-constructor [node]
+  (-> node node-export-data :constructor))
+
+(defn- node-export-data-type [node]
+  (-> node node-export-data :type))
+
+(defn- node-ignores-export? [node]
+  (-> node node-export-data :ignore-export))
+
+(defn- node-inputs [node]
+  (-> node node/node-type :inputs))
+
+(defn- node-outputs [node]
+  (-> node node/node-type :outputs))
+
+(defn- node-input [node input-id]
+  (-> node node-inputs input-id))
+
+(defn- node-output [node output-id]
+  (-> node node-outputs output-id))
+
+
+(defn- write-dependency [[class-name [file _]]]
+  (str "var " class-name " = require('" file "');"))
 
 (defn- write-dependencies [node-graph]
   (->> (:nodes node-graph)
@@ -20,69 +48,83 @@
        (map write-dependency)
        (string/join "\n")))
 
-(defn- write-set-input [node-id [_ input]]
-  (case (:type input)
-    :param (str "  " (node-id->var node-id)
-                "." (:name input)
-                ".value = " (:default input) ";")
-    :constant (str "  " (node-id->var node-id)
-                   "." (:name input)
-                   " = " (pr-str (:default input)) ";")
-    nil))
+
+(defmulti write-set-input (fn [_ [_ input]] (:type input)))
+
+(defmethod write-set-input :param [node-id [_ input]]
+  (str "  " (node-id->var node-id)
+       "." (:name input)
+       ".value = " (:default input) ";"))
+
+(defmethod write-set-input :constant [node-id [_ input]]
+  (str "  " (node-id->var node-id)
+       "." (:name input)
+       " = " (pr-str (:default input)) ";"))
+
+(defmethod write-set-input :default [_ _] nil)
+
+
 
 (defn- write-create-node [[node-id node]]
   (let [construct (str "  var " (node-id->var node-id)
-                       " = "
-                       (-> node node/node-type :export-data :constructor) ";")
-        inputs (-> node node/node-type :inputs)
-        props (string/join "\n"
-                           (keep (partial write-set-input node-id)
-                                 inputs))]
-    (str construct "\n" props (if (string/blank? props) "" "\n"))))
+                       " = " (node-constructor node))
+        props (->> (node-inputs node)
+                   (keep (partial write-set-input node-id))
+                   (string/join "\n"))]
+    (str construct "\n"
+         props (if (string/blank? props) "" "\n"))))
 
 (defn- write-create-nodes [node-graph]
-  (->> node-graph
-       :nodes
-       (filter (fn [[_ n]] (-> n node/node-type :export-data :constructor)))
+  (->> (:nodes node-graph)
+       (filter (fn [[_ n]] (node-constructor n)))
        (map write-create-node)
        (string/join "\n")))
+
+
+
+(defmulti write-connect-call (fn [_ _ _ to-slot] (:type to-slot)))
+
+(defmethod write-connect-call :param [from-node-var from-slot to-node-var to-slot]
+  (str "  " from-node-var
+       ".connect(" to-node-var "." (:name to-slot)
+       ", " (:index from-slot)
+       ");"))
+
+(defmethod write-connect-call :null-node [_ _ _ _] nil)
+
+(defmethod write-connect-call :default [from-node-var from-slot to-node-var to-slot]
+  (str "  " from-node-var
+       ".connect(" to-node-var
+       ", " (:index from-slot)
+       ");"))
+
 
 (defn- write-connection [node-graph [[from-node-id from-slot-id] [to-node-id to-slot-id]]]
   (let [from-node-var (node-id->var from-node-id)
         to-node-var (node-id->var to-node-id)
 
-        from-slot (-> node-graph :nodes from-node-id node/node-type :outputs from-slot-id)
-        to-slot (-> node-graph :nodes to-node-id node/node-type :inputs to-slot-id)]
+        from-slot (-> (node-graph-node node-graph from-node-id)
+                      (node-output from-slot-id))
+        to-slot (-> (node-graph-node node-graph from-node-id)
+                    (node-input to-slot-id))]
 
     (when-not (= (:type from-slot) :null-node)
-      (case (:type to-slot)
-        :param (str "  " from-node-var
-                    ".connect(" to-node-var "." (:name to-slot)
-                    ", " (:index from-slot)
-                    ");")
-        :node (str "  " from-node-var
-                   ".connect(" to-node-var
-                   ", " (:index from-slot)
-                   ");")
-        :gate (str "  " from-node-var
-                   ".connect(" to-node-var
-                   ", " (:index from-slot)
-                   ");")
-        :null-node nil))))
+      (write-connect-call from-node-var from-slot to-node-var to-slot))))
 
 (defn- write-connections [node-graph]
-  (->> node-graph
-       :connections
+  (->> (:connections node-graph)
        (map (partial write-connection node-graph))
        (remove nil?)
        (string/join "\n")))
 
+
+
 (defn- write-property-input [node-graph [from-node-id _]]
-  (->> from-node-id
-       (node-graph/nodes-out-from node-graph)
+  (->> (node-graph/nodes-out-from node-graph from-node-id)
        (map (fn [[_ [to-id to-slot-id]]]
-              [to-id (-> node-graph :nodes to-id node/node-type :inputs to-slot-id)]))
-       (filter (fn [[node-id slot]] (#{:param :node} (:type slot))))
+              [to-id (-> (node-graph-node node-graph to-id)
+                         (node-input to-slot-id))]))
+       (filter (fn [[_ slot]] (#{:param :node} (:type slot))))
        (map (fn [[node-id slot]]
               (str "  this." (or (:name slot) (node-id->var node-id))
                    " = " (node-id->var node-id) (if (= (:type slot) :param)
@@ -92,16 +134,17 @@
        (string/join "\n")))
 
 (defn- write-property-inputs [node-graph]
-  (->> node-graph
-       :nodes
-       (filter (fn [[_ n]] (-> n node/node-type :export-data :type (= :input))))
+  (->> (:nodes node-graph)
+       (filter (fn [[_ n]] (-> n node-export-data-type (= :input))))
        (map (partial write-property-input node-graph))
        (remove string/blank?)
        (string/join "\n")))
 
-(defn- graph-without-internal-nodes [node-graph]
+
+
+(defn- graph-without-ignored-nodes [node-graph]
   (let [nodes (into {}
-                    (remove (fn [[_ n]] (-> n node/node-type :export-data :ignore-export))
+                    (remove (fn [[_ n]] (-> n node-ignores-export?))
                             (:nodes node-graph)))
         node-ids (set (keys nodes))
         connections (filter (fn [[[id1 _] [id2 _]]]
@@ -111,26 +154,24 @@
         (assoc :nodes nodes)
         (assoc :connections connections))))
 
+
 (defn- write-connect-destinations [node-graph to-node-id]
-  (->> to-node-id
-       (node-graph/nodes-in-to node-graph)
+  (->> (node-graph/nodes-in-to node-graph to-node-id)
        (map (fn [[[from-id _] _]]
               (str "    this." (node-id->var from-id)
                    ".connect(destination, input);")))
        (string/join "\n")))
 
 (defn- write-disconnect-destinations [node-graph to-node-id]
-  (->> to-node-id
-       (node-graph/nodes-in-to node-graph)
+  (->> (node-graph/nodes-in-to node-graph to-node-id)
        (map (fn [[[from-id _] _]]
               (str "    this." (node-id->var from-id)
                    ".disconnect();")))
        (string/join "\n")))
 
 (defn- write-output-if-statements [node-graph f]
-  (->> node-graph
-       :nodes
-       (filter (fn [[_ n]] (-> n node/node-type :export-data :type (= :output))))
+  (->> (:nodes node-graph)
+       (filter (fn [[_ n]] (-> n node-export-data-type (= :output))))
        (map-indexed (fn [i [id _]]
                       (str "  if (output === " i ") {\n"
                            (f node-graph id) "\n"
@@ -151,6 +192,8 @@
        (write-output-if-statements node-graph write-disconnect-destinations)
        "};"))
 
+
+
 (defn- write-constructor [node-graph]
   (let [create-nodes (write-create-nodes node-graph)
         connections (write-connections node-graph)
@@ -161,13 +204,23 @@
          "\n"
          "}")))
 
+
 (defn- write-property-accessor-function [to-id slot]
   (str "GroupedNode.prototype." (:name slot) " = function (value) {\n"
        "  return this." (node-id->var to-id)
        "." (:name slot) "(value);\n"
        "};"))
 
-(defn- write-property-constant-function [to-id slot]
+
+(defmulti write-accessor-function (fn [_ slot] (:type slot)))
+
+(defmethod write-accessor-function :accessor [to-id slot]
+  (write-property-accessor-function to-id slot))
+
+(defmethod write-accessor-function :gate [to-id slot]
+  (write-property-accessor-function to-id slot))
+
+(defmethod write-accessor-function :constant [to-id slot]
   (str "GroupedNode.prototype." (:name slot) " = function (value) {\n"
        "  if (value === undefined) {\n"
        "    return this." (node-id->var to-id) "." (:name slot) ";\n"
@@ -177,18 +230,15 @@
        "  }\n"
        "};"))
 
+(defmethod write-accessor-function :default [_ _] "")
+
 (defn- write-property-input-function [node-graph [from-node-id node]]
   (->> from-node-id
        (node-graph/nodes-out-from node-graph)
        (map (fn [[_ [to-id to-slot-id]]]
               [to-id (-> node-graph :nodes to-id node/node-type :inputs to-slot-id)]))
        (filter (fn [[node-id slot]] (#{:gate :accessor :constant} (:type slot))))
-       (map (fn [[node-id slot]]
-              (case (:type slot)
-                :accessor (write-property-accessor-function node-id slot)
-                :gate (write-property-accessor-function node-id slot)
-                :constant (write-property-constant-function node-id slot)
-                "")))
+       (map (fn [[node-id slot]] (write-accessor-function node-id slot)))
        (string/join "\n")))
 
 (defn- write-property-input-functions [node-graph]
@@ -199,8 +249,10 @@
        (remove string/blank?)
        (string/join "\n")))
 
+
+
 (defn javascript-node-graph [node-graph]
-  (let [node-graph (graph-without-internal-nodes node-graph)
+  (let [node-graph (graph-without-ignored-nodes node-graph)
         dependencies (write-dependencies node-graph)
         constructor (write-constructor node-graph)
         connect-function (write-connect-function node-graph)
