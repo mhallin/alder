@@ -147,6 +147,53 @@
              (fn [ctx] #js {})
              {:type :input}))
 
+(def biquad-filter-node-type
+  (NodeType. {:signal-in {:type :node
+                          :index 0
+                          :title "Signal in"}
+              :frequency {:type :param
+                          :name "frequency"
+                          :title "Frequency"
+                          :default 350
+                          :data-type :number
+                          :range [0 22050]}
+              :detune {:type :param
+                       :name "detune"
+                       :title "Detune"
+                       :default 0
+                       :data-type :number
+                       :range [-100 100]}
+              :Q {:type :param
+                  :name "Q"
+                  :title "Quality"
+                  :default 1
+                  :data-type :number
+                  :range [0.0001 1000]}
+              :gain {:type :param
+                     :name "gain"
+                     :title "Gain"
+                     :default 0
+                     :data-type :number
+                     :range [-40 40]}
+              :type {:type :constant
+                     :name "type"
+                     :title "Type"
+                     :default "lowpass"
+                     :data-type :string
+                     :choices ["lowpass" "highpass" "bandpass"
+                               "lowshelf" "highshelf" "peaking"
+                               "notch"
+                               "allpass"]}}
+             {:signal-out {:type :node
+                           :index 0
+                           :title "Signal out"}}
+             nil
+             false
+             "LO Filter"
+             [90 100]
+             (fn [ctx] (.call (aget ctx "createBiquadFilter") ctx))
+             {:constructor "context.createBiquadFilter()"}))
+
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
                        :name "device"
@@ -177,6 +224,7 @@
                      :input input-node-type
                      :oscillator oscillator-node-type
                      :gain gain-node-type
+                     :biquad-filter biquad-filter-node-type
                      :adsr adsr-node-type
                      :fft fft-analyser-node-type
                      :scope scope-analyser-node-type}
