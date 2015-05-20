@@ -135,6 +135,18 @@
              (fn [ctx] #js {})
              {:type :output}))
 
+(def input-node-type
+  (NodeType. {}
+             {:signal-out {:type :null-node
+                           :index 0
+                           :title "Signal out"}}
+             nil
+             false
+             "Input"
+             [80 40]
+             (fn [ctx] #js {})
+             {:type :input}))
+
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
                        :name "device"
@@ -162,6 +174,7 @@
 (def all-node-types
   (let [basic-nodes {:audio-destination audio-destination-node-type
                      :output output-node-type
+                     :input input-node-type
                      :oscillator oscillator-node-type
                      :gain gain-node-type
                      :adsr adsr-node-type

@@ -30,11 +30,12 @@
 
         input-data (-> to-node node/node-type :inputs input-id)
         input-name (:name input-data)]
-    (case (:type input-data)
-      :param (f from-audio-node (aget to-audio-node input-name) output-index)
-      :node (f from-audio-node to-audio-node output-index)
-      :gate (f from-audio-node to-audio-node output-index)
-      :null-node nil)))
+    (when-not (= (:type output-data) :null-node)
+      (case (:type input-data)
+        :param (f from-audio-node (aget to-audio-node input-name) output-index)
+        :node (f from-audio-node to-audio-node output-index)
+        :gate (f from-audio-node to-audio-node output-index)
+        :null-node nil))))
 
 (defn connect-nodes [node-graph from to]
   (println "connect" from to)
@@ -61,7 +62,11 @@
     (first matching)))
 
 (defn nodes-in-to [node-graph node-id]
-  (filter (fn [[[_ _] [id _]]] (= id node-id))
+  (filter (fn [[_ [id _]]] (= id node-id))
+          (:connections node-graph)))
+
+(defn nodes-out-from [node-graph node-id]
+  (filter (fn [[[id _] _]] (= id node-id))
           (:connections node-graph)))
 
 (defn remove-node [node-graph node-id]
