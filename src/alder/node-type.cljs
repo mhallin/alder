@@ -194,6 +194,22 @@
              (fn [ctx] (.call (aget ctx "createBiquadFilter") ctx))
              {:constructor "context.createBiquadFilter()"}))
 
+(def const-source-node-type
+  (NodeType. {:value {:type :accessor
+                      :name "value"
+                      :default 1
+                      :title "Value"
+                      :data-type :number}}
+             {:signal {:type :node
+                       :index 0
+                       :title "Signal out"}}
+             nil
+             false
+             "Const"
+             [80 40]
+             (fn [ctx] (js/ConstSourceNode. ctx))
+             {:constructor "new ConstSourceNode(context)"}))
+
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
                        :name "device"
@@ -226,6 +242,7 @@
                      :gain gain-node-type
                      :biquad-filter biquad-filter-node-type
                      :adsr adsr-node-type
+                     :const-source const-source-node-type
                      :fft fft-analyser-node-type
                      :scope scope-analyser-node-type}
         midi-nodes (if has-midi-support
