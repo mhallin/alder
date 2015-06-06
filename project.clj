@@ -7,12 +7,24 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [sablono "0.3.4"]
                  [org.omcljs/om "0.8.8"]
+                 [secretary "1.2.3"]
 
-                 [ring/ring-core "1.3.2"]]
+                 [ring/ring-core "1.3.2"]
+                 [javax.servlet/servlet-api "2.5"]
+                 [compojure "1.3.4"]
+                 [ragtime/ragtime.sql.files "0.3.8"]
+                 [org.postgresql/postgresql "9.4-1201-jdbc41"]
+                 [environ "1.0.0"]
+                 [hiccup "1.0.5"]
+                 [jarohen/chord "0.6.0"]
+                 [yesql "0.4.0"]
+                 [org.clojure/java.jdbc "0.3.7"]]
 
   :plugins [[lein-cljsbuild "1.0.5"]
             [lein-figwheel "0.3.1"]
-            [lein-ring "0.9.3"]]
+            [lein-ring "0.9.3"]
+            [ragtime/ragtime.lein "0.3.8"]
+            [lein-environ "1.0.0"]]
 
   :source-paths ["src"]
 
@@ -55,7 +67,7 @@
   :figwheel {
              ;; :http-server-root "public" ;; default and assumes "resources" 
              ;; :server-port 3449 ;; default
-             :css-dirs ["resources/public/css"] ;; watch and update CSS
+             :css-dirs ["resources/public/css_compiled"] ;; watch and update CSS
 
              ;; Start an nREPL server into the running figwheel process
              :nrepl-port 7888
@@ -64,7 +76,7 @@
              ;; if you want to embed a ring handler into the figwheel http-kit
              ;; server, this is for simple ring servers, if this
              ;; doesn't work for you just run your own server :)
-             ;; :ring-handler hello_world.server/handler
+             :ring-handler alder.core/app
 
              ;; To be able to open files in your editor from the heads up display
              ;; you will need to put a script on your path.

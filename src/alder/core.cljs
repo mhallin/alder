@@ -1,13 +1,18 @@
 (ns ^:figwheel-always alder.core
     (:require [om.core :as om :include-macros true]
               [sablono.core :as html :refer-macros [html]]
+              [chord.client :refer [ws-ch]]
+              [cljs.core.async :refer [<! >! put! close!]]
 
               [alder.node :as node]
               [alder.node-type :as node-type]
               [alder.node-graph :as node-graph]
               [alder.node-render :as node-render]
               [alder.export-render :as export-render]
-              [alder.geometry :as geometry]))
+              [alder.geometry :as geometry]
+              [alder.routes :as routes])
+
+    (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (enable-console-print!)
 
@@ -19,7 +24,9 @@
                           :dragging nil
                           :id-counter 0
                           :trash-area-rectangle nil
-                          :show-export-window false}))
+                          :show-export-window false
+                          :current-page :index
+                          :current-page-args {}}))
 
 (defn end-drag [event]
   (when-let [dragging-data (:dragging @app-state)]
@@ -256,10 +263,10 @@
                  :href "#"}
                 "Export"]])))))
 
-(defn root-component [data owner]
+(defn editor-component [data owner]
   (reify
     om/IDisplayName
-    (display-name [_] "Root")
+    (display-name [_] "Editor")
     
     om/IRender
     (render [_]
@@ -274,10 +281,48 @@
                          (:node-graph data)
                          {:opts {:on-close hide-export-window}}))]))))
 
+(defn index-component [data owner]
+  (reify
+    om/IDisplayName
+    (display-name [_] "Index")
+
+    om/IWillMount
+    (will-mount [_]
+      (go
+        (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3449/alder-api-ws"))]
+          (if-not error
+            (do
+              (>! ws-channel [:create-new nil])
+              (let [{:keys [message]} (<! ws-channel)]
+                (routes/replace-navigation! (routes/show-patch {:short-id message}))))
+            (js/console.error (pr-str error))))))
+
+    om/IRender
+    (render [_]
+      (html [:div.alder-index
+             [:h1 "Alder DSP Editor"]
+             [:p "Loading initial patch..."]]))))
+
+(defn root-component [data owner]
+  (reify
+    om/IDisplayName
+    (display-name [_] "Root")
+
+    om/IRender
+    (render [_]
+      (case (:current-page data)
+        :index (om/build index-component data)
+        :show-patch (om/build editor-component data)))))
+
+(defn dispatch-route [page page-args]
+  (swap! app-state #(merge % {:current-page page :current-page-args page-args})))
+
+(routes/set-routing-callback! dispatch-route)
+(routes/dispatch!)
+
 (om/root root-component
          app-state
          {:target (. js/document (getElementById "app"))})
-
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
