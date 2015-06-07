@@ -81,3 +81,9 @@
                            connections)]
     (update-in node-graph [:nodes]
                #(dissoc % node-id))))
+
+(defn disconnected-inputs [node-graph node-id inputs]
+  (remove (fn [[id _]] (some (fn [[[_ _] [to-node-id to-input-id]]]
+                               (and (= to-node-id node-id) (= to-input-id id)))
+                             (:connections node-graph)))
+          inputs))

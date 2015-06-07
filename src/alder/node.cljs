@@ -93,8 +93,8 @@
 
 
 (defn editable-inputs [node]
-  (remove #(= (:type %) :node)
-          (vals (-> node node-type :inputs))))
+  (remove (fn [[_ i]] (= (:type i) :node))
+          (-> node node-type :inputs)))
 
 
 (defn current-input-value [node input]

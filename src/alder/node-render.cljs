@@ -3,6 +3,7 @@
             [om.core :as om :include-macros true]
             [sablono.core :as html :refer-macros [html]]
 
+            [alder.node-graph :as node-graph]
             [alder.node :as node]
             [alder.geometry :as geometry]
             [alder.audio.aapi :as aapi]
@@ -195,7 +196,7 @@
     :fft (om/build fft-component (:audio-node node))
     :waveform (om/build waveform-component (:audio-node node))))
 
-(defn inspector-component [[node-id node] owner]
+(defn inspector-component [[node-graph node-id node] owner]
   (let [node-origin (-> node :frame geometry/rectangle-origin)
         node-width (-> node :frame :width)
         node-height (-> node :frame :height)
@@ -226,8 +227,10 @@
             {:style {:left (str inspector-x "px")
                      :top (str inspector-y "px")
                      :width (str inspector-width "px")}}
-            (map render-input-container
-                 (node/editable-inputs node))
+            (->> (node/editable-inputs node)
+                 (node-graph/disconnected-inputs node-graph node-id)
+                 (map second)
+                 (map render-input-container))
             (map #(render-inspector-field node %)
                  (-> node node/node-type :extra-data :inspector-fields))]))))))
 

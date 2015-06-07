@@ -181,10 +181,13 @@
                       {:opts {:on-mouse-down node-start-drag
                               :on-slot-mouse-down slot-start-drag}
                        :key 0})
-        (om/build-all node-render/inspector-component
-                      (->> data :node-graph :nodes
-                           (filter (fn [[_ node]] (node :inspector-visible))))
-                      {:key 0})
+        (map (fn [[node-id node]]
+               (om/build node-render/inspector-component
+                         [(:node-graph data)
+                          node-id node]
+                         {:react-key (name node-id)}))
+             (->> data :node-graph :nodes
+                  (filter (fn [[_ node]] (node :inspector-visible)))))
         [:svg.graph-canvas__connections
          (om/build-all connection-view
                        (map (fn [[[from-node-id from-slot-id] [to-node-id to-slot-id]]]
