@@ -55,3 +55,8 @@
   (let [reply-chan (chan)]
     (go (>! internal-comm [reply-chan [:create-new nil]]))
     reply-chan))
+
+(defn send-serialized-graph [patch-id serialized-graph]
+  (let [reply-chan (chan)]
+    (go (>! internal-comm [reply-chan [:save-patch [patch-id serialized-graph]]]))
+    reply-chan))

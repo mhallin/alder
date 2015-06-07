@@ -13,7 +13,8 @@
               [alder.export-render :as export-render]
               [alder.geometry :as geometry]
               [alder.routes :as routes]
-              [alder.comm :as comm])
+              [alder.comm :as comm]
+              [alder.persist :as persist])
 
     (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -33,6 +34,7 @@
 
 (defn end-drag [event]
   (when-let [dragging-data (:dragging @app-state)]
+    (persist/set-ignore-state-changes! false)
     (let [mouse-x (.-clientX event)
           mouse-y (.-clientY event)
           mouse-point [mouse-x mouse-y]]
@@ -76,6 +78,7 @@
 (defn node-start-drag [node-id event]
   (when (= (.-button event) 0)
     (.stopPropagation event)
+    (persist/set-ignore-state-changes! true)
     (let [mouse-x (.-clientX event)
           mouse-y (.-clientY event)
           elem-x (.-offsetLeft (.-currentTarget event))
@@ -325,6 +328,7 @@
 (routes/set-routing-callback! dispatch-route)
 (routes/dispatch!)
 (comm/start-socket-connection)
+(persist/watch-state app-state)
 
 (om/root root-component
          app-state

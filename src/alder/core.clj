@@ -41,6 +41,9 @@
   (let [patch (db/create-patch!)]
     [:reply :create-new (:short_id patch)]))
 
+(defmethod handle-message :save-patch [_ args]
+  [:reply :ok nil])
+
 (defn api-channel-handler [request]
   (with-channel request ws-ch
     (go-loop []
