@@ -3,6 +3,7 @@
               [sablono.core :as html :refer-macros [html]]
               [chord.client :refer [ws-ch]]
               [cljs.core.async :refer [<! >! put! close!]]
+              [taoensso.timbre :as timbre]
 
               [alder.node :as node]
               [alder.node-type :as node-type]

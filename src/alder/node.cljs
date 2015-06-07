@@ -1,6 +1,8 @@
 (ns alder.node
   (:require [alder.geometry :as geometry]
-            [alder.node-type :as node-type]))
+            [alder.node-type :as node-type])
+
+  (:require-macros [taoensso.timbre :refer [debug]]))
 
 (defrecord Node
     [frame node-type-id audio-node])
@@ -29,7 +31,7 @@
                     ((:constructor node-type) context))]
     (assign-default-node-inputs node)
     (when (.-start (:audio-node node))
-      (println "starting audio node")
+      (debug "starting audio node" (:audio-node node))
       (.start (:audio-node node)))
     node))
 

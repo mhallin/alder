@@ -1,6 +1,8 @@
 (ns alder.node-graph
   (:require [alder.node :as node]
-            [alder.geometry :as geometry]))
+            [alder.geometry :as geometry])
+
+  (:require-macros [taoensso.timbre :refer [debug]]))
 
 (defonce id-counter (atom 0))
 
@@ -38,13 +40,13 @@
         :null-node nil))))
 
 (defn connect-nodes [node-graph from to]
-  (println "connect" from to)
+  (debug "connect nodes" from to)
   (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2 %3))
   (update-in node-graph [:connections]
                (fn [conns] (conj conns [from to]))))
 
 (defn disconnect-nodes [node-graph from to]
-  (println "disconnect" from to)
+  (debug "disconnect nodes" from to)
   (set-connection node-graph from to #(.call (aget %1 "disconnect") %1 %2 %3))
   (update-in node-graph [:connections]
              (fn [conns] (vec (remove #(= % [from to]) conns)))))

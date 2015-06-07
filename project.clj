@@ -18,7 +18,8 @@
                  [hiccup "1.0.5"]
                  [jarohen/chord "0.6.0"]
                  [yesql "0.4.0"]
-                 [org.clojure/java.jdbc "0.3.7"]]
+                 [org.clojure/java.jdbc "0.3.7"]
+                 [com.taoensso/timbre "4.0.0-beta4"]]
 
   :plugins [[lein-cljsbuild "1.0.5"]
             [lein-figwheel "0.3.1"]

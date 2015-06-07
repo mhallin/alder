@@ -17,25 +17,39 @@
 
             [chord.http-kit :refer [with-channel]]
             [org.httpkit.server :refer [run-server]]
-            [clojure.core.async :refer [<! >! put! close! go-loop]]))
+            [clojure.core.async :refer [<! >! put! close! go-loop]]
+
+            [taoensso.timbre :as timbre :refer [info]]))
 
 (db/migrate)
+
+(defn wrap-logging [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (info "HTTP"
+            (:remote-addr request)
+            (str \"
+                 (-> request :request-method name string/upper-case) " "
+                 (:uri request)
+                 \")
+            (:status response))
+      response)))
 
 (defmulti handle-message (fn [cmd _] cmd))
 
 (defmethod handle-message :create-new [_ _]
   (let [patch (db/create-patch!)]
-    (println "Created patch" patch)
     [:reply :create-new (:short_id patch)]))
 
 (defn api-channel-handler [request]
-  (println "Opened connection from" (:remote-addr request))
   (with-channel request ws-ch
     (go-loop []
       (when-let [{:keys [message]} (<! ws-ch)]
-        (println "Message received:" message)
         (let [[command args] message
               response (handle-message command args)]
+          (info "MSG"
+                (:remote-addr request)
+                command)
           (>! ws-ch response))
         (recur)))))
 
@@ -46,6 +60,7 @@
 
 (def app
   (-> (handler/site main-routes)
+      (wrap-logging)
       (wrap-resource "public")
       (wrap-content-type)
       (wrap-not-modified)))

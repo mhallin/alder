@@ -2,7 +2,8 @@
   (:require [chord.client :refer [ws-ch]]
             [cljs.core.async :refer [<! >! put! close! chan alts!]])
 
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [taoensso.timbre :refer [debug]]))
 
 (defonce internal-comm (chan))
 (defonce current-connection (atom nil))
@@ -33,7 +34,7 @@
                     :reply (do
                              (>! (peek waiting-replies) [name args])
                              (recur (pop waiting-replies)))
-                    :command (println "got command" (pr-str message)))))
+                    :command (debug "got command" message))))
           (recur waiting-replies))))))
 
 (defn stop-socket-connection []
