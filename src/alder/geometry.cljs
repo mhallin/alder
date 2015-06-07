@@ -10,6 +10,10 @@
      :width (str width "px")
      :height (str height "px")}))
 
+(defn rectangle->vec [rectangle]
+  (let [{:keys [x y width height]} rectangle]
+    [x y width height]))
+
 (defn rectangle-move-to [rectangle position]
   (let [[x y] position]
     (-> rectangle

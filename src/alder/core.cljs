@@ -8,6 +8,7 @@
               [alder.node :as node]
               [alder.node-type :as node-type]
               [alder.node-graph :as node-graph]
+              [alder.node-graph-serialize :as node-graph-serialize]
               [alder.node-render :as node-render]
               [alder.export-render :as export-render]
               [alder.geometry :as geometry]
@@ -281,6 +282,9 @@
              (om/build graph-canvas-view data)
              (om/build palette-view data)
              [:div.state-debug (pr-str data)]
+             [:div.save-data-debug
+              (.stringify js/JSON
+                          (node-graph-serialize/serialize-graph (:node-graph data)))]
              (when (:show-export-window data)
                (om/build export-render/export-component
                          (:node-graph data)
