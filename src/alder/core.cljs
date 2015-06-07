@@ -10,7 +10,8 @@
               [alder.node-render :as node-render]
               [alder.export-render :as export-render]
               [alder.geometry :as geometry]
-              [alder.routes :as routes])
+              [alder.routes :as routes]
+              [alder.comm :as comm])
 
     (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -288,14 +289,10 @@
 
     om/IWillMount
     (will-mount [_]
-      (go
-        (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3449/alder-api-ws"))]
-          (if-not error
-            (do
-              (>! ws-channel [:create-new nil])
-              (let [{:keys [message]} (<! ws-channel)]
-                (routes/replace-navigation! (routes/show-patch {:short-id message}))))
-            (js/console.error (pr-str error))))))
+      (let [reply-chan (comm/create-new-patch)]
+        (go
+          (let [[_ short-id] (<! reply-chan)]
+            (routes/replace-navigation! (routes/show-patch {:short-id short-id}))))))
 
     om/IRender
     (render [_]
@@ -319,6 +316,7 @@
 
 (routes/set-routing-callback! dispatch-route)
 (routes/dispatch!)
+(comm/start-socket-connection)
 
 (om/root root-component
          app-state

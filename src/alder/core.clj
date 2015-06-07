@@ -26,7 +26,7 @@
 (defmethod handle-message :create-new [_ _]
   (let [patch (db/create-patch!)]
     (println "Created patch" patch)
-    (:short_id patch)))
+    [:reply :create-new (:short_id patch)]))
 
 (defn api-channel-handler [request]
   (println "Opened connection from" (:remote-addr request))
