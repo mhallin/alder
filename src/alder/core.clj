@@ -48,12 +48,12 @@
   (with-channel request ws-ch
     (go-loop []
       (when-let [{:keys [message]} (<! ws-ch)]
-        (let [[command args] message
-              response (handle-message command args)]
+        (let [[command args] message]
           (info "MSG"
                 (:remote-addr request)
                 command)
-          (>! ws-ch response))
+          (let [response (handle-message command args)]
+            (>! ws-ch response)))
         (recur)))))
 
 (defroutes main-routes
