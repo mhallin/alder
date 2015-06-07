@@ -23,6 +23,11 @@
       (.setValue (json/write-str value)))))
 
 
+(defn- str->jsonb [s]
+  (doto (PGobject.)
+    (.setType "jsonb")
+    (.setValue s)))
+
 (defn generate-short-id []
   (->> (range 12)
        (map (fn [_] (rand-nth "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890")))
@@ -33,4 +38,8 @@
 
 (defn create-patch! []
   (let [short-id (generate-short-id)]
-    (save-patch<! database-url short-id (jdbc/sql-value {}))))
+    (do-create-patch<! database-url short-id (jdbc/sql-value {}))))
+
+
+(defn save-patch! [short-id patch-data]
+  (do-save-patch! database-url (str->jsonb patch-data) short-id))
