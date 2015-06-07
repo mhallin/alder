@@ -13,32 +13,32 @@ Requirements:
 
 * Leiningen_
 * Node.js_ and npm_
-* Grunt_
+* Gulp_
 
 .. code-block:: sh
 
-   $ grunt
-   $ lein ring server-headless
+   $ ./node-modules/.bin/gulp
+   $ DATABASE_URL="jdbc:postgresql://localhost/alder" lein run
 
-   # Visit http://localhost:3000
+   # Visit http://localhost:3449
 
 
 Development Setup
 -----------------
 
-You can use Grunt's auto watch feature and lein-figwheel_ to auto
+You can use Gulp's file watch feature and lein-figwheel_ to auto
 reload and push code changes to the browser for a very interactive
 development environment.
 
 .. code-block:: sh
 
    # In one terminal window
-   $ grunt watch
+   $ ./node-modules/.bin/gulp watch
 
    # In another window
-   $ lein figwheel
+   $ DATABASE_URL="jdbc:postgresql://localhost/alder" lein figwheel
 
-   # Open http://localhost:3449
+   # Visit http://localhost:3449
 
 Deployment Setup
 ----------------
@@ -48,12 +48,12 @@ through Clojure and Ring's Uberjar feature.
 
 .. code-block:: sh
 
-   $ grunt
+   $ ./node-modules/.bin/gulp
    $ lein ring uberjar
 
 .. _Clojurescript: https://github.com/clojure/clojurescript
 .. _Leiningen: http://leiningen.org
 .. _Node.js: http://nodejs.org
 .. _npm: http://npmjs.com
-.. _Grunt: http://gruntjs.com
+.. _Gulp: http://gulpjs.com
 .. _lein-figwheel: https://github.com/bhauman/lein-figwheel
