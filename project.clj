@@ -29,8 +29,8 @@
   :source-paths ["src"]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
-  
-  :ring {:handler alder.core/app}
+
+  :main alder.core
 
   :hooks [leiningen.cljsbuild]
 

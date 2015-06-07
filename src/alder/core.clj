@@ -16,6 +16,7 @@
             [compojure.response :as response]
 
             [chord.http-kit :refer [with-channel]]
+            [org.httpkit.server :refer [run-server]]
             [clojure.core.async :refer [<! >! put! close! go-loop]]))
 
 (db/migrate)
@@ -48,3 +49,13 @@
       (wrap-resource "public")
       (wrap-content-type)
       (wrap-not-modified)))
+
+(defonce server (atom nil))
+
+(defn stop-server []
+  (when-not (nil? @server)
+    (@server :timeout 100)
+    (reset! server nil)))
+
+(defn -main [& args]
+  (reset! server (run-server app {:port 3449})))
