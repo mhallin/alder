@@ -41,15 +41,18 @@
           mouse-point [mouse-x mouse-y]]
       (when-let [slot-path (:slot-path dragging-data)]
         (let [offset (:offset dragging-data)
+              reverse (:reverse dragging-data)
               position (geometry/point-sub [mouse-x mouse-y] offset)]
           (when-let [hit (-> @app-state :node-graph
                              (node-graph/hit-test-slot position))]
-            (swap! app-state
-                   #(update-in % [:node-graph]
-                               (fn [node-graph]
-                                 (node-graph/connect-nodes node-graph
-                                                           slot-path
-                                                           hit)))))))
+            (let [from (if reverse hit slot-path)
+                  to (if reverse slot-path hit)]
+              (swap! app-state
+                     #(update-in % [:node-graph]
+                                 (fn [node-graph]
+                                   (node-graph/connect-nodes node-graph
+                                                             from
+                                                             to))))))))
 
       (when-let [node-id (:node-id dragging-data)]
         (when (-> @app-state :trash-area-rectangle (geometry/rectangle-hit-test mouse-point))
@@ -97,13 +100,18 @@
        (let [mouse-x (.-clientX event)
              mouse-y (.-clientY event)
              [offset-source-x offset-source-y] offset-source
-             ]
+             is-input (-> @app-state
+                          :node-graph
+                          (node-graph/node-by-id node-id)
+                          node/node-type-inputs
+                          (contains? slot-id))]
          (swap! app-state
                 #(update-in % [:dragging]
                             (fn [_] {:slot-path [node-id slot-id]
                                      :current-pos [mouse-x mouse-y]
                                      :offset [(- mouse-x offset-source-x)
-                                              (- mouse-y offset-source-y)]}))))))
+                                              (- mouse-y offset-source-y)]
+                                     :reverse is-input}))))))
   ([node-id slot-id event]
      (let [node (-> @app-state :node-graph :nodes node-id)
            slot-frame (node/canvas-slot-frame node slot-id)

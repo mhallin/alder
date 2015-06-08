@@ -89,3 +89,6 @@
                                (and (= to-node-id node-id) (= to-input-id id)))
                              (:connections node-graph)))
           inputs))
+
+(defn node-by-id [node-graph node-id]
+  (-> node-graph :nodes node-id))

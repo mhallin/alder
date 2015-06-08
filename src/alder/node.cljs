@@ -10,6 +10,12 @@
 (defn node-type [node]
   (-> node :node-type-id node-type/get-node-type))
 
+(defn node-type-inputs [node]
+  (-> node node-type :inputs))
+
+(defn node-type-outputs [node]
+  (-> node node-type :outputs))
+
 (defn- assign-default-node-inputs [node]
   (let [audio-node (:audio-node node)]
    (doseq [[_ input] (-> node node-type :inputs)]
