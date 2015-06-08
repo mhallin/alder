@@ -1,4 +1,4 @@
-(ns alder.views
+(ns alder-backend.views
   (:use [hiccup core page]))
 
 (defn index-page []

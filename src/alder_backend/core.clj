@@ -1,4 +1,4 @@
-(ns alder.core
+(ns alder-backend.core
   (:use ring.util.response
         ring.middleware.resource
         ring.middleware.content-type
@@ -6,8 +6,8 @@
 
         compojure.core)
 
-  (:require [alder.db :as db]
-            [alder.views :as views]
+  (:require [alder-backend.db :as db]
+            [alder-backend.views :as views]
 
             [clojure.string :as string]
             

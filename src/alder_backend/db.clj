@@ -1,4 +1,4 @@
-(ns alder.db
+(ns alder-backend.db
   (:require [ragtime.core :as rcore]
             [ragtime.sql.files :as rfiles]
 
@@ -11,7 +11,7 @@
 
   (:import org.postgresql.util.PGobject))
 
-(defqueries "alder/sql/patch.sql")
+(defqueries "alder_backend/sql/patch.sql")
 
 (def database-url (env :database-url))
 
