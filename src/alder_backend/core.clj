@@ -10,6 +10,7 @@
             [alder-backend.views :as views]
 
             [clojure.string :as string]
+            [clojure.java.io :as io]
             
             [compojure.route :as route]
             [compojure.handler :as handler]
@@ -18,10 +19,12 @@
             [chord.http-kit :refer [with-channel]]
             [org.httpkit.server :refer [run-server]]
             [clojure.core.async :refer [<! >! put! close! go-loop]]
+            [environ.core :refer [env]]
 
-            [taoensso.timbre :as timbre :refer [info]]))
+            [taoensso.timbre :as timbre :refer [info]])
 
-(db/migrate)
+  (:gen-class))
+
 
 (defn wrap-logging [handler]
   (fn [request]
@@ -80,4 +83,5 @@
     (reset! server nil)))
 
 (defn -main [& args]
+  (db/migrate)
   (reset! server (run-server app {:port 3449})))

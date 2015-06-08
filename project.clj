@@ -29,7 +29,7 @@
 
   :source-paths ["src"]
 
-  :clean-targets ^{:protect false} ["resources/public" "target"]
+  :clean-targets ^{:protect false} ["resources/public/cljs_compiled" "target"]
 
   :main alder-backend.core
 
@@ -58,12 +58,7 @@
    {:env {:production true}
     :omit-source :true
     :aot :all
-    :cljsbuild {:builds [{:id "min"
-                          :source-paths ["src"]
-                          :compiler {:output-to "resources/public/cljs_compiled/alder.js"
-                                     :main alder.core
-                                     :optimizations :advanced
-                                     :pretty-print false}}]}}}
+    :cljsbuild {:builds []}}}
   
   :figwheel {
              ;; :http-server-root "public" ;; default and assumes "resources" 
