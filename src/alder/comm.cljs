@@ -60,3 +60,8 @@
   (let [reply-chan (chan)]
     (go (>! internal-comm [reply-chan [:save-patch [patch-id serialized-graph]]]))
     reply-chan))
+
+(defn get-serialized-graph [patch-id]
+  (let [reply-chan (chan)]
+    (go (>! internal-comm [reply-chan [:get-patch patch-id]]))
+    reply-chan))

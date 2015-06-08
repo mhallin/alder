@@ -16,7 +16,8 @@
               [alder.comm :as comm]
               [alder.persist :as persist])
 
-    (:require-macros [cljs.core.async.macros :refer [go]]))
+    (:require-macros [cljs.core.async.macros :refer [go]]
+                     [taoensso.timbre :refer [info debug]]))
 
 (enable-console-print!)
 
@@ -29,7 +30,7 @@
                           :id-counter 0
                           :trash-area-rectangle nil
                           :show-export-window false
-                          :current-page :index
+                          :current-page :none
                           :current-page-args {}}))
 
 (defn end-drag [event]
@@ -214,7 +215,7 @@
 
 (defn- prototype-node-start-drag [node-type-id event]
   (when (= (.-button event) 0)
-    (let [node-id (node-graph/next-node-id)]
+    (let [node-id (node-graph/next-node-id (:node-graph @app-state))]
       (swap! app-state
              (fn [state]
                (update-in state [:node-graph]
@@ -300,6 +301,7 @@
 
     om/IWillMount
     (will-mount [_]
+      (debug "Index component creating new patch")
       (let [reply-chan (comm/create-new-patch)]
         (go
           (let [[_ short-id] (<! reply-chan)]
@@ -320,10 +322,24 @@
     (render [_]
       (case (:current-page data)
         :index (om/build index-component data)
-        :show-patch (om/build editor-component data)))))
+        :show-patch (om/build editor-component data)
+        :none (html [:div])))))
 
 (defn dispatch-route [page page-args]
-  (swap! app-state #(merge % {:current-page page :current-page-args page-args})))
+  (debug "Dispatching route" page page-args)
+  (if (= page :show-patch)
+    (go
+      (let [{:keys [short-id]} page-args
+            chan (comm/get-serialized-graph short-id)
+            [_ serialized-graph] (<! chan)
+            graph-js-obj (.parse js/JSON serialized-graph)
+            node-graph (node-graph-serialize/materialize-graph (:context @app-state)
+                                                               graph-js-obj)]
+        (swap! app-state #(merge % {:current-page page
+                                    :current-page-args page-args
+                                    :node-graph node-graph}))))
+    (swap! app-state #(merge % {:current-page page
+                                :current-page-args page-args}))))
 
 (routes/set-routing-callback! dispatch-route)
 (routes/dispatch!)

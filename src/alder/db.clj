@@ -22,6 +22,14 @@
       (.setType "jsonb")
       (.setValue (json/write-str value)))))
 
+(extend-protocol jdbc/IResultSetReadColumn
+  PGobject
+  (result-set-read-column [pgobj metadata idx]
+    (let [type (.getType pgobj)
+          value (.getValue pgobj)]
+      (case type
+        "jsonb" (json/read-str value :key-fn keyword)
+        :else value))))
 
 (defn- str->jsonb [s]
   (doto (PGobject.)
@@ -40,6 +48,8 @@
   (let [short-id (generate-short-id)]
     (do-create-patch<! database-url short-id (jdbc/sql-value {}))))
 
-
 (defn save-patch! [short-id patch-data]
   (do-save-patch! database-url (str->jsonb patch-data) short-id))
+
+(defn get-patch [short-id]
+  (first (do-get-patch database-url short-id)))

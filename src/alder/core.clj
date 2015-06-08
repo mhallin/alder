@@ -45,6 +45,9 @@
   (db/save-patch! patch-id patch-data)
   [:reply :ok nil])
 
+(defmethod handle-message :get-patch [_ patch-id]
+  [:reply :patch-data (:patch_data (db/get-patch patch-id))])
+
 (defn api-channel-handler [request]
   (with-channel request ws-ch
     (go-loop []

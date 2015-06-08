@@ -25,3 +25,35 @@
               :nodes (into {} (map (partial serialize-node node-graph)
                                    (:nodes node-graph)))}]
     (clj->js data)))
+
+
+(defn- materialize-node [context node-graph [node-id {:keys [frame inputs node-type-id]}]]
+  (let [[x y _ _] frame
+        node-graph (node-graph/add-node node-graph
+                                        node-id
+                                        (keyword node-type-id)
+                                        [x y]
+                                        context)
+        node (node-id (:nodes node-graph))
+        node-type (node/node-type node)]
+    (doseq [[input-id value] inputs]
+      (let [input (input-id (:inputs node-type))]
+        (node/set-input-value node input value)))
+    node-graph))
+
+(defn- materialize-connection [node-graph [[from-node from-slot] [to-node to-slot]]]
+  (node-graph/connect-nodes node-graph
+                            [(keyword from-node) (keyword from-slot)]
+                            [(keyword to-node) (keyword to-slot)]))
+
+(defn materialize-graph [context serialized-graph]
+  (let [{:keys [nodes connections]} (clojure.walk/keywordize-keys
+                                     (js->clj serialized-graph))
+        node-graph (node-graph/make-node-graph)
+        node-graph (reduce (fn [graph n] (materialize-node context graph n))
+                           node-graph
+                           nodes)
+        node-graph (reduce (fn [graph c] (materialize-connection graph c))
+                           node-graph
+                           connections)]
+    node-graph))

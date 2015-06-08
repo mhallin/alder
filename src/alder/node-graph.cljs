@@ -6,10 +6,12 @@
 
 (defonce id-counter (atom 0))
 
-(defn next-node-id []
-  (let [next-id (swap! id-counter inc)]
-    (keyword (str "node-" next-id))))
-
+(defn next-node-id [node-graph]
+  (let [next-id (swap! id-counter inc)
+        node-id (keyword (str "node-" next-id))]
+    (if (node-id (:nodes node-graph))
+      (next-node-id node-graph)
+      node-id)))
 
 (defn make-node-graph []
   {:nodes {}
