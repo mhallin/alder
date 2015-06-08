@@ -260,10 +260,8 @@
                 :key (str "node__" node-id)
                 :on-mouse-down #(on-mouse-down node-id %)}
                title
-               [:img.graph-canvas__node-inspector-toggle
-                {:src (if (:inspector-visible node)
-                        "/img/inspector_close_button.svg"
-                        "/img/inspector_open_button.svg")
+               [:div.graph-canvas__node-inspector-toggle
+                {:class (if (:inspector-visible node) "--open" "--closed")
                  :on-click #(om/transact! node :inspector-visible (fn [x] (not x)))}]
                (render-slot-list node-id node on-slot-mouse-down)])))))
 

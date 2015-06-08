@@ -165,7 +165,15 @@ body
   position: absolute
   bottom: 2px
   left: calc(50% - 8px)
+  width: 16px
+  height: 8px
   cursor: pointer
+
+  &.--open
+    background-image: url('/img/inspector_close_button.svg')
+
+  &.--closed
+    background-image: url('/img/inspector_open_button.svg')
 
 
 .prototype-node
