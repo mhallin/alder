@@ -18,7 +18,8 @@
                                   (filter (partial input-needs-serialization?
                                                    node-graph
                                                    node-id)
-                                          (:inputs (node/node-type node)))))}])
+                                          (:inputs (node/node-type node)))))
+            :inspector-visible (:inspector-visible node)}])
 
 (defn serialize-graph [node-graph]
   (let [data {:connections (:connections node-graph)
@@ -27,13 +28,17 @@
     (clj->js data)))
 
 
-(defn- materialize-node [context node-graph [node-id {:keys [frame inputs node-type-id]}]]
+(defn- materialize-node [context node-graph [node-id {:keys [frame
+                                                             inputs
+                                                             node-type-id
+                                                             inspector-visible]}]]
   (let [[x y _ _] frame
         node-graph (node-graph/add-node node-graph
                                         node-id
                                         (keyword node-type-id)
                                         [x y]
                                         context)
+        node-graph (assoc-in node-graph [:nodes node-id :inspector-visible] inspector-visible)
         node (node-id (:nodes node-graph))
         node-type (node/node-type node)]
     (doseq [[input-id value] inputs]
