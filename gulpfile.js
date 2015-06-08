@@ -5,12 +5,14 @@ var gutil = require('gulp-util');
 var sass = require('gulp-sass');
 var autoprefixer = require('gulp-autoprefixer');
 var sourcemaps = require('gulp-sourcemaps');
+var postcss = require('gulp-postcss');
+var assets = require('postcss-assets');
 var webpack = require('webpack');
 
 var webpackConfig = {
-	entry: './resources/public/js/audio/all.js',
+	entry: './src/audio/all.js',
 	output: {
-		path: 'resources/public/js/wp_compiled',
+		path: 'resources/public/js_compiled',
 		filename: 'audio_all.js',
 	},
 	module: {
@@ -28,12 +30,14 @@ var webpackConfig = {
 };
 
 gulp.task('sass', function () {
-	gulp.src('resources/public/sass/style.sass', {base: 'resources/public/sass'})
+	gulp.src('src/sass/style.sass', {base: 'src/sass'})
 		.pipe(sourcemaps.init())
 		.pipe(sass().on('error', sass.logError))
 		.pipe(autoprefixer({
 			browsers: ['last 1 version'],
 		}))
+		.pipe(postcss([assets({
+		})]))
 		.pipe(sourcemaps.write())
 		.pipe(gulp.dest('resources/public/css_compiled'));
 });
@@ -51,9 +55,9 @@ gulp.task('webpack', function (callback) {
 });
 
 gulp.task('watch', function () {
-	gulp.watch('resources/**/*.sass', ['sass']);
+	gulp.watch('src/sass/*.sass', ['sass']);
 
-	gulp.watch('resources/public/js/audio/**/*.js', ['webpack']);
+	gulp.watch('src/audio/**/*.js', ['webpack']);
 });
 
 gulp.task('default', ['sass', 'webpack']);

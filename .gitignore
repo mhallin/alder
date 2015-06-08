@@ -1,6 +1,4 @@
-/resources/public/js/compiled/**
-/resources/public/js/wp_compiled/**
-/resources/public/css_compiled/**
+/resources
 figwheel_server.log
 pom.xml
 *jar
@@ -14,7 +12,6 @@ pom.xml
 .repl
 .nrepl-port
 .sass-cache
-/resources/public/css/style.css*
 /node_modules/
 /profiles.clj
 /build

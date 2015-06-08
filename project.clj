@@ -29,7 +29,7 @@
 
   :source-paths ["src"]
 
-  :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
+  :clean-targets ^{:protect false} ["resources/public" "target"]
 
   :main alder-backend.core
 
@@ -43,13 +43,13 @@
                           :figwheel { :on-jsload "alder.core/on-js-reload" }
                           
                           :compiler {:main alder.core
-                                     :asset-path "js/compiled/out"
-                                     :output-to "resources/public/js/compiled/alder.js"
-                                     :output-dir "resources/public/js/compiled/out"
+                                     :asset-path "cljs_compiled/out"
+                                     :output-to "resources/public/cljs_compiled/alder.js"
+                                     :output-dir "resources/public/cljs_compiled/out"
                                      :source-map-timestamp true }}
                          {:id "min"
                           :source-paths ["src"]
-                          :compiler {:output-to "resources/public/js/compiled/alder.js"
+                          :compiler {:output-to "resources/public/cljs_compiled/alder.js"
                                      :main alder.core
                                      :optimizations :advanced
                                      :pretty-print false}}]}}
@@ -60,7 +60,7 @@
     :aot :all
     :cljsbuild {:builds [{:id "min"
                           :source-paths ["src"]
-                          :compiler {:output-to "resources/public/js/compiled/alder.js"
+                          :compiler {:output-to "resources/public/cljs_compiled/alder.js"
                                      :main alder.core
                                      :optimizations :advanced
                                      :pretty-print false}}]}}}

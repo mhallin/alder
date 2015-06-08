@@ -14,7 +14,7 @@
 
    [:body
     [:div#app "Loading Alder…"]
-    [:script {:src "js/wp_compiled/audio_all.js"
+    [:script {:src "js_compiled/audio_all.js"
               :type "text/javascript"}]
-    [:script {:src "js/compiled/alder.js"
+    [:script {:src "cljs_compiled/alder.js"
               :type "text/javascript"}]]))
