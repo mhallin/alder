@@ -10,7 +10,6 @@
             [alder-backend.views :as views]
 
             [clojure.string :as string]
-            [clojure.java.io :as io]
             
             [compojure.route :as route]
             [compojure.handler :as handler]
@@ -84,4 +83,7 @@
 
 (defn -main [& args]
   (db/migrate)
-  (reset! server (run-server app {:port 3449})))
+  (let [port (or (env :alder-port) 3449)
+        instance (run-server app {:port port})]
+    (info "Application started on port" port)
+    (reset! server instance)))

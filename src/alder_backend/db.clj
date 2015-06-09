@@ -1,5 +1,7 @@
 (ns alder-backend.db
-  (:require [ragtime.core :as rcore]
+  (:require [alder-backend.migration :as migration]
+
+            [ragtime.core :as rcore]
             [ragtime.sql.files :as rfiles]
 
             [clojure.java.jdbc :as jdbc]
@@ -7,8 +9,9 @@
             
             [environ.core :refer [env]]
             [yesql.core :refer [defqueries]]
-            [clojure.string :as string])
-
+            [clojure.string :as string]
+            [taoensso.timbre :as timbre :refer [debug]])
+  
   (:import org.postgresql.util.PGobject))
 
 (defqueries "alder_backend/sql/patch.sql")
@@ -42,7 +45,9 @@
        (string/join)))
 
 (defn migrate []
-  (rcore/migrate-all (rcore/connection database-url) (rfiles/migrations)))
+  (let [migrations (migration/migrations)]
+    (debug "Found migrations" (mapv :id migrations))
+    (rcore/migrate-all (rcore/connection database-url) migrations)))
 
 (defn create-patch! []
   (let [short-id (generate-short-id)]
