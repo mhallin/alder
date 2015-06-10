@@ -37,8 +37,8 @@
                     ((:constructor node-type) context))]
     (assign-default-node-inputs node)
     (when (.-start (:audio-node node))
-      (debug "starting audio node" (:audio-node node))
-      (.start (:audio-node node)))
+      (debug "starting audio node" (:audio-node node) (.-start (:audio-node node)))
+      (.start (:audio-node node) 0))
     node))
 
 (defn node-move-to [node position]
