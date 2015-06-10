@@ -24,7 +24,7 @@ MIDICCNode.prototype.device = function (device) {
 		}
 	}
 	else {
-		return device;
+		return this._device;
 	}
 };
 
