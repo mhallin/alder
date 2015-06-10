@@ -215,7 +215,25 @@
                        :name "device"
                        :default nil
                        :title "Device"
-                       :data-type :midi-device}}
+                       :data-type :midi-device}
+              :note-mode {:type :constant
+                          :name "noteMode"
+                          :default "retrig"
+                          :data-type "string"
+                          :title "Mode"
+                          :choices ["retrig" "legato"]}
+              :portamento {:type :constant
+                           :name "portamento"
+                           :default 0
+                           :data-type :number
+                           :range [0 5]
+                           :title "Portamento"}
+              :priority {:type :constant
+                         :name "priority"
+                         :default "last-on"
+                         :data-type "string"
+                         :title "Priority"
+                         :choices ["last-on" "highest" "lowest"]}}
              {:gate {:type :node
                      :index 0
                      :title "Gate"}

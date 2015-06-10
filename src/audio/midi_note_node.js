@@ -1,11 +1,21 @@
 'use strict';
 
+var kMIDINoteModeRetrig = 'retrig';
+var kMIDINoteModeLegato = 'legato';
+
+var kMIDIPriorityHighest = 'highest';
+var kMIDIPriorityLowest = 'lowest';
+var kMIDIPriorityLastOn = 'last-on';
+
 function MIDINoteNode(context) {
 	this.gate = null;
 	this.frequency = null;
 
 	this.context = context;
 	this._device = null;
+	this._noteStack = [];
+	this._lastNote = null;
+	this._lastVelocity = null;
 }
 
 MIDINoteNode.prototype.device = function (device) {
@@ -62,24 +72,76 @@ MIDINoteNode.prototype.onmidimessage = function (event) {
 };
 
 MIDINoteNode.prototype.dispatchNoteOn = function (note, velocity) {
+	this._lastVelocity = velocity;
+	this._noteStack.push(note);
+
 	if (this.frequency) {
+		var portamentoEndTime = this.context.currentTime;
+
+		if (this._noteStack.length > 1) {
+			portamentoEndTime += this.portamento;
+		}
+		
 		this.frequency.linearRampToValueAtTime(midiNoteToFrequency(note),
-											   this.context.currentTime);
+											   portamentoEndTime);
+		this._lastNote = note;
 	}
 
-	if (this.gate) {
+	if (this.gate && (this._noteStack.length === 1 ||
+					  this.noteMode == kMIDINoteModeRetrig)) {
 		this.gate.gate(velocity / 128);
 	}
 };
 
 MIDINoteNode.prototype.dispatchNoteOff = function (note) {
-	if (this.gate) {
+	var noteIndex = this._noteStack.indexOf(note);
+	this._noteStack.splice(noteIndex, 1);
+
+	if (this._noteStack.length) {
+		var nextNote = decideNextNote(this.priority, this._noteStack);
+
+		if (this.noteMode === kMIDINoteModeRetrig &&
+			nextNote != this._lastNote &&
+			this.gate) {
+
+			this.gate.gate(this._lastVelocity / 128);
+		}
+
+		if (this.frequency) {
+			var portamentoEndTime = this.context.currentTime + this.portamento;
+			this.frequency.linearRampToValueAtTime(midiNoteToFrequency(nextNote),
+												   portamentoEndTime);
+			this._lastNote = nextNote;
+		}
+	}
+	else if (this.gate) {
 		this.gate.gate(0);
 	}
 };
 
 function midiNoteToFrequency(note) {
 	return 440 * Math.pow(2, (note - 69) / 12);
+}
+
+function decideNextNote(priorityMode, activeNotes) {
+	if (priorityMode === kMIDIPriorityLastOn) {
+		return activeNotes[activeNotes.length - 1];
+	}
+
+	var highest = activeNotes[0];
+	var lowest = activeNotes[0];
+
+	for (var i = 0; i < activeNotes.length; ++i) {
+		if (activeNotes[i] > highest) {
+			highest = activeNotes[i];
+		}
+
+		if (activeNotes[i] < lowest) {
+			lowest = activeNotes[i];
+		}
+	}
+
+	return priorityMode === kMIDIPriorityHighest ? highest : lowest;
 }
 
 module.exports = MIDINoteNode;
