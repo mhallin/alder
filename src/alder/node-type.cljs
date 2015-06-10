@@ -243,7 +243,7 @@
              nil
              false
              "MIDI Note"
-             [110 40]
+             [110 80]
              #(js/MIDINoteNode. %)
              {:constructor "new MIDINoteNode(context)"
               :dependencies {"MIDINoteNode" ["audio/midi_note_node"
