@@ -1,5 +1,7 @@
 'use strict';
 
+var MIDIDispatch = require('./midi_dispatch');
+
 var kMIDINoteModeRetrig = 'retrig';
 var kMIDINoteModeLegato = 'legato';
 
@@ -21,15 +23,14 @@ function MIDINoteNode(context) {
 MIDINoteNode.prototype.device = function (device) {
 	if (device !== undefined) {
 		if (this._device) {
-			this._device.onmidimessage = null;
+			MIDIDispatch.removeMIDIEventListeners(device, this);
 			this._device = null;
 		}
 
 		this._device = device;
 
 		if (this._device) {
-			var self = this;
-			this._device.onmidimessage = function (e) { self.onmidimessage(e); };
+			MIDIDispatch.addMIDIEventListener(device, this, this.onmidimessage);
 		}
 	}
 };
