@@ -257,6 +257,32 @@
                                              (str (.-origin js/location)
                                                   "/js/audio/midi_note_node.js")]}}))
 
+(def midi-cc-node-type
+  (NodeType. {:device {:type :accessor
+                       :name "device"
+                       :default nil
+                       :title "Device"
+                       :data-type :midi-device}
+              :channel {:type :constant
+                        :name "channel"
+                        :default 0
+                        :data-type :number
+                        :range [0 127]
+                        :title "Channel"}}
+             {:value {:type :node
+                      :index 0
+                      :title "Value"
+                      :data-type :param}}
+             nil
+             false
+             "MIDI CC"
+             [100 40]
+             #(js/MIDICCNode. %)
+             {:constructor "new MIDICCNode(context)"
+              :dependencies {"MIDICCNode" ["audio/midi_cc_node"
+                                           (str (.-origin js/location)
+                                                "/js/audio/midi_cc_node.js")]}}))
+
 (def has-midi-support (midiapi/has-midi-access))
 
 (def all-node-types
@@ -271,7 +297,8 @@
                      :fft fft-analyser-node-type
                      :scope scope-analyser-node-type}
         midi-nodes (if has-midi-support
-                     {:midi-note midi-note-node-type}
+                     {:midi-note midi-note-node-type
+                      :midi-cc midi-cc-node-type}
                      {})]
     (merge basic-nodes midi-nodes)))
 
