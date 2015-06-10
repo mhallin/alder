@@ -2,7 +2,7 @@
   (:require [alder-backend.migration :as migration]
 
             [ragtime.core :as rcore]
-            [ragtime.sql.files :as rfiles]
+            [ragtime.sql.database :as rsql]
 
             [clojure.java.jdbc :as jdbc]
             [clojure.data.json :as json]
@@ -58,3 +58,6 @@
 
 (defn get-patch [short-id]
   (first (do-get-patch database-url short-id)))
+
+(defn -main []
+  (migrate))

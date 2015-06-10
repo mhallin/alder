@@ -1,8 +1,9 @@
 (ns alder-backend.views
   (:require [clojure.data.json :as json]
+            [clojure.java.io :as io]
+
             [environ.core :refer [env]]
-            [clojure.java.io :as io])
-  (:use [hiccup core page]))
+            [hiccup.page :refer [html5]]))
 
 (def cdn-root
   (or (env :cdn-root) ""))

@@ -1,29 +1,28 @@
 (ns alder-backend.core
-  (:use ring.util.response
-        ring.middleware.resource
-        ring.middleware.content-type
-        ring.middleware.not-modified
-
-        compojure.core)
-
   (:require [alder-backend.db :as db]
             [alder-backend.views :as views]
 
             [clojure.string :as string]
+            [clojure.core.async :refer [<! >! put! close! go-loop]]
             
-            [compojure.route :as route]
             [compojure.handler :as handler]
-            [compojure.response :as response]
+            [compojure.core :refer [GET defroutes]]
+
+            [ring.middleware.resource :refer [wrap-resource]]
+            [ring.middleware.content-type :refer [wrap-content-type]]
+            [ring.middleware.not-modified :refer [wrap-not-modified]]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
 
             [chord.http-kit :refer [with-channel]]
             [org.httpkit.server :refer [run-server]]
-            [clojure.core.async :refer [<! >! put! close! go-loop]]
             [environ.core :refer [env]]
-
             [taoensso.timbre :as timbre :refer [info]])
 
   (:gen-class))
 
+(def alder-site-defaults
+  (merge site-defaults
+         {:session false}))
 
 (defn wrap-logging [handler]
   (fn [request]
@@ -68,11 +67,8 @@
   (GET "/alder-api-ws" [] api-channel-handler))
 
 (def app
-  (-> (handler/site main-routes)
-      (wrap-logging)
-      (wrap-resource "public")
-      (wrap-content-type)
-      (wrap-not-modified)))
+  (-> (wrap-defaults main-routes alder-site-defaults)
+      (wrap-logging)))
 
 (defonce server (atom nil))
 
