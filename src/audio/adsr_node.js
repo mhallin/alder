@@ -12,6 +12,7 @@ function ADSRNode(context) {
 
 ADSRNode.prototype.connect = function (param) {
 	this.param = param;
+	this.param.setValueAtTime(0, this.context.currentTime);
 };
 
 ADSRNode.prototype.disconnect = function (param) {
