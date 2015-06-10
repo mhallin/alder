@@ -23,7 +23,7 @@ function MIDINoteNode(context) {
 MIDINoteNode.prototype.device = function (device) {
 	if (device !== undefined) {
 		if (this._device) {
-			MIDIDispatch.removeMIDIEventListeners(device, this);
+			MIDIDispatch.removeMIDIEventListener(device, this);
 			this._device = null;
 		}
 
@@ -32,6 +32,9 @@ MIDINoteNode.prototype.device = function (device) {
 		if (this._device) {
 			MIDIDispatch.addMIDIEventListener(device, this, this.onmidimessage);
 		}
+	}
+	else {
+		return device;
 	}
 };
 
