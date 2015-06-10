@@ -7,7 +7,9 @@
             [alder.node :as node]
             [alder.geometry :as geometry]
             [alder.audio.aapi :as aapi]
-            [alder.audio.midiapi :as midiapi]))
+            [alder.audio.midiapi :as midiapi])
+
+  (:require-macros [taoensso.timbre :refer [debug]]))
 
 (defn render-choice-input [input value on-change]
   [:select.node-inspector__input
@@ -18,15 +20,42 @@
                    val])
         (:choices input))])
 
+(defn number-input-component [value owner {:keys [min max on-change]}]
+  (letfn [(parse-float [v]
+            (when (.test #"^(\-|\+)?[0-9]+(\.[0-9]+)?$" v)
+              (js/parseFloat v)))
+
+          (input-did-change [e]
+            (let [new-value (-> e .-target .-value)]
+              (debug "Input did change" new-value)
+              (om/set-state! owner :value new-value)
+              (when-let [f (parse-float new-value)]
+                (on-change f))))]
+    (reify
+      om/IDisplayName
+      (display-name [_] "NumberInput")
+
+      om/IInitState
+      (init-state [_] {:value (str value)})
+
+      om/IRenderState
+      (render-state [_ state]
+        (debug "Rendering with value" (:value state))
+        (html
+         [:input.node-inspector__input
+          {:type "number"
+           :step "any"
+           :value (:value state)
+           :min min
+           :max max
+           :on-change input-did-change}])))))
+
 (defn render-number-input [input value on-change]
   (let [[min max] (:range input)]
-    [:input.node-inspector__input
-     {:type :number
-      :step :any
-      :value value
-      :min min
-      :max max
-      :on-change #(on-change (-> % .-target .-value js/parseFloat))}]))
+    (om/build number-input-component value
+              {:opts {:min min
+                      :max max
+                      :on-change on-change}})))
 
 (defn render-string-input [input value on-change]
   [:input.node-inspector__input
