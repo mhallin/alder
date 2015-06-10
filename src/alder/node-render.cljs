@@ -290,7 +290,7 @@
                 :on-mouse-down #(on-mouse-down node-id %)}
                title
                [:div.graph-canvas__node-inspector-toggle
-                {:class (if (:inspector-visible node) "--open" "--closed")
+                {:class (if (:inspector-visible node) "m-open" "m-closed")
                  :on-click #(om/transact! node :inspector-visible (fn [x] (not x)))}]
                (render-slot-list node-id node on-slot-mouse-down)])))))
 
