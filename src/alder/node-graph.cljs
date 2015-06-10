@@ -42,10 +42,17 @@
         :null-node nil))))
 
 (defn connect-nodes [node-graph from to]
-  (debug "connect nodes" from to)
-  (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2 %3))
-  (update-in node-graph [:connections]
-               (fn [conns] (conj conns [from to]))))
+  (let [[from-node-id from-slot-id] from
+        [to-node-id to-slot-id] to
+        from-node (-> node-graph :nodes from-node-id)
+        to-node (-> node-graph :nodes to-node-id)]
+    (if (node/can-connect [from-node from-slot-id] [to-node to-slot-id])
+      (do
+        (debug "connect nodes" from to)
+        (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2 %3))
+        (update-in node-graph [:connections]
+                   (fn [conns] (conj conns [from to]))))
+      node-graph)))
 
 (defn disconnect-nodes [node-graph from to]
   (debug "disconnect nodes" from to)

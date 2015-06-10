@@ -35,7 +35,8 @@
                          :choices ["sine" "square" "sawtooth" "triangle"]}}
              {:signal {:type :node
                        :index 0
-                       :title "Signal"}}
+                       :title "Signal"
+                       :data-type :signal}}
              nil
              false
              "Osc"
@@ -54,7 +55,8 @@
                           :title "Signal"}}
              {:signal-out {:type :node
                            :index 0
-                           :title "Signal"}}
+                           :title "Signal"
+                           :data-type :signal}}
              nil
              false
              "Gain"
@@ -88,7 +90,8 @@
                         :data-type :number}}
              {:envelope {:type :node
                          :index 0
-                         :title "Envelope"}}
+                         :title "Envelope"
+                         :data-type :param}}
              nil
              false
              "ADSR"
@@ -186,7 +189,8 @@
                                "allpass"]}}
              {:signal-out {:type :node
                            :index 0
-                           :title "Signal out"}}
+                           :title "Signal out"
+                           :data-type :signal}}
              nil
              false
              "LO Filter"
@@ -202,7 +206,8 @@
                       :data-type :number}}
              {:signal {:type :node
                        :index 0
-                       :title "Signal out"}}
+                       :title "Signal out"
+                       :data-type :signal}}
              nil
              false
              "Const"
@@ -219,7 +224,7 @@
               :note-mode {:type :constant
                           :name "noteMode"
                           :default "retrig"
-                          :data-type "string"
+                          :data-type :string
                           :title "Mode"
                           :choices ["retrig" "legato"]}
               :portamento {:type :constant
@@ -231,15 +236,17 @@
               :priority {:type :constant
                          :name "priority"
                          :default "last-on"
-                         :data-type "string"
+                         :data-type :string
                          :title "Priority"
                          :choices ["last-on" "highest" "lowest"]}}
              {:gate {:type :node
                      :index 0
-                     :title "Gate"}
+                     :title "Gate"
+                     :data-type :gate}
               :frequency {:type :node
                           :index 1
-                          :title "Frequency"}}
+                          :title "Frequency"
+                          :data-type :param}}
              nil
              false
              "MIDI Note"

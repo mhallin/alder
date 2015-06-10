@@ -264,18 +264,27 @@
                  (-> node node/node-type :extra-data :inspector-fields))]))))))
 
 
-(defn- render-slot-list [node-id node on-mouse-down]
+(defn- render-slot [node-id node slot-id slot slot-frame slot-drag-data on-mouse-down]
+  (html
+   [:div.graph-canvas__node-slot
+    {:style (geometry/rectangle->css slot-frame)
+     :class (if slot-drag-data
+              [(if (node/can-connect slot-drag-data [node slot-id])
+                 "m-connectable"
+                 "m-not-connectable")]
+              [])
+     :title (:title slot)
+     :on-mouse-down #(on-mouse-down node-id slot-id %)}]))
+
+(defn- render-slot-list [node-id node slot-drag-data on-mouse-down]
   (let [slot-frames (node/node-slot-frames node)]
     (map (fn [[slot-id [slot slot-frame]]]
-           [:div.graph-canvas__node-slot
-            {:style (geometry/rectangle->css slot-frame)
-             :title (:title slot)
-             :on-mouse-down #(on-mouse-down node-id slot-id %)}])
+           (render-slot node-id node slot-id slot slot-frame slot-drag-data on-mouse-down))
          slot-frames)))
 
 
-(defn node-component [[node-id node] owner {:keys [on-mouse-down
-                                                   on-slot-mouse-down] :as opts}]
+(defn node-component [[node-id node slot-drag-data] owner
+                      {:keys [on-mouse-down on-slot-mouse-down] :as opts}]
   (reify
     om/IDisplayName
     (display-name [_] "Node")
@@ -292,7 +301,7 @@
                [:div.graph-canvas__node-inspector-toggle
                 {:class (if (:inspector-visible node) "m-open" "m-closed")
                  :on-click #(om/transact! node :inspector-visible (fn [x] (not x)))}]
-               (render-slot-list node-id node on-slot-mouse-down)])))))
+               (render-slot-list node-id node slot-drag-data on-slot-mouse-down)])))))
 
 
 (defn prototype-node-component [[node-type-id node-type] owner {:keys [on-mouse-down]}]

@@ -180,6 +180,11 @@
                         to-coord
                         nil)))))
 
+(defn- current-dragging-slot [state]
+  (when-let [[node-id slot-id] (:slot-path (:dragging state))]
+    (let [node (-> state :node-graph :nodes node-id)]
+      [node slot-id])))
+
 (defn graph-canvas-view [data owner]
   (reify
     om/IDisplayName
@@ -189,11 +194,13 @@
     (render [_]
       (html
        [:div.graph-canvas
-        (om/build-all node-render/node-component
-                      (:nodes (:node-graph data))
-                      {:opts {:on-mouse-down node-start-drag
+        (map (fn [[id n]]
+               (om/build node-render/node-component
+                         [id n (current-dragging-slot data)]
+                         {:opts {:on-mouse-down node-start-drag
                               :on-slot-mouse-down slot-start-drag}
-                       :key 0})
+                          :react-key id}))
+             (:nodes (:node-graph data)))
         (map (fn [[node-id node]]
                (om/build node-render/inspector-component
                          [(:node-graph data)

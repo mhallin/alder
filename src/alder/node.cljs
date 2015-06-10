@@ -27,7 +27,6 @@
          :constant (aset audio-node input-name default-value)
          nil)))))
 
-
 (defn make-node [context position node-type-id]
   (let [node-type (node-type/get-node-type node-type-id)
         [width height] (:default-size node-type)
@@ -122,3 +121,22 @@
       :gate (.call (aget audio-node input-name) audio-node value)
       :accessor (.call (aget audio-node input-name) audio-node value)
       nil)))
+
+(defn can-connect [[from-node from-slot-id] [to-node to-slot-id]]
+  (let [from-output (-> from-node node-type :outputs from-slot-id)
+        from-input (-> from-node node-type :inputs from-slot-id)
+        to-output (-> to-node node-type :outputs to-slot-id)
+        to-input (-> to-node node-type :inputs to-slot-id)]
+    (when (or (and from-output (nil? to-output)) (and from-input (nil? to-input)))
+      (let [input (or from-input to-input)
+            output (or from-output to-output)]
+        (or (and (= (:type input) :node)
+                 (= (:data-type output) :signal))
+            (and (= (:type input) :param)
+                 (= (:data-type output) :signal))
+            (= (:type input) :null-node)
+            (= (:type output) :null-node)
+            (and (= (:data-type output) :param)
+                 (= (:type input) :param))
+            (and (= (:data-type output) :gate)
+                 (= (:type input) :gate)))))))
