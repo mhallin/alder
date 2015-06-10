@@ -174,16 +174,16 @@
     (aapi/set-fft-size! analyser-node fft-size)
     (let [width 160
           height 160
-          data-array (js/Float32Array. fft-size)]
+          data-array (js/Uint8Array. fft-size)]
       (letfn [(update-waveform-data []
-                (aapi/get-float-time-domain-data analyser-node data-array)
+                (aapi/get-byte-time-domain-data analyser-node data-array)
                 (let [steps (.-length data-array)
                       step-width (/ width steps)
                       line-segments (map (fn [i]
                                            (let [v (aget data-array i)
                                                  x (* i step-width)
                                                  y (+ (/ height 2)
-                                                      (* (- v) (/ height 2)))]
+                                                      (* (- 1 (/ v 128)) (/ height 2)))]
                                              (str (if (zero? i) "M" "L")
                                                   x "," y " ")))
                                          (range steps))

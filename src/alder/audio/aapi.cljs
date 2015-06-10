@@ -27,3 +27,6 @@
 
 (defn get-float-time-domain-data [analyser-node data-array]
   (.call (aget analyser-node "getFloatTimeDomainData") analyser-node data-array))
+
+(defn get-byte-time-domain-data [analyser-node data-array]
+  (.call (aget analyser-node "getByteTimeDomainData") analyser-node data-array))
