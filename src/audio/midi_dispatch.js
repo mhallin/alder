@@ -27,8 +27,8 @@ MIDIDispatch.prototype.removeMIDIEventListener = function (device, token) {
 	this._registerDevice(device);
 
 	var listenerArray = this._eventListeners[device.id];
-	
-	for (var i = 0; i < listenerArray; ++i) {
+
+	for (var i = 0; i < listenerArray.length; ++i) {
 		if (listenerArray[i][0] === token) {
 			listenerArray.splice(i, 1);
 			break;

@@ -6,5 +6,15 @@
 (defn request-midi-access []
   (.call (aget js/navigator "requestMIDIAccess") js/navigator))
 
-(defn set-on-midi-message! [device event-handler]
-  (aset device "onmidimessage" event-handler))
+(defn add-midi-event-listener [device token callback]
+  (.call (aget js/MIDIDispatch "addMIDIEventListener")
+         js/MIDIDispatch
+         device
+         token
+         callback))
+
+(defn remove-midi-event-listener [device token]
+  (.call (aget js/MIDIDispatch "removeMIDIEventListener")
+         js/MIDIDispatch
+         device
+         token))

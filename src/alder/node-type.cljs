@@ -273,7 +273,7 @@
                       :index 0
                       :title "Value"
                       :data-type :param}}
-             nil
+             {:inspector-fields [:midi-cc-learn]}
              false
              "MIDI CC"
              [100 40]

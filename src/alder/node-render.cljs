@@ -220,10 +220,57 @@
                 [:path.node-inspector__waveform-line
                  {:d line-data}]]))))))))
 
+(defn midi-cc-learn-component [node owner]
+  (let [listen-token (.create js/Object #js {})]
+    (letfn [(stop-learn []
+              (midiapi/remove-midi-event-listener (.device (:audio-node node))
+                                                  listen-token)
+              (om/set-state! owner :is-learning false))
+
+            (on-midi-message [e]
+              (let [data (.-data e)]
+                (when (and (= (.-length data) 3)
+                           (= (bit-and 0xf0 (aget data 0)) 0xb0))
+                  (let [channel (bit-and 0x7f (aget data 1))]
+                    (node/set-input-value node
+                                          (:channel (:inputs (node/node-type node)))
+                                          channel)
+                    (stop-learn)))))
+
+            (start-learn []
+              (midiapi/add-midi-event-listener (.device (:audio-node node))
+                                               listen-token
+                                               on-midi-message)
+              (om/set-state! owner :is-learning true))]
+      (reify
+        om/IDisplayName
+        (display-name [_] "MIDICCLearn")
+
+        om/IInitState
+        (init-state [_]
+          {:is-learning false})
+
+        om/IWillUnmount
+        (will-unmount [_]
+          (when (:is-learning (om/get-state owner))
+            (stop-learn)))
+
+        om/IRenderState
+        (render-state [this state]
+          (let [is-learning (:is-learning state)]
+            (html
+             [:div.node-inspector__input-container
+              [:span.node-inspector__input-title
+               "Learn"]
+              [:button.node-inspector__input
+               {:on-click (if is-learning stop-learn start-learn)}
+               (if is-learning "Stop" "Start")]])))))))
+
 (defn render-inspector-field [node field-type]
   (case field-type
     :fft (om/build fft-component (:audio-node node))
-    :waveform (om/build waveform-component (:audio-node node))))
+    :waveform (om/build waveform-component (:audio-node node))
+    :midi-cc-learn (om/build midi-cc-learn-component node)))
 
 (defn inspector-component [[node-graph node-id node] owner]
   (let [node-origin (-> node :frame geometry/rectangle-origin)
@@ -243,8 +290,8 @@
                [:span.node-inspector__input-title
                 (or (:inspector-title input) (:title input))]
                (render-input input
-                                 (node/current-input-value node input)
-                                 #(set-input-value node input %))])]
+                             (node/current-input-value node input)
+                             #(set-input-value node input %))])]
       (reify
         om/IDisplayName
         (display-name [_] "NodeInspector")
@@ -281,7 +328,6 @@
     (map (fn [[slot-id [slot slot-frame]]]
            (render-slot node-id node slot-id slot slot-frame slot-drag-data on-mouse-down))
          slot-frames)))
-
 
 (defn node-component [[node-id node slot-drag-data] owner
                       {:keys [on-mouse-down on-slot-mouse-down] :as opts}]
