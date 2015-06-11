@@ -16,16 +16,22 @@
 (defn node-type-outputs [node]
   (-> node node-type :outputs))
 
+(defn set-input-value [node input value]
+  (let [audio-node (:audio-node node)
+        input-name (:name input)]
+    (case (:type input)
+      :param (set! (.-value (aget audio-node input-name)) value)
+      :constant (aset audio-node input-name value)
+      :gate (.call (aget audio-node input-name) audio-node value)
+      :accessor (.call (aget audio-node input-name) audio-node value)
+      nil)
+    (assoc-in node [:input-values input-name] value)))
+
 (defn- assign-default-node-inputs [node]
-  (let [audio-node (:audio-node node)]
-   (doseq [[_ input] (-> node node-type :inputs)]
-     (let [input-name (:name input)
-           input-type (:type input)
-           default-value (:default input)]
-       (case input-type
-         :param (set! (.-value (aget audio-node input-name)) default-value)
-         :constant (aset audio-node input-name default-value)
-         nil)))))
+  (reduce (fn [node [_ input]]
+            (set-input-value node input (:default input)))
+          node
+          (-> node node-type :inputs)))
 
 (defn make-node [context position node-type-id]
   (let [node-type (node-type/get-node-type node-type-id)
@@ -33,8 +39,8 @@
         [x y] position
         node (Node. (geometry/Rectangle. x y width height)
                     node-type-id
-                    ((:constructor node-type) context))]
-    (assign-default-node-inputs node)
+                    ((:constructor node-type) context))
+        node (assign-default-node-inputs node)]
     (when (.-start (:audio-node node))
       (debug "starting audio node" (:audio-node node) (.-start (:audio-node node)))
       (.start (:audio-node node) 0))
@@ -109,17 +115,6 @@
       :param (.-value (aget audio-node input-name))
       :constant (aget audio-node input-name)
       :accessor (.call (aget audio-node input-name) audio-node)
-      nil)))
-
-
-(defn set-input-value [node input value]
-  (let [audio-node (:audio-node node)
-        input-name (:name input)]
-    (case (:type input)
-      :param (set! (.-value (aget audio-node input-name)) value)
-      :constant (aset audio-node input-name value)
-      :gate (.call (aget audio-node input-name) audio-node value)
-      :accessor (.call (aget audio-node input-name) audio-node value)
       nil)))
 
 (defn can-connect [[from-node from-slot-id] [to-node to-slot-id]]

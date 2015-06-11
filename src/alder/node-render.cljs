@@ -27,7 +27,6 @@
 
           (input-did-change [e]
             (let [new-value (-> e .-target .-value)]
-              (debug "Input did change" new-value)
               (om/set-state! owner :value new-value)
               (when-let [f (parse-float new-value)]
                 (on-change f))))]
@@ -36,11 +35,18 @@
       (display-name [_] "NumberInput")
 
       om/IInitState
-      (init-state [_] {:value (str value)})
+      (init-state [_] {:value (str value)
+                       :init-value value})
+
+      om/IWillReceiveProps
+      (will-receive-props [_ next-value]
+        (let [init-value (:init-value (om/get-state owner))]
+          (when (not= init-value next-value)
+            (om/set-state! owner {:value (str next-value)
+                                  :init-value value}))))
 
       om/IRenderState
       (render-state [_ state]
-        (debug "Rendering with value" (:value state))
         (html
          [:input.node-inspector__input
           {:type "number"
@@ -231,10 +237,10 @@
               (let [data (.-data e)]
                 (when (and (= (.-length data) 3)
                            (= (bit-and 0xf0 (aget data 0)) 0xb0))
-                  (let [channel (bit-and 0x7f (aget data 1))]
-                    (node/set-input-value node
-                                          (:channel (:inputs (node/node-type node)))
-                                          channel)
+                  (let [channel (bit-and 0x7f (aget data 1))
+                        channel-input (:channel (:inputs (node/node-type node)))]
+                    (om/update! node
+                                (node/set-input-value node channel-input channel))
                     (stop-learn)))))
 
             (start-learn []
@@ -282,8 +288,8 @@
                                               (- node-height 4)])
         [inspector-x inspector-y] inspector-origin]
     (letfn [(set-input-value [node input value]
-              (node/set-input-value node input value)
-              (om/refresh! owner))
+              (om/update! node
+                          (node/set-input-value node input value)))
 
             (render-input-container [input]
               [:div.node-inspector__input-container
