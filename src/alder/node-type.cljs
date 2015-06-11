@@ -220,7 +220,8 @@
                        :name "device"
                        :default nil
                        :title "Device"
-                       :data-type :midi-device}
+                       :data-type :midi-device
+                       :serializable false}
               :note-mode {:type :constant
                           :name "noteMode"
                           :default "retrig"
@@ -262,7 +263,8 @@
                        :name "device"
                        :default nil
                        :title "Device"
-                       :data-type :midi-device}
+                       :data-type :midi-device
+                       :serializable false}
               :channel {:type :constant
                         :name "channel"
                         :default 0

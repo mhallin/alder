@@ -15,7 +15,7 @@
         patch-id (:short-id (:current-page-args new-state))]
     (when (and (not @ignore-state-changes)
                (not= @last-persisted-graph node-graph))
-      (info "Saving" patch-id "as" node-graph)
+      (info "Saving" patch-id)
       (let [chan (->> node-graph
                       (node-graph-serialize/serialize-graph)
                       (.stringify js/JSON)

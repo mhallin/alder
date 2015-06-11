@@ -8,6 +8,7 @@
 
 (defn- input-needs-serialization? [node-graph node-id [input-id input]]
   (and (not= (:type input) :node)
+       (if (nil? (:serializable input)) true (:serializable input))
        (not-any? (fn [[[_ _] [_ id]]] (= input-id id))
                  (node-graph/nodes-in-to node-graph node-id))))
 
