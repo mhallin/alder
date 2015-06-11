@@ -58,7 +58,7 @@
         node-graph (reduce (fn [graph n] (materialize-node context graph n))
                            node-graph
                            nodes)
-        node-graph (reduce (fn [graph c] (materialize-connection graph c))
+        node-graph (reduce materialize-connection
                            node-graph
                            connections)]
     node-graph))

@@ -80,7 +80,7 @@
                                (node-graph/node-move-to graph node-id [x y])))))))))
 
 (defn node-start-drag [node-id event]
-  (when (= (.-button event) 0)
+  (when (zero? (.-button event))
     (.stopPropagation event)
     (persist/set-ignore-state-changes! true)
     (let [mouse-x (.-clientX event)
@@ -95,7 +95,7 @@
 
 (defn slot-start-drag
   ([node-id slot-id offset-source event]
-     (when (= (.-button event) 0)
+     (when (zero? (.-button event))
        (.stopPropagation event)
        (let [mouse-x (.-clientX event)
              mouse-y (.-clientY event)
@@ -149,7 +149,7 @@
   (reify
     om/IDisplayName
     (display-name [_] "Connection")
-    
+
     om/IRender
     (render [_]
       (let [[_ from-slot-frame] (-> from-node
@@ -172,7 +172,7 @@
   (reify
     om/IDisplayName
     (display-name [_] "TemporaryConnectio")
-    
+
     om/IRender
     (render [_]
       (html
@@ -189,7 +189,7 @@
   (reify
     om/IDisplayName
     (display-name [_] "GraphCanvas")
-    
+
     om/IRender
     (render [_]
       (html
@@ -229,7 +229,7 @@
              (om/build temporary-connection-view [slot-center current-pos])))]]))))
 
 (defn- prototype-node-start-drag [node-type-id event]
-  (when (= (.-button event) 0)
+  (when (zero? (.-button event))
     (let [node-id (node-graph/next-node-id (:node-graph @app-state))]
       (swap! app-state
              (fn [state]
@@ -273,7 +273,7 @@
       om/IWillUnmount
       (will-unmount [_]
         (.removeEventListener js/window "resize" handle-resize))
-      
+
       om/IRender
       (render [_]
         (html [:div.palette
@@ -292,7 +292,7 @@
   (reify
     om/IDisplayName
     (display-name [_] "Editor")
-    
+
     om/IRender
     (render [_]
       (html [:div.alder-root
@@ -369,4 +369,4 @@
   ;; optionally touch your app-state to force rerendering depending on
   ;; your application
   ;; (swap! app-state update-in [:__figwheel_counter] inc)
-) 
+)

@@ -50,18 +50,18 @@
 
         inputs (-> node node-type :inputs)
         input-count (count inputs)
-        input-y-spacing (/ height (+ input-count 1))
+        input-y-spacing (/ height (inc input-count))
         input-x (- (/ slot-width 2))
 
         outputs (-> node node-type :outputs)
         output-count (count outputs)
-        output-y-spacing (/ height (+ output-count 1))
+        output-y-spacing (/ height (inc output-count))
         output-x (- width (/ slot-width 2))]
     (letfn [(make-frame-list [x y-spacing i [id slot]]
               [id
                [slot
                 (geometry/Rectangle. x
-                                     (- (* y-spacing (+ i 1))
+                                     (- (* y-spacing (inc i))
                                         (/ slot-height 2))
                                      slot-width
                                      slot-height)]])]

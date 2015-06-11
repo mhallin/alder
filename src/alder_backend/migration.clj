@@ -13,9 +13,9 @@
 
 (def migration-dir "alder_backend/migrations")
 
-(defn- wrap-sql-migration [name direction migration-fn]
+(defn- wrap-sql-migration [migration-name direction migration-fn]
   (fn [db-spec]
-    (debug "Executing migration" name direction)
+    (debug "Executing migration" migration-name direction)
     (jdbc/with-db-connection [db db-spec]
       (jdbc/with-db-transaction [txn db]
         (migration-fn txn)))))
@@ -34,7 +34,7 @@
      :down (wrap-sql-migration name :down #(down m %))}))
 
 (defn- running-in-jar? []
-  (.startsWith (.toString (io/resource migration-dir)) "jar:"))
+  (.startsWith (str (io/resource migration-dir)) "jar:"))
 
 (defn- migrations-in-jar []
   (let [this-jar (-> *ns*

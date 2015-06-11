@@ -248,7 +248,7 @@
       (reify
         om/IDisplayName
         (display-name [_] "NodeInspector")
-        
+
         om/IRender
         (render [_]
           (html
@@ -288,7 +288,7 @@
   (reify
     om/IDisplayName
     (display-name [_] "Node")
-    
+
     om/IRender
     (render [_]
       (let [frame (:frame node)
@@ -308,7 +308,7 @@
   (reify
     om/IDisplayName
     (display-name [_] "PrototypeNode")
-    
+
     om/IRender
     (render [_]
       (let [title (:default-title node-type)
@@ -318,4 +318,3 @@
                         :height (str height "px")}
                 :on-mouse-down #(on-mouse-down node-type-id %)}
                title])))))
-

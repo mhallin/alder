@@ -6,12 +6,12 @@
 
             [clojure.java.jdbc :as jdbc]
             [clojure.data.json :as json]
-            
+
             [environ.core :refer [env]]
             [yesql.core :refer [defqueries]]
             [clojure.string :as string]
             [taoensso.timbre :as timbre :refer [debug]])
-  
+
   (:import org.postgresql.util.PGobject))
 
 (defqueries "alder_backend/sql/patch.sql")

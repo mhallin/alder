@@ -10,7 +10,7 @@
                  [secretary "1.2.3"]
 
                  [ring/ring-core "1.3.2"]
-                 [ring/ring-defaults "0.1.2"]
+                 [ring/ring-defaults "0.1.5"]
                  [javax.servlet/servlet-api "2.5"]
                  [compojure "1.3.4"]
                  [ragtime/ragtime.sql "0.3.9"]
@@ -41,9 +41,9 @@
   {:dev
    {:cljsbuild {:builds [{:id "dev"
                           :source-paths ["src"]
-                          
+
                           :figwheel { :on-jsload "alder.core/on-js-reload" }
-                          
+
                           :compiler {:main alder.core
                                      :asset-path "cljs_compiled/out"
                                      :output-to "resources/public/cljs_compiled/alder.js"
@@ -55,15 +55,15 @@
                                      :main alder.core
                                      :optimizations :advanced
                                      :pretty-print false}}]}}
-   
+
    :uberjar
    {:env {:production true}
     :omit-source :true
     :aot :all
     :cljsbuild {:builds []}}}
-  
+
   :figwheel {
-             ;; :http-server-root "public" ;; default and assumes "resources" 
+             ;; :http-server-root "public" ;; default and assumes "resources"
              ;; :server-port 3449 ;; default
              :css-dirs ["resources/public/css_compiled"] ;; watch and update CSS
 
@@ -89,5 +89,5 @@
              ;; :repl false
 
              ;; to configure a different figwheel logfile path
-             ;; :server-logfile "tmp/logs/figwheel-logfile.log" 
+             ;; :server-logfile "tmp/logs/figwheel-logfile.log"
              })

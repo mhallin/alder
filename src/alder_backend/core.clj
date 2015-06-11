@@ -4,7 +4,7 @@
 
             [clojure.string :as string]
             [clojure.core.async :refer [<! >! put! close! go-loop]]
-            
+
             [compojure.handler :as handler]
             [compojure.core :refer [GET defroutes]]
 
@@ -67,8 +67,8 @@
   (GET "/alder-api-ws" [] api-channel-handler))
 
 (def app
-  (-> (wrap-defaults main-routes alder-site-defaults)
-      (wrap-logging)))
+  (wrap-logging (wrap-defaults main-routes
+                               alder-site-defaults)))
 
 (defonce server (atom nil))
 
