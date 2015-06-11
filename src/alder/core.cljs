@@ -85,8 +85,8 @@
     (persist/set-ignore-state-changes! true)
     (let [mouse-x (.-clientX event)
           mouse-y (.-clientY event)
-          elem-x (.-offsetLeft (.-currentTarget event))
-          elem-y (.-offsetTop (.-currentTarget event))]
+          elem-x (.-left (.getBoundingClientRect (.-currentTarget event)))
+          elem-y (.-top (.getBoundingClientRect (.-currentTarget event)))]
       (swap! app-state #(update-in % [:dragging]
                                    (fn [_] {:node-id node-id
                                             :offset [(- mouse-x elem-x)
@@ -287,13 +287,14 @@
       om/IRender
       (render [_]
         (html [:div.palette
-               (map render-palette-group node-type/all-node-groups)
-               [:div.palette__trash-area
-                {:ref "trash-area"}]
-               [:a.palette__show-export-window
-                {:on-click show-export-window
-                 :href "#"}
-                "Export"]])))))
+               [:div.palette__inner
+                (map render-palette-group node-type/all-node-groups)
+                [:div.palette__trash-area
+                 {:ref "trash-area"}]
+                [:a.palette__show-export-window
+                 {:on-click show-export-window
+                  :href "#"}
+                 "Export"]]])))))
 
 (defn editor-component [data owner]
   (reify

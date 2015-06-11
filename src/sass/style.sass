@@ -4,17 +4,18 @@
 
 body
   display: flex
-  min-height: 100vh
+  height: 100vh
   flex-direction: column
+  overflow: hidden
 
 *, *:after, *:before
   box-sizing: border-box
 
-  
+
 #app
   display: flex
   flex: 1
-  
+
 .modal-underlay
   display: flex
   align-items: center
@@ -44,24 +45,30 @@ body
   display: flex
   flex-direction: row
 
-  
 .graph-canvas
   display: flex
-  flex-grow: 1
+  width: calc(100% - 260px)
   margin-right: 16px
   z-index: 2
   position: relative
   cursor: default
+  overflow: scroll
 
-  
 .palette
   width: 260px
-  padding: 16px 4px 16px 16px
   z-index: 1
   background-color: #fcfcfc
   border-left: 1px solid #dfdfdf
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2)
-  
+  position: fixed
+  right: 0
+  top: 0
+
+.palette__inner
+  padding: 16px 4px 16px 16px
+  height: 100vh
+  overflow: scroll
+
 .palette__node-group-title
   @extend .__no_user_select
 
@@ -182,7 +189,7 @@ body
 
   &.m-not-connectable
     border-color: #f3f3f3
-  
+
 
 .graph-canvas__node-inspector-toggle
   position: absolute
@@ -207,7 +214,7 @@ body
   margin-bottom: 16px
   margin-right: 16px
   display: inline-block
- 
+
 .state-debug
   position: absolute
   left: 8px
