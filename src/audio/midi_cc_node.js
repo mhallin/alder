@@ -13,7 +13,7 @@ function MIDICCNode(context) {
 MIDICCNode.prototype.device = function (device) {
 	if (device !== undefined) {
 		if (this._device) {
-			MIDIDispatch.removeMIDIEventListener(device, this);
+			MIDIDispatch.removeMIDIEventListener(this._device, this);
 			this._device = null;
 		}
 

@@ -7,11 +7,11 @@ function MIDIDispatch() {
 }
 
 MIDIDispatch.prototype._registerDevice = function (device) {
-	if (this._devices.indexOf(device) !== -1) {
+	if (this._devices.indexOf(device.id) !== -1) {
 		return;
 	}
 
-	this._devices.push(device);
+	this._devices.push(device.id);
 	this._eventListeners[device.id] = [];
 
 	var self = this;
