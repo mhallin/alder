@@ -312,7 +312,7 @@
         envelopes [[:adsr adsr-node-type]]
         midi-nodes [[:midi-note midi-note-node-type]
                     [:midi-cc midi-cc-node-type]]
-        analysers [[:oscillator oscillator-node-type]
+        analysers [[:scope scope-analyser-node-type]
                    [:fft fft-analyser-node-type]]
         interfaces [[:input input-node-type]
                     [:output output-node-type]

@@ -9,12 +9,14 @@
               [alder.node-type :as node-type]
               [alder.node-graph :as node-graph]
               [alder.node-graph-serialize :as node-graph-serialize]
-              [alder.node-render :as node-render]
               [alder.export-render :as export-render]
               [alder.geometry :as geometry]
               [alder.routes :as routes]
               [alder.comm :as comm]
-              [alder.persist :as persist])
+              [alder.persist :as persist]
+              [alder.views.inspector :refer [inspector-component]]
+              [alder.views.node :refer [node-component]]
+              [alder.views.prototype-node :refer [prototype-node-component]])
 
     (:require-macros [cljs.core.async.macros :refer [go]]
                      [taoensso.timbre :refer [info debug]]))
@@ -198,7 +200,7 @@
       (html
        [:div.graph-canvas
         (map (fn [[id n]]
-               (om/build node-render/node-component
+               (om/build node-component
                          [id n (current-dragging-slot data) (:selection data)]
                          {:opts {:on-mouse-down (fn [node-id e]
                                                   (update-selection node-id)
@@ -207,7 +209,7 @@
                           :react-key id}))
              (:nodes (:node-graph data)))
         (map (fn [[node-id node]]
-               (om/build node-render/inspector-component
+               (om/build inspector-component
                          [(:node-graph data)
                           node-id node]
                          {:react-key (name node-id)}))
@@ -261,7 +263,7 @@
              [:div.palette__node-group
               [:h3.palette__node-group-title
                title]
-              (om/build-all node-render/prototype-node-component
+              (om/build-all prototype-node-component
                             node-types
                             {:opts {:on-mouse-down prototype-node-start-drag}
                              :key :default-title})]))]
