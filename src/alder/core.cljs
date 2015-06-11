@@ -260,7 +260,17 @@
               (swap! app-state #(assoc-in % [:trash-area-rectangle] rectangle))))
 
           (handle-resize [_]
-            (update-trash-area-rectangle))]
+            (update-trash-area-rectangle))
+
+          (render-palette-group [{:keys [title node-types]}]
+            (html
+             [:div.palette__node-group
+              [:h3.palette__node-group-title
+               title]
+              (om/build-all node-render/prototype-node-component
+                            node-types
+                            {:opts {:on-mouse-down prototype-node-start-drag}
+                             :key :default-title})]))]
     (reify
       om/IDisplayName
       (display-name [_] "Palette")
@@ -277,10 +287,7 @@
       om/IRender
       (render [_]
         (html [:div.palette
-               (om/build-all node-render/prototype-node-component
-                             node-type/all-node-types
-                             {:opts {:on-mouse-down prototype-node-start-drag}
-                              :key :default-title})
+               (map render-palette-group node-type/all-node-groups)
                [:div.palette__trash-area
                 {:ref "trash-area"}]
                [:a.palette__show-export-window

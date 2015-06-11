@@ -304,5 +304,27 @@
                      {})]
     (merge basic-nodes midi-nodes)))
 
+(def all-node-groups
+  (let [generators [[:oscillator oscillator-node-type]
+                    [:const-source const-source-node-type]]
+        filters [[:biquad-filter biquad-filter-node-type]
+                 [:gain gain-node-type]]
+        envelopes [[:adsr adsr-node-type]]
+        midi-nodes [[:midi-note midi-note-node-type]
+                    [:midi-cc midi-cc-node-type]]
+        analysers [[:oscillator oscillator-node-type]
+                   [:fft fft-analyser-node-type]]
+        interfaces [[:input input-node-type]
+                    [:output output-node-type]
+                    [:audio-destination audio-destination-node-type]]]
+    (concat [{:title "Generators" :node-types generators}
+             {:title "Filters" :node-types filters}
+             {:title "Envelopes" :node-types envelopes}]
+            (if has-midi-support
+              [{:title "MIDI" :node-types midi-nodes}]
+              [])
+            [{:title "Analysers" :node-types analysers}]
+            [{:title "Interfaces" :node-types interfaces}])))
+
 (defn get-node-type [node-type-id]
   (all-node-types node-type-id))

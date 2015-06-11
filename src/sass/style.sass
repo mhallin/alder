@@ -4,7 +4,7 @@
 
 body
   display: flex
-  min-height: calc(100vh - 16px)
+  min-height: 100vh
   flex-direction: column
 
 *, *:after, *:before
@@ -12,7 +12,6 @@ body
 
   
 #app
-  padding: 8px
   display: flex
   flex: 1
   
@@ -56,9 +55,26 @@ body
 
   
 .palette
-  width: 180px
-  padding-left: 16px
+  width: 260px
+  padding: 16px 4px 16px 16px
   z-index: 1
+  background-color: #fcfcfc
+  border-left: 1px solid #dfdfdf
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2)
+  
+.palette__node-group-title
+  @extend .__no_user_select
+
+  margin-bottom: 16px
+  padding-right: 8px
+  padding-bottom: 2px
+
+  text-align: right
+  font-weight: 300
+  font-size: 14px
+
+  border-bottom: 1px solid #979797
+  color: #4a4a4a
 
 .palette__trash-area
   margin-top: 40px
@@ -188,8 +204,9 @@ body
   @extend .graph-canvas__node
 
   position: relative
-  margin-bottom: 8px
-
+  margin-bottom: 16px
+  margin-right: 16px
+  display: inline-block
  
 .state-debug
   position: absolute

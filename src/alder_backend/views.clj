@@ -30,7 +30,7 @@
 
    [:body
     [:div#app "Loading Alder…"]
-    [:div.github-fork-ribbon-wrapper.right
+    [:div.github-fork-ribbon-wrapper.left
      [:div.github-fork-ribbon
       [:a
        {:href "https://github.com/mhallin/alder"
