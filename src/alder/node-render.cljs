@@ -335,7 +335,7 @@
            (render-slot node-id node slot-id slot slot-frame slot-drag-data on-mouse-down))
          slot-frames)))
 
-(defn node-component [[node-id node slot-drag-data] owner
+(defn node-component [[node-id node slot-drag-data selection] owner
                       {:keys [on-mouse-down on-slot-mouse-down] :as opts}]
   (reify
     om/IDisplayName
@@ -348,7 +348,8 @@
         (html [:div.graph-canvas__node
                {:style (geometry/rectangle->css frame)
                 :key (str "node__" node-id)
-                :on-mouse-down #(on-mouse-down node-id %)}
+                :on-mouse-down #(on-mouse-down node-id %)
+                :class (if (selection node-id) ["m-selected"] [])}
                title
                [:div.graph-canvas__node-inspector-toggle
                 {:class (if (:inspector-visible node) "m-open" "m-closed")

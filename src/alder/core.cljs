@@ -28,10 +28,16 @@
                           :context (AudioContext.)
                           :dragging nil
                           :id-counter 0
-                          :trash-area-rectangle nil
                           :show-export-window false
                           :current-page :none
-                          :current-page-args {}}))
+                          :current-page-args {}
+                          :selection #{}}))
+
+(defn- clear-selection! []
+  (swap! app-state #(assoc % :selection #{})))
+
+(defn- set-selection! [selection]
+  (swap! app-state #(assoc % :selection selection)))
 
 (defn end-drag [event]
   (when-let [dragging-data (:dragging @app-state)]
@@ -52,14 +58,7 @@
                                  (fn [node-graph]
                                    (node-graph/connect-nodes node-graph
                                                              from
-                                                             to))))))))
-
-      (when-let [node-id (:node-id dragging-data)]
-        (when (-> @app-state :trash-area-rectangle (geometry/rectangle-hit-test mouse-point))
-          (swap! app-state
-                 #(update-in % [:node-graph]
-                             (fn [node-graph]
-                               (node-graph/remove-node node-graph node-id))))))))
+                                                             to))))))))))
   (swap! app-state #(update-in % [:dragging] (fn [_] nil))))
 
 (defn update-drag [event]
@@ -185,6 +184,10 @@
     (let [node (-> state :node-graph :nodes node-id)]
       [node slot-id])))
 
+(defn- update-selection [node-id]
+  (when-not ((:selection @app-state) node-id)
+    (set-selection! #{node-id})))
+
 (defn graph-canvas-view [data owner]
   (reify
     om/IDisplayName
@@ -196,8 +199,10 @@
        [:div.graph-canvas
         (map (fn [[id n]]
                (om/build node-render/node-component
-                         [id n (current-dragging-slot data)]
-                         {:opts {:on-mouse-down node-start-drag
+                         [id n (current-dragging-slot data) (:selection data)]
+                         {:opts {:on-mouse-down (fn [node-id e]
+                                                  (update-selection node-id)
+                                                  (node-start-drag node-id e))
                               :on-slot-mouse-down slot-start-drag}
                           :react-key id}))
              (:nodes (:node-graph data)))
@@ -239,6 +244,7 @@
                                                 node-type-id
                                                 [0 0]
                                                 (:context state)))))
+      (set-selection! #{node-id})
       (node-start-drag node-id event))))
 
 (defn- show-export-window [event]
@@ -250,19 +256,7 @@
   (swap! app-state #(assoc % :show-export-window false)))
 
 (defn palette-view [data owner]
-  (letfn [(update-trash-area-rectangle []
-            (let [trash-area (om/get-node owner "trash-area")
-            left (.-offsetLeft trash-area)
-            top (.-offsetTop trash-area)
-            width (.-offsetWidth trash-area)
-            height (.-offsetHeight trash-area)
-            rectangle (geometry/Rectangle. left top width height)]
-              (swap! app-state #(assoc-in % [:trash-area-rectangle] rectangle))))
-
-          (handle-resize [_]
-            (update-trash-area-rectangle))
-
-          (render-palette-group [{:keys [title node-types]}]
+  (letfn [(render-palette-group [{:keys [title node-types]}]
             (html
              [:div.palette__node-group
               [:h3.palette__node-group-title
@@ -275,47 +269,64 @@
       om/IDisplayName
       (display-name [_] "Palette")
 
-      om/IDidMount
-      (did-mount [_]
-        (update-trash-area-rectangle)
-        (.addEventListener js/window "resize" handle-resize))
-
-      om/IWillUnmount
-      (will-unmount [_]
-        (.removeEventListener js/window "resize" handle-resize))
-
       om/IRender
       (render [_]
         (html [:div.palette
                [:div.palette__inner
                 (map render-palette-group node-type/all-node-groups)
-                [:div.palette__trash-area
-                 {:ref "trash-area"}]
                 [:a.palette__show-export-window
                  {:on-click show-export-window
                   :href "#"}
                  "Export"]]])))))
 
 (defn editor-component [data owner]
-  (reify
-    om/IDisplayName
-    (display-name [_] "Editor")
+  (letfn [(handle-key-up [e]
+            (when (and (= (.-keyCode e) 46))
+              (debug "Removing" (:selection @app-state))
+              (.preventDefault e)
+              (swap! app-state
+                     #(update-in % [:node-graph]
+                                 (fn [node-graph]
+                                   (node-graph/remove-nodes node-graph
+                                                            (:selection @app-state)))))
+              (clear-selection!)))
 
-    om/IRender
-    (render [_]
-      (html [:div.alder-root
-             {:on-mouse-up #(end-drag %)
-              :on-mouse-move #(update-drag %)}
-             (om/build graph-canvas-view data)
-             (om/build palette-view data)
-             [:div.state-debug (pr-str data)]
-             [:div.save-data-debug
-              (.stringify js/JSON
-                          (node-graph-serialize/serialize-graph (:node-graph data)))]
-             (when (:show-export-window data)
-               (om/build export-render/export-component
-                         (:node-graph data)
-                         {:opts {:on-close hide-export-window}}))]))))
+          (handle-mouse-up [e]
+            (when (= (.-className (.-target e)) "graph-canvas")
+              (clear-selection!)))]
+    (reify
+      om/IDisplayName
+      (display-name [_] "Editor")
+
+      om/IDidMount
+      (did-mount [_]
+        (.addEventListener js/document
+                           "keyup"
+                           handle-key-up))
+
+      om/IWillUnmount
+      (will-unmount [_]
+        (.removeEventListener js/document
+                              "keyup"
+                              handle-key-up))
+
+      om/IRender
+      (render [_]
+        (html [:div.alder-root
+               {:on-mouse-up (fn [e]
+                               (end-drag e)
+                               (handle-mouse-up e))
+                :on-mouse-move #(update-drag %)}
+               (om/build graph-canvas-view data)
+               (om/build palette-view data)
+               [:div.state-debug (pr-str data)]
+               [:div.save-data-debug
+                (.stringify js/JSON
+                            (node-graph-serialize/serialize-graph (:node-graph data)))]
+               (when (:show-export-window data)
+                 (om/build export-render/export-component
+                           (:node-graph data)
+                           {:opts {:on-close hide-export-window}}))])))))
 
 (defn index-component [data owner]
   (reify
