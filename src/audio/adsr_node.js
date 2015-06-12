@@ -6,24 +6,24 @@ function ADSRNode(context) {
 	this.sustain = null;
 	this.release = null;
 
-	this.param = null;
+	this._connectedParams = [];
 	this.context = context;
 }
 
 ADSRNode.prototype.connect = function (param) {
-	this.param = param;
-	this.param.setValueAtTime(0, this.context.currentTime);
+	this._connectedParams.push(param);
+	param.setValueAtTime(0, this.context.currentTime);
 };
 
 ADSRNode.prototype.disconnect = function (param) {
-	this.param = null;
+	var index = this._connectedParams.indexOf(param);
+
+	if (index >= 0) {
+		this._connectedParams.splice(index, 1);
+	}
 };
 
 ADSRNode.prototype.gate = function (value) {
-	if (!this.param) {
-		return;
-	}
-
 	if (value > 0) {
 		this.noteOn(value);
 	}
@@ -33,31 +33,31 @@ ADSRNode.prototype.gate = function (value) {
 };
 
 ADSRNode.prototype.noteOn = function (value) {
-	if (!this.param) {
-		return;
-	}
-	
 	var now = this.context.currentTime;
 	var decayStart = now + this.attack;
 	var sustainStart = now + this.attack + this.decay;
 	var sustainValue = value * this.sustain;
 
-	this.param.cancelScheduledValues(now);
-	this.param.setValueAtTime(0, now);
-	this.param.linearRampToValueAtTime(value, decayStart);
-	this.param.linearRampToValueAtTime(sustainValue, sustainStart);
+	for (var i = 0; i < this._connectedParams.length; ++i) {
+		var param = this._connectedParams[i];
+
+		param.cancelScheduledValues(now);
+		param.setValueAtTime(0, now);
+		param.linearRampToValueAtTime(value, decayStart);
+		param.linearRampToValueAtTime(sustainValue, sustainStart);
+	}
 };
 
 ADSRNode.prototype.noteOff = function () {
-	if (!this.param) {
-		return;
-	}
-
 	var now = this.context.currentTime;
 	var releaseEnd = now + this.release;
 
-	this.param.cancelScheduledValues(now);
-	this.param.linearRampToValueAtTime(0, releaseEnd);
+	for (var i = 0; i < this._connectedParams.length; ++i) {
+		var param = this._connectedParams[i];
+
+		param.cancelScheduledValues(now);
+		param.linearRampToValueAtTime(0, releaseEnd);
+	}
 };
 
 module.exports = ADSRNode;
