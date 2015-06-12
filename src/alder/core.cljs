@@ -84,12 +84,22 @@
 
       (when-let [node-id (:node-id dragging-data)]
         (let [[offset-x offset-y] (:offset dragging-data)
-              x (- x offset-x)
-              y (- y offset-y)]
+              [node-x node-y] (node-graph/node-position (:node-graph @app-state)
+                                                        node-id)
+              new-node-x (- x offset-x)
+              new-node-y (- y offset-y)
+              dx (- new-node-x node-x)
+              dy (- new-node-y node-y)
+              node-ids (:selection @app-state)]
           (swap! app-state
-                 #(update-in % [:node-graph]
-                             (fn [graph]
-                               (node-graph/node-move-to graph node-id [x y]))))))
+                 #(update % :node-graph
+                          (fn [graph]
+                            (node-graph/nodes-move-by graph node-ids [dx dy]))))
+          ;; (swap! app-state
+          ;;        #(update-in % [:node-graph]
+          ;;                    (fn [graph]
+          ;;                      (node-graph/node-move-to graph node-id [x y]))))
+          ))
 
       (when-let [new-node (:new-node dragging-data)]
         (let [[offset-x offset-y] (:offset new-node)

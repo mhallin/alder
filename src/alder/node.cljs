@@ -46,7 +46,10 @@
     node))
 
 (defn node-move-to [node position]
-  (update-in node [:frame] #(geometry/rectangle-move-to % position)))
+  (update node :frame #(geometry/rectangle-move-to % position)))
+
+(defn node-move-by [node offset]
+  (update node :frame #(geometry/rectangle-move-by % offset)))
 
 (defn node-slot-frames [node]
   (let [{:keys [width height]} (:frame node)

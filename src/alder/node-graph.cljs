@@ -67,6 +67,18 @@
   (update-in node-graph [:nodes node-id]
              (fn [node] (node/node-move-to node position))))
 
+(defn node-move-by [node-graph node-id offset]
+  (update-in node-graph [:nodes node-id]
+             (fn [node] (node/node-move-by node offset))))
+
+(defn nodes-move-by [node-graph node-ids offset]
+  (reduce (fn [node-graph node-id]
+            (node-move-by node-graph node-id offset))
+          node-graph
+          node-ids))
+
+(defn node-position [node-graph node-id]
+  (-> node-graph :nodes node-id :frame geometry/rectangle-origin))
 
 (defn hit-test-slot [node-graph position]
   (when-let [matching (keep (fn [[id node]]
