@@ -34,6 +34,8 @@
                           :current-page-args {}
                           :selection #{}}))
 
+(def palette-width 260)
+
 (defn- clear-selection! []
   (swap! app-state #(assoc % :selection #{})))
 
@@ -59,7 +61,17 @@
                                  (fn [node-graph]
                                    (node-graph/connect-nodes node-graph
                                                              from
-                                                             to))))))))))
+                                                             to))))))))
+
+      (when-let [new-node (:new-node dragging-data)]
+        (when (< mouse-x (- (.-innerWidth js/window) 260))
+          (let [new-node-id (node-graph/next-node-id (:node-graph @app-state))
+                new-node (:node new-node)]
+            (swap! app-state
+                   #(update-in % [:node-graph]
+                               (fn [node-graph]
+                                 (node-graph/add-node node-graph new-node-id new-node))))
+            (set-selection! #{new-node-id}))))))
   (swap! app-state #(update-in % [:dragging] (fn [_] nil))))
 
 (defn update-drag [event]
@@ -77,7 +89,16 @@
           (swap! app-state
                  #(update-in % [:node-graph]
                              (fn [graph]
-                               (node-graph/node-move-to graph node-id [x y])))))))))
+                               (node-graph/node-move-to graph node-id [x y]))))))
+
+      (when-let [new-node (:new-node dragging-data)]
+        (let [[offset-x offset-y] (:offset new-node)
+              x (- x offset-x)
+              y (- y offset-y)]
+          (swap! app-state
+                 #(update-in % [:dragging :new-node :node]
+                             (fn [n]
+                               (node/node-move-to n [x y])))))))))
 
 (defn node-start-drag [node-id event]
   (when (zero? (.-button event))
@@ -91,6 +112,24 @@
                                    (fn [_] {:node-id node-id
                                             :offset [(- mouse-x elem-x)
                                                      (- mouse-y elem-y)]})))
+      (update-drag event))))
+
+(defn- prototype-node-start-drag [node-type-id event]
+  (when (zero? (.-button event))
+    (.stopPropagation event)
+    (let [node-id (node-graph/next-node-id (:node-graph @app-state))
+          mouse-x (.-clientX event)
+          mouse-y (.-clientY event)
+          elem-x (.-left (.getBoundingClientRect (.-currentTarget event)))
+          elem-y (.-top (.getBoundingClientRect (.-currentTarget event)))]
+      (swap! app-state
+             (fn [state]
+               (assoc state :dragging
+                      {:new-node {:node (node/make-node (:context @app-state)
+                                                        [0 0]
+                                                        node-type-id)
+                                  :offset [(- mouse-x elem-x)
+                                           (- mouse-y elem-y)]}})))
       (update-drag event))))
 
 (defn slot-start-drag
@@ -234,20 +273,6 @@
                  slot-center (geometry/rectangle-center slot-frame)]
              (om/build temporary-connection-view [slot-center current-pos])))]]))))
 
-(defn- prototype-node-start-drag [node-type-id event]
-  (when (zero? (.-button event))
-    (let [node-id (node-graph/next-node-id (:node-graph @app-state))]
-      (swap! app-state
-             (fn [state]
-               (update-in state [:node-graph]
-                          #(node-graph/add-node %
-                                                node-id
-                                                node-type-id
-                                                [0 0]
-                                                (:context state)))))
-      (set-selection! #{node-id})
-      (node-start-drag node-id event))))
-
 (defn- show-export-window [event]
   (.preventDefault event)
   (swap! app-state #(assoc % :show-export-window true)))
@@ -320,6 +345,8 @@
                 :on-mouse-move #(update-drag %)}
                (om/build graph-canvas-view data)
                (om/build palette-view data)
+               (when-let [new-node (-> data :dragging :new-node)]
+                 (om/build node-component [nil (:node new-node) nil #{}]))
                [:div.state-debug (pr-str data)]
                [:div.save-data-debug
                 (.stringify js/JSON

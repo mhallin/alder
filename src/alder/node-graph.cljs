@@ -16,10 +16,14 @@
   {:nodes {}
    :connections []})
 
-(defn add-node [node-graph node-id node-type-id position context]
-  (let [node (node/make-node context position node-type-id)
-        node-graph (assoc-in node-graph [:nodes node-id] node)]
-    node-graph))
+(defn add-node
+  ([node-graph node-id node]
+   (assoc-in node-graph [:nodes node-id] node))
+
+  ([node-graph node-id node-type-id position context]
+   (let [node (node/make-node context position node-type-id)
+         node-graph (assoc-in node-graph [:nodes node-id] node)]
+     node-graph)))
 
 (defn set-connection [node-graph [from-id output-id] [to-id input-id] f]
   (let [from-node (-> node-graph :nodes from-id)

@@ -1,3 +1,5 @@
+$palette-width: 260px
+
 .__no_user_select
   user-select: none
 
@@ -47,7 +49,7 @@ body
 
 .graph-canvas
   display: flex
-  width: calc(100% - 260px)
+  width: calc(100% - #{$palette-width})
   margin-right: 16px
   z-index: 2
   position: relative
@@ -55,7 +57,7 @@ body
   overflow: scroll
 
 .palette
-  width: 260px
+  width: $palette-width
   z-index: 1
   background-color: #fcfcfc
   border-left: 1px solid #dfdfdf
@@ -194,7 +196,8 @@ body
   &.m-closed
     background-image: inline('../img/inspector_open_button.svg')
 
-
+.alder-root > .graph-canvas__node
+  z-index: 4
 
 .prototype-node
   @extend .graph-canvas__node
@@ -208,6 +211,7 @@ body
   position: absolute
   left: 8px
   bottom: 8px
+  width: calc(100% - #{$palette-width} - 8px)
   white-space: pre-wrap
   font-family: Menlo, monospace
   font-size: 11px
