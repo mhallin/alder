@@ -1,8 +1,7 @@
 (ns alder.node
   (:require [alder.geometry :as geometry]
-            [alder.node-type :as node-type])
-
-  (:require-macros [taoensso.timbre :refer [debug]]))
+            [alder.node-type :as node-type]
+            [taoensso.timbre :refer-macros [debug]]))
 
 (defrecord Node
     [frame node-type-id audio-node])

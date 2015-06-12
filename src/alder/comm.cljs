@@ -1,9 +1,9 @@
 (ns alder.comm
   (:require [chord.client :refer [ws-ch]]
-            [cljs.core.async :refer [<! >! put! close! chan alts!]])
+            [cljs.core.async :refer [<! >! put! close! chan alts!]]
+            [taoensso.timbre :refer-macros [debug]])
 
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [taoensso.timbre :refer [debug]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce internal-comm (chan))
 (defonce current-connection (atom nil))

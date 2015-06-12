@@ -1,12 +1,12 @@
 (ns alder.routes
   (:require [secretary.core :as secretary :refer-macros [defroute]]
             [cljs.core.async :refer [<!]]
+            [taoensso.timbre :refer-macros [debug]]
 
             [alder.comm :as comm]
             [alder.node-graph-serialize :as node-graph-serialize])
 
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [taoensso.timbre :refer [debug]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce routing-callback (atom nil))
 

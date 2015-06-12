@@ -3,7 +3,7 @@
               [sablono.core :as html :refer-macros [html]]
               [chord.client :refer [ws-ch]]
               [cljs.core.async :refer [<! >! put! close!]]
-              [taoensso.timbre :as timbre]
+              [taoensso.timbre :as timbre :refer-macros [info debug]]
 
               [alder.node :as node]
               [alder.node-type :as node-type]
@@ -18,8 +18,7 @@
               [alder.views.node :refer [node-component]]
               [alder.views.prototype-node :refer [prototype-node-component]])
 
-    (:require-macros [cljs.core.async.macros :refer [go]]
-                     [taoensso.timbre :refer [info debug]]))
+    (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (enable-console-print!)
 
@@ -385,6 +384,14 @@
 (om/root root-component
          app-state
          {:target (. js/document (getElementById "app"))})
+
+(comment
+
+  ;; Eval this in a REPL to disable logging for specific modules, or
+  ;; change the logging configuration in any other way.
+  (timbre/merge-config! {:ns-blacklist ["alder.persist"]})
+
+)
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on

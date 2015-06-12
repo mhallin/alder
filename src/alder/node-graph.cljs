@@ -1,8 +1,7 @@
 (ns alder.node-graph
   (:require [alder.node :as node]
-            [alder.geometry :as geometry])
-
-  (:require-macros [taoensso.timbre :refer [debug]]))
+            [alder.geometry :as geometry]
+            [taoensso.timbre :refer-macros [debug]]))
 
 (defonce id-counter (atom 0))
 

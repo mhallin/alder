@@ -1,10 +1,10 @@
 (ns alder.persist
   (:require [cljs.core.async :refer [<! >! put! close!]]
+            [taoensso.timbre :refer-macros [info debug]]
 
             [alder.node-graph-serialize :as node-graph-serialize]
             [alder.comm :as comm])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [taoensso.timbre :refer [info debug]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce ignore-state-changes (atom false))
 (defonce last-persisted-graph (atom nil))
