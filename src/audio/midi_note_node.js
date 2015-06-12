@@ -10,8 +10,8 @@ var kMIDIPriorityLowest = 'lowest';
 var kMIDIPriorityLastOn = 'last-on';
 
 function MIDINoteNode(context) {
-	this.gate = null;
-	this.frequency = null;
+	this._connectedGates = [];
+	this._connectedFrequencies = [];
 
 	this.context = context;
 	this._device = null;
@@ -40,19 +40,27 @@ MIDINoteNode.prototype.device = function (device) {
 
 MIDINoteNode.prototype.connect = function (destination, index) {
 	if (index === 0) {
-		this.gate = destination;
+		this._connectedGates.push(destination);
 	}
 	else if (index === 1) {
-		this.frequency = destination;
+		this._connectedFrequencies.push(destination);
 	}
 };
 
 MIDINoteNode.prototype.disconnect = function (destination, index) {
 	if (index === 0) {
-		this.gate = null;
+		var gateIndex = this._connectedGates.indexOf(destination);
+
+		if (gateIndex >= 0) {
+			this._connectedGates.splice(gateIndex, 1);
+		}
 	}
 	else if (index === 1) {
-		this.frequency = null;
+		var freqIndex = this._connectedFrequencies.indexOf(destination);
+
+		if (freqIndex >= 0) {
+			this._connectedFrequencies.splice(freqIndex, 1);
+		}
 	}
 };
 
@@ -79,21 +87,17 @@ MIDINoteNode.prototype.dispatchNoteOn = function (note, velocity) {
 	this._lastVelocity = velocity;
 	this._noteStack.push(note);
 
-	if (this.frequency) {
-		var portamentoEndTime = this.context.currentTime;
+	var portamentoEndTime = this.context.currentTime;
 
-		if (this._noteStack.length > 1) {
-			portamentoEndTime += this.portamento;
-		}
-		
-		this.frequency.linearRampToValueAtTime(midiNoteToFrequency(note),
-											   portamentoEndTime);
-		this._lastNote = note;
+	if (this._noteStack.length > 1) {
+		portamentoEndTime += this.portamento;
 	}
 
-	if (this.gate && (this._noteStack.length === 1 ||
-					  this.noteMode == kMIDINoteModeRetrig)) {
-		this.gate.gate(velocity / 128);
+	this.sendNote(note, portamentoEndTime);
+	this._lastNote = note;
+
+	if (this._noteStack.length === 1 || this.noteMode == kMIDINoteModeRetrig) {
+		this.sendGate(velocity);
 	}
 };
 
@@ -105,21 +109,34 @@ MIDINoteNode.prototype.dispatchNoteOff = function (note) {
 		var nextNote = decideNextNote(this.priority, this._noteStack);
 
 		if (this.noteMode === kMIDINoteModeRetrig &&
-			nextNote != this._lastNote &&
-			this.gate) {
+			nextNote != this._lastNote) {
 
-			this.gate.gate(this._lastVelocity / 128);
+			this.sendGate(this._lastVelocity);
 		}
 
-		if (this.frequency) {
-			var portamentoEndTime = this.context.currentTime + this.portamento;
-			this.frequency.linearRampToValueAtTime(midiNoteToFrequency(nextNote),
-												   portamentoEndTime);
-			this._lastNote = nextNote;
-		}
+		var portamentoEndTime = this.context.currentTime + this.portamento;
+		this.sendNote(nextNote, portamentoEndTime);
+		this._lastNote = nextNote;
 	}
-	else if (this.gate) {
-		this.gate.gate(0);
+	else {
+		this.sendGate(0);
+	}
+};
+
+MIDINoteNode.prototype.sendGate = function (velocity) {
+	for (var i = 0; i < this._connectedGates.length; ++i) {
+		var param = this._connectedGates[i];
+
+		param.gate(velocity / 128);
+	}
+};
+
+MIDINoteNode.prototype.sendNote = function (note, portamentoEndTime) {
+	for (var i = 0; i < this._connectedFrequencies.length; ++i) {
+		var param = this._connectedFrequencies[i];
+
+		param.linearRampToValueAtTime(midiNoteToFrequency(note),
+									  portamentoEndTime);
 	}
 };
 
