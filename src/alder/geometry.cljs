@@ -14,6 +14,15 @@
   (let [{:keys [x y width height]} rectangle]
     [x y width height]))
 
+(defn corners->rectangle [[x1 y1] [x2 y2]]
+  (let [min-x (min x1 x2)
+        min-y (min y1 y2)
+        max-x (max x1 x2)
+        max-y (max y1 y2)]
+    (Rectangle. min-x min-y
+                (- max-x min-x)
+                (- max-y min-y))))
+
 (defn rectangle-move-to [rectangle position]
   (let [[x y] position]
     (-> rectangle
@@ -43,6 +52,18 @@
          (<= px (+ x width))
          (>= py y)
          (<= py (+ y height)))))
+
+(defn rectangles-overlap? [ra rb]
+  (let [{ax1 :x ay1 :y aw :width ah :height} ra
+        {bx1 :x by1 :y bw :width bh :height} rb
+        ax2 (+ ax1 aw)
+        ay2 (+ ay1 ah)
+        bx2 (+ bx1 bw)
+        by2 (+ by1 bh)]
+    (and (< ax1 bx2)
+         (> ax2 bx1)
+         (< ay1 by2)
+         (> ay2 by1))))
 
 (defn point-add [p1 p2]
   (let [[x1 y1] p1

@@ -196,6 +196,13 @@ body
   &.m-closed
     background-image: inline('../img/inspector_open_button.svg')
 
+.graph-canvas__selection
+  @extend .__no_user_select
+
+  background-color: rgba(128, 128, 128, 0.05)
+  border: 1px solid rgba(128, 128, 128, 0.1)
+  position: absolute
+
 .alder-root > .graph-canvas__node
   z-index: 4
 
@@ -216,7 +223,7 @@ body
   font-family: Menlo, monospace
   font-size: 11px
 
-  display: none
+  display: block
 
 
 .save-data-debug

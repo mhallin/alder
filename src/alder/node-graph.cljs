@@ -105,3 +105,7 @@
 
 (defn node-by-id [node-graph node-id]
   (-> node-graph :nodes node-id))
+
+(defn nodes-in-rect [node-graph rect]
+  (filter (fn [[id n]] (geometry/rectangles-overlap? rect (:frame n)))
+          (:nodes node-graph)))

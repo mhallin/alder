@@ -98,7 +98,21 @@
           (swap! app-state
                  #(update-in % [:dragging :new-node :node]
                              (fn [n]
-                               (node/node-move-to n [x y])))))))))
+                               (node/node-move-to n [x y]))))))
+
+      (when-let [selection-start (:selection-start dragging-data)]
+        (let [selection-end [x y]
+              selection-rect (geometry/corners->rectangle selection-start
+                                                          selection-end)
+              selected-nodes (node-graph/nodes-in-rect (:node-graph @app-state)
+                                                       selection-rect)]
+          (swap! app-state
+                 #(assoc-in %
+                            [:dragging :selection-end]
+                            selection-end))
+          (swap! app-state
+                 #(assoc %
+                         :selection (set (map first selected-nodes)))))))))
 
 (defn node-start-drag [node-id event]
   (when (zero? (.-button event))
@@ -130,6 +144,17 @@
                                                         node-type-id)
                                   :offset [(- mouse-x elem-x)
                                            (- mouse-y elem-y)]}})))
+      (update-drag event))))
+
+(defn- start-selection-drag [event]
+  (when (zero? (.-button event))
+    (let [mouse-x (.-clientX event)
+          mouse-y (.-clientY event)]
+      (.stopPropagation event)
+      (swap! app-state
+             (fn [state]
+               (assoc state :dragging
+                      {:selection-start [mouse-x mouse-y]})))
       (update-drag event))))
 
 (defn slot-start-drag
@@ -237,6 +262,13 @@
     (render [_]
       (html
        [:div.graph-canvas
+        {:on-mouse-down start-selection-drag}
+        (when-let [selection-start (:selection-start (:dragging data))]
+          (let [selection-end (:selection-end (:dragging data))
+                selection-rect (geometry/corners->rectangle selection-start
+                                                            selection-end)]
+            [:div.graph-canvas__selection
+             {:style (geometry/rectangle->css selection-rect)}]))
         (map (fn [[id n]]
                (om/build node-component
                          [id n (current-dragging-slot data) (:selection data)]
@@ -315,10 +347,6 @@
                                  (fn [node-graph]
                                    (node-graph/remove-nodes node-graph
                                                             (:selection @app-state)))))
-              (clear-selection!)))
-
-          (handle-mouse-up [e]
-            (when (= (.-className (.-target e)) "graph-canvas")
               (clear-selection!)))]
     (reify
       om/IDisplayName
@@ -339,10 +367,8 @@
       om/IRender
       (render [_]
         (html [:div.alder-root
-               {:on-mouse-up (fn [e]
-                               (end-drag e)
-                               (handle-mouse-up e))
-                :on-mouse-move #(update-drag %)}
+               {:on-mouse-up end-drag
+                :on-mouse-move update-drag}
                (om/build graph-canvas-view data)
                (om/build palette-view data)
                (when-let [new-node (-> data :dragging :new-node)]
