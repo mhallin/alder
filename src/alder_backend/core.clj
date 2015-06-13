@@ -3,7 +3,7 @@
             [alder-backend.views :as views]
 
             [clojure.string :as string]
-            [clojure.core.async :refer [<! >! put! close! go-loop]]
+            [clojure.core.async :refer [<! >! put! close! go]]
 
             [compojure.handler :as handler]
             [compojure.core :refer [GET defroutes]]
@@ -51,15 +51,21 @@
 
 (defn api-channel-handler [request]
   (with-channel request ws-ch
-    (go-loop []
-      (when-let [{:keys [message]} (<! ws-ch)]
-        (let [[command args] message]
-          (info "MSG"
-                (:remote-addr request)
-                command)
-          (let [response (handle-message command args)]
-            (>! ws-ch response)))
-        (recur)))))
+    (go
+      (info "WS" (:remote-addr request) "CONN")
+      (try
+        (loop []
+          (when-let [{:keys [message]} (<! ws-ch)]
+            (let [[command args] message]
+              (info "WS"
+                    (:remote-addr request)
+                    "MSG"
+                    command)
+              (let [response (handle-message command args)]
+                (>! ws-ch response)))
+            (recur)))
+        (finally
+          (info "WS" (:remote-addr request) "DISCONN"))))))
 
 (defroutes main-routes
   (GET "/" [] (views/index-page))
