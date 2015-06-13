@@ -56,6 +56,11 @@
                              :patch-data (:patch_data new-patch)}])
       [:reply :patch-data (:patch_data (db/get-patch patch-id))])))
 
+(defmethod handle-message :create-readonly-duplicate [_ patch-id]
+  (let [patch (db/duplicate-patch! patch-id)]
+    (db/mark-patch-read-only! (:short_id patch))
+    [:reply :ok {:short-id (:short_id patch)}]))
+
 (defn api-channel-handler [request]
   (with-channel request ws-ch
     (go

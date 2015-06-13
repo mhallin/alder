@@ -68,6 +68,9 @@
 (defn update-visited-at! [short-id]
   (do-update-visited-at! database-url short-id))
 
+(defn mark-patch-read-only! [short-id]
+  (do-mark-patch-read-only! database-url short-id))
+
 (defn -main []
   (migrate)
   (System/exit 0))

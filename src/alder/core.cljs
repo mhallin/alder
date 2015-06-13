@@ -16,7 +16,8 @@
               [alder.persist :as persist]
               [alder.views.inspector :refer [inspector-component]]
               [alder.views.node :refer [node-component]]
-              [alder.views.prototype-node :refer [prototype-node-component]])
+              [alder.views.prototype-node :refer [prototype-node-component]]
+              [alder.views.share :refer [share-component]])
 
     (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -29,7 +30,7 @@
                           :context (AudioContext.)
                           :dragging nil
                           :id-counter 0
-                          :show-export-window false
+                          :modal-overlay nil
                           :current-page :none
                           :current-page-args {}
                           :selection #{}}))
@@ -306,13 +307,13 @@
                  slot-center (geometry/rectangle-center slot-frame)]
              (om/build temporary-connection-view [slot-center current-pos])))]]))))
 
-(defn- show-export-window [event]
+(defn- show-modal-window [name event]
   (.preventDefault event)
-  (swap! app-state #(assoc % :show-export-window true)))
+  (swap! app-state #(assoc % :modal-overlay name)))
 
-(defn- hide-export-window [event]
+(defn- hide-modal-window [event]
   (.preventDefault event)
-  (swap! app-state #(assoc % :show-export-window false)))
+  (swap! app-state #(assoc % :modal-overlay nil)))
 
 (defn palette-view [data owner]
   (letfn [(render-palette-group [{:keys [title node-types]}]
@@ -333,10 +334,7 @@
         (html [:div.palette
                [:div.palette__inner
                 (map render-palette-group node-type/all-node-groups)
-                [:a.palette__show-export-window
-                 {:on-click show-export-window
-                  :href "#"}
-                 "Export"]]])))))
+                ]])))))
 
 (defn navbar-view [data owner]
   (letfn [(start-patch-name-editor [e]
@@ -382,7 +380,20 @@
                :ref "editor"}]
              [:h2.navbar__patch-name
               {:on-double-click start-patch-name-editor}
-              name]))])))))
+              name]))
+         [:div.navbar__aux-button-container
+          [:a.navbar__aux-button
+           {:href "#"
+            :on-click (partial show-modal-window :share)}
+           "Share"]
+          [:a.navbar__aux-button
+           {:on-click (partial show-modal-window :export)
+            :href "#"}
+           "Export"]]])))))
+
+(def modal-component-map
+  {:export export-render/export-component
+   :share share-component})
 
 (defn editor-component [data owner]
   (letfn [(handle-key-up [e]
@@ -425,10 +436,11 @@
                [:div.save-data-debug
                 (.stringify js/JSON
                             (node-graph-serialize/serialize-graph (:node-graph data)))]
-               (when (:show-export-window data)
-                 (om/build export-render/export-component
-                           (:node-graph data)
-                           {:opts {:on-close hide-export-window}}))])))))
+               (when-let [modal-component (modal-component-map (:modal-overlay data))]
+                 [:div.modal-underlay
+                  [:div.modal-underlay__dialog
+                   (om/build modal-component data
+                             {:opts {:on-close hide-modal-window}})]])])))))
 
 (defn index-component [data owner]
   (reify

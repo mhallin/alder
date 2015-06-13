@@ -65,3 +65,8 @@
   (let [reply-chan (chan)]
     (go (>! internal-comm [reply-chan [:get-patch patch-id]]))
     reply-chan))
+
+(defn create-readonly-duplicate-patch [patch-id]
+  (let [reply-chan (chan)]
+    (go (>! internal-comm [reply-chan [:create-readonly-duplicate patch-id]]))
+    reply-chan))
