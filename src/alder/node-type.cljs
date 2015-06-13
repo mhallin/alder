@@ -215,6 +215,27 @@
              (fn [ctx] (js/ConstSourceNode. ctx))
              {:constructor "new ConstSourceNode(context)"}))
 
+(def stereo-panner-node-type
+  (NodeType. {:pan {:type :param
+                    :name "pan"
+                    :default 0
+                    :title "Pan"
+                    :data-type :number
+                    :range [-1 1]}
+              :signal-in {:type :node
+                          :index 0
+                          :title "Signal in"}}
+             {:signal-out {:type :node
+                           :index 0
+                           :title "Signal out"
+                           :data-type :signal}}
+             nil
+             false
+             "Pan"
+             [70 40]
+             (fn [ctx] (.call (aget ctx "createStereoPanner") ctx))
+             {:constructor "context.createStereoPanner()"}))
+
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
                        :name "device"
@@ -297,7 +318,8 @@
                      :adsr adsr-node-type
                      :const-source const-source-node-type
                      :fft fft-analyser-node-type
-                     :scope scope-analyser-node-type}
+                     :scope scope-analyser-node-type
+                     :stereo-panner stereo-panner-node-type}
         midi-nodes (if has-midi-support
                      {:midi-note midi-note-node-type
                       :midi-cc midi-cc-node-type}
@@ -308,7 +330,8 @@
   (let [generators [[:oscillator oscillator-node-type]
                     [:const-source const-source-node-type]]
         filters [[:biquad-filter biquad-filter-node-type]
-                 [:gain gain-node-type]]
+                 [:gain gain-node-type]
+                 [:stereo-panner stereo-panner-node-type]]
         envelopes [[:adsr adsr-node-type]]
         midi-nodes [[:midi-note midi-note-node-type]
                     [:midi-cc midi-cc-node-type]]
