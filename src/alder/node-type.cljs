@@ -8,10 +8,84 @@
      constructor
      export-data])
 
+(defn- signal-in [index title]
+  {:type :node, :index index, :title title})
+
+(defn- signal-out [index title]
+  {:type :node, :index index, :title title, :data-type :signal})
+
+(defn- number-param-in
+  ([name title default range]
+   {:type :param,
+    :name name,
+    :title title,
+    :default default,
+    :data-type :number,
+    :range range})
+
+  ([name title default]
+   {:type :param,
+    :name name,
+    :title title,
+    :default default,
+    :data-type :number}))
+
+(defn- number-constant-in
+  ([name title default range]
+   {:type :constant,
+    :name name,
+    :title title,
+    :data-type :number,
+    :default default,
+    :range range})
+
+  ([name title default]
+   {:type :constant,
+    :name name,
+    :title title,
+    :data-type :number,
+    :default default}))
+
+(defn- number-accessor-in [name title default]
+  {:type :accessor,
+   :name name,
+   :title title,
+   :data-type :number,
+   :default default})
+
+(defn- string-constant-in [name title default choices]
+  {:type :constant,
+   :name name,
+   :title title,
+   :data-type :string,
+   :default default,
+   :choices choices})
+
+(defn- gate-in [name title]
+  {:type :gate, :name name, :title title})
+
+(defn- gate-out [index title]
+  {:type :node, :index index, :title title, :data-type :gate})
+
+(defn- param-out [index title]
+  {:type :node, :index index, :title title, :data-type :param})
+
+(defn- null-in [index title]
+  {:type :null-node, :index index, :title title})
+
+(defn- null-out [index title]
+  {:type :null-node, :index index, :title title})
+
+(defn- midi-device-accessor-in [name title]
+  {:type :accessor,
+   :name name,
+   :default nil,
+   :title title,
+   :data-type :midi-device,
+   :serializable false})
+
 (def audio-destination-node-type
-  (NodeType. {:signal {:type :node
-                       :index 0
-                       :title "Signal"}}
+  (NodeType. {:signal (signal-in 0 "Signal")}
              {}
              nil
              true
@@ -21,22 +95,10 @@
              {:ignore-export true}))
 
 (def oscillator-node-type
-  (NodeType. {:frequency {:type :param
-                          :name "frequency"
-                          :default 220
-                          :title "Frequency"
-                          :data-type :number
-                          :range [0 22050]}
-              :waveform {:type :constant
-                         :name "type"
-                         :default "square"
-                         :title "Waveform"
-                         :data-type :string
-                         :choices ["sine" "square" "sawtooth" "triangle"]}}
-             {:signal {:type :node
-                       :index 0
-                       :title "Signal"
-                       :data-type :signal}}
+  (NodeType. {:frequency (number-param-in "frequency" "Frequency" 220 [0 22050])
+              :waveform (string-constant-in "type" "Waveform" "square"
+                                            ["sine" "square" "sawtooth" "triangle"])}
+             {:signal (signal-out 0 "Signal")}
              nil
              false
              "Osc"
@@ -45,18 +107,9 @@
              {:constructor "context.createOscillator()"}))
 
 (def gain-node-type
-  (NodeType. {:gain {:type :param
-                     :name "gain"
-                     :default 1
-                     :title "Gain"
-                     :data-type :number}
-              :signal-in {:type :node
-                          :index 0
-                          :title "Signal"}}
-             {:signal-out {:type :node
-                           :index 0
-                           :title "Signal"
-                           :data-type :signal}}
+  (NodeType. {:gain (number-param-in "gain" "Gain" 1)
+              :signal-in (signal-in 0 "Signal")}
+             {:signal-out (signal-out 0 "Signal")}
              nil
              false
              "Gain"
@@ -65,33 +118,12 @@
              {:constructor "context.createGain()"}))
 
 (def adsr-node-type
-  (NodeType. {:gate {:type :gate
-                     :name "gate"
-                     :title "Gate"}
-              :attack {:type :constant
-                       :name "attack"
-                       :default 0.1
-                       :title "Attack"
-                       :data-type :number}
-              :decay {:type :constant
-                      :name "decay"
-                      :default 0.1
-                      :title "Decay"
-                      :data-type :number}
-              :sustain {:type :constant
-                        :name "sustain"
-                        :default 0.8
-                        :title "Sustain"
-                        :data-type :number}
-              :release {:type :constant
-                        :name "release"
-                        :default 0.1
-                        :title "Release"
-                        :data-type :number}}
-             {:envelope {:type :node
-                         :index 0
-                         :title "Envelope"
-                         :data-type :param}}
+  (NodeType. {:gate (gate-in "gate" "Gate")
+              :attack (number-constant-in "attack" "Attack" 0.01)
+              :decay (number-constant-in "decay" "Decay" 0.01)
+              :sustain (number-constant-in "sustain" "Sustain" 0.8)
+              :release (number-constant-in "release" "Release" 0.05)}
+             {:envelope (param-out 0 "Envelope")}
              nil
              false
              "ADSR"
@@ -103,9 +135,7 @@
                                               "/js/audio/adsr_node.js")]}}))
 
 (def fft-analyser-node-type
-  (NodeType. {:signal-in {:type :node
-                          :index 0
-                          :title "Signal"}}
+  (NodeType. {:signal-in (signal-in 0 "Signal")}
              {}
              {:inspector-fields [:fft]}
              false
@@ -115,9 +145,7 @@
              {:ignore-export true}))
 
 (def scope-analyser-node-type
-  (NodeType. {:signal-in {:type :node
-                          :index 0
-                          :title "Signal"}}
+  (NodeType. {:signal-in (signal-in 0 "Signal")}
              {}
              {:inspector-fields [:waveform]}
              false
@@ -127,9 +155,7 @@
              {:ignore-export true}))
 
 (def output-node-type
-  (NodeType. {:signal-in {:type :null-node
-                          :index 0
-                          :title "Signal in"}}
+  (NodeType. {:signal-in (null-in 0 "Signal in")}
              {}
              nil
              false
@@ -140,9 +166,7 @@
 
 (def input-node-type
   (NodeType. {}
-             {:signal-out {:type :null-node
-                           :index 0
-                           :title "Signal out"}}
+             {:signal-out (null-out 0 "Signal out")}
              nil
              false
              "Input"
@@ -151,46 +175,17 @@
              {:type :input}))
 
 (def biquad-filter-node-type
-  (NodeType. {:signal-in {:type :node
-                          :index 0
-                          :title "Signal in"}
-              :frequency {:type :param
-                          :name "frequency"
-                          :title "Frequency"
-                          :default 350
-                          :data-type :number
-                          :range [0 22050]}
-              :detune {:type :param
-                       :name "detune"
-                       :title "Detune"
-                       :default 0
-                       :data-type :number
-                       :range [-100 100]}
-              :Q {:type :param
-                  :name "Q"
-                  :title "Quality"
-                  :default 1
-                  :data-type :number
-                  :range [0.0001 1000]}
-              :gain {:type :param
-                     :name "gain"
-                     :title "Gain"
-                     :default 0
-                     :data-type :number
-                     :range [-40 40]}
-              :type {:type :constant
-                     :name "type"
-                     :title "Type"
-                     :default "lowpass"
-                     :data-type :string
-                     :choices ["lowpass" "highpass" "bandpass"
-                               "lowshelf" "highshelf" "peaking"
-                               "notch"
-                               "allpass"]}}
-             {:signal-out {:type :node
-                           :index 0
-                           :title "Signal out"
-                           :data-type :signal}}
+  (NodeType. {:signal-in (signal-in 0 "Signal in")
+              :frequency (number-param-in "frequency" "Frequency" 350 [0 22050])
+              :detune (number-param-in "detune" "Detune" 0 [-100 100])
+              :Q (number-param-in "Q" "Quality" 1 [0.0001 1000])
+              :gain (number-param-in "gain" "Gain" 0 [-40 40])
+              :type (string-constant-in "type" "Type" "lowpass"
+                                        ["lowpass" "highpass" "bandpass"
+                                         "lowshelf" "highshelf" "peaking"
+                                         "notch"
+                                         "allpass"])}
+             {:signal-out (signal-out 0 "Signal out")}
              nil
              false
              "LO Filter"
@@ -199,15 +194,8 @@
              {:constructor "context.createBiquadFilter()"}))
 
 (def const-source-node-type
-  (NodeType. {:value {:type :accessor
-                      :name "value"
-                      :default 1
-                      :title "Value"
-                      :data-type :number}}
-             {:signal {:type :node
-                       :index 0
-                       :title "Signal out"
-                       :data-type :signal}}
+  (NodeType. {:value (number-accessor-in "value" "Value" 1)}
+             {:signal (signal-out 0 "Signal out")}
              nil
              false
              "Const"
@@ -216,19 +204,9 @@
              {:constructor "new ConstSourceNode(context)"}))
 
 (def stereo-panner-node-type
-  (NodeType. {:pan {:type :param
-                    :name "pan"
-                    :default 0
-                    :title "Pan"
-                    :data-type :number
-                    :range [-1 1]}
-              :signal-in {:type :node
-                          :index 0
-                          :title "Signal in"}}
-             {:signal-out {:type :node
-                           :index 0
-                           :title "Signal out"
-                           :data-type :signal}}
+  (NodeType. {:pan (number-param-in "pan" "Pan" 0 [-1 1])
+              :signal-in (signal-in 0 "Signal in")}
+             {:signal-out (signal-out 0 "Signal out")}
              nil
              false
              "Pan"
@@ -237,17 +215,9 @@
              {:constructor "context.createStereoPanner()"}))
 
 (def stereo-splitter-node-type
-  (NodeType. {:signal-in {:type :node
-                          :index 0
-                          :title "Signal in"}}
-             {:left-out {:type :node
-                         :index 0
-                         :title "Left channel out"
-                         :data-type :signal}
-              :right-out {:type :node
-                          :index 1
-                          :title "Right channel out"
-                          :data-type :signal}}
+  (NodeType. {:signal-in (signal-in 0 "Stereo in")}
+             {:left-out (signal-out 0 "Left channel")
+              :right-out (signal-out 1 "Right channel")}
              nil
              false
              "Split"
@@ -256,16 +226,9 @@
              {:constructor "context.createChannelSplitter(2)"}))
 
 (def stereo-merger-node-type
-  (NodeType. {:left-in {:type :node
-                        :index 0
-                        :title "Left channel in"}
-              :right-in {:type :node
-                         :index 1
-                         :title "Right channel in"}}
-             {:signal-out {:type :node
-                          :index 0
-                           :title "Signal out"
-                           :data-type :signal}}
+  (NodeType. {:left-in (signal-in 0 "Left channel")
+              :right-in (signal-in 1 "Right channel")}
+             {:signal-out (signal-out 0 "Stereo out")}
              nil
              false
              "Merge"
@@ -274,18 +237,9 @@
              {:constructor "context.createChannelMerger(2)"}))
 
 (def delay-node-type
-  (NodeType. {:signal-in {:type :node
-                          :index 0
-                          :title "Signal in"}
-              :delay-time {:type :param
-                           :name "delayTime"
-                           :data-type :number
-                           :range [0 5]
-                           :title "Delay time"}}
-             {:signal-out {:type :node
-                           :index 0
-                           :title "Signal out"
-                           :data-type :signal}}
+  (NodeType. {:signal-in (signal-in 0 "Signal in")
+              :delay-time (number-param-in "delayTime" "Delay time" 0 [0 5])}
+             {:signal-out (signal-out 0 "Signal out")}
              nil
              false
              "Delay"
@@ -294,43 +248,13 @@
              {:constructor "context.createDelay(5)"}))
 
 (def compressor-node-type
-  (NodeType. {:signal-in {:type :node
-                          :index 0
-                          :title "Signal in"}
-              :threshold {:type :param
-                          :name "threshold"
-                          :data-type :number
-                          :default -24
-                          :title "Threshold"
-                          :range [-100 0]}
-              :knee {:type :param
-                     :name "knee"
-                     :data-type :number
-                     :default 30
-                     :range [0 40]
-                     :title "Knee"}
-              :ratio {:type :param
-                      :name "ratio"
-                      :data-type :number
-                      :default 12
-                      :range [1 20]
-                      :title "Ratio"}
-              :attack {:type :param
-                       :name "attack"
-                       :data-type :number
-                       :default 0.003
-                       :range [0 1]
-                       :title "Attack"}
-              :release {:type :param
-                        :name "release"
-                        :data-type :number
-                        :default 0.25
-                        :range [0 1]
-                        :title "Release"}}
-             {:signal-out {:type :node
-                           :index 0
-                           :title "Signal out"
-                           :data-type :signal}}
+  (NodeType. {:signal-in (signal-in 0 "Signal in")
+              :threshold (number-param-in "threshold" "Threshold" -24 [-100 0])
+              :knee (number-param-in "knee" "Knee" 30 [0 40])
+              :ratio (number-param-in "ratio" "Ratio" 12 [1 20])
+              :attack (number-param-in "attack" "Attack" 0.003 [0 1])
+              :release (number-param-in "release" "Release" 0.25 [0 1])}
+             {:signal-out (signal-out 0 "Signal out")}
              nil
              false
              "Compressor"
@@ -339,38 +263,14 @@
              {:constructor "context.createDynamicsCompressor()"}))
 
 (def midi-note-node-type
-  (NodeType. {:device {:type :accessor
-                       :name "device"
-                       :default nil
-                       :title "Device"
-                       :data-type :midi-device
-                       :serializable false}
-              :note-mode {:type :constant
-                          :name "noteMode"
-                          :default "retrig"
-                          :data-type :string
-                          :title "Mode"
-                          :choices ["retrig" "legato"]}
-              :portamento {:type :constant
-                           :name "portamento"
-                           :default 0
-                           :data-type :number
-                           :range [0 5]
-                           :title "Portamento"}
-              :priority {:type :constant
-                         :name "priority"
-                         :default "last-on"
-                         :data-type :string
-                         :title "Priority"
-                         :choices ["last-on" "highest" "lowest"]}}
-             {:gate {:type :node
-                     :index 0
-                     :title "Gate"
-                     :data-type :gate}
-              :frequency {:type :node
-                          :index 1
-                          :title "Frequency"
-                          :data-type :param}}
+  (NodeType. {:device (midi-device-accessor-in "device" "Device")
+              :note-mode (string-constant-in "noteMode" "Mode" "retrig"
+                                             ["retrig" "legato"])
+              :portamento (number-constant-in "portamento" "Portamento" 0)
+              :priority (string-constant-in "priority" "Priority" "last-on"
+                                            ["last-on" "highest" "lowest"])}
+             {:gate (gate-out 0 "Gate")
+              :frequency (param-out 1 "Frequency")}
              nil
              false
              "MIDI Note"
@@ -382,22 +282,9 @@
                                                   "/js/audio/midi_note_node.js")]}}))
 
 (def midi-cc-node-type
-  (NodeType. {:device {:type :accessor
-                       :name "device"
-                       :default nil
-                       :title "Device"
-                       :data-type :midi-device
-                       :serializable false}
-              :channel {:type :constant
-                        :name "channel"
-                        :default 0
-                        :data-type :number
-                        :range [0 127]
-                        :title "Channel"}}
-             {:value {:type :node
-                      :index 0
-                      :title "Value"
-                      :data-type :param}}
+  (NodeType. {:device (midi-device-accessor-in "device" "Device")
+              :channel (number-constant-in "channel" "Channel" 0 [0 127])}
+             {:value (param-out 0 "Value")}
              {:inspector-fields [:midi-cc-learn]}
              false
              "MIDI CC"
@@ -433,31 +320,27 @@
     (merge basic-nodes midi-nodes)))
 
 (def all-node-groups
-  (let [generators [[:oscillator oscillator-node-type]
-                    [:const-source const-source-node-type]]
-        filters [[:biquad-filter biquad-filter-node-type]
-                 [:gain gain-node-type]
-                 [:stereo-panner stereo-panner-node-type]
-                 [:stereo-splitter stereo-splitter-node-type]
-                 [:stereo-merger stereo-merger-node-type]
-                 [:delay delay-node-type]
-                 [:compressor compressor-node-type]]
-        envelopes [[:adsr adsr-node-type]]
-        midi-nodes [[:midi-note midi-note-node-type]
-                    [:midi-cc midi-cc-node-type]]
-        analysers [[:scope scope-analyser-node-type]
-                   [:fft fft-analyser-node-type]]
-        interfaces [[:input input-node-type]
-                    [:output output-node-type]
-                    [:audio-destination audio-destination-node-type]]]
-    (concat [{:title "Generators" :node-types generators}
-             {:title "Filters" :node-types filters}
-             {:title "Envelopes" :node-types envelopes}]
-            (if has-midi-support
-              [{:title "MIDI" :node-types midi-nodes}]
-              [])
-            [{:title "Analysers" :node-types analysers}]
-            [{:title "Interfaces" :node-types interfaces}])))
+  (letfn [(lookup [node-type-id]
+            [node-type-id (all-node-types node-type-id)])]
+
+    (let [generators [:oscillator :const-source]
+          filters [:biquad-filter :gain :stereo-panner
+                   :stereo-splitter :stereo-merger
+                   :delay :compressor]
+          envelopes [:adsr]
+          midi-nodes [:midi-note :midi-cc]
+          analysers [:scope :fft]
+          interfaces [:input :output :audio-destination]]
+      (map
+       (fn [m] (update m :node-types (partial map lookup)))
+       (concat [{:title "Generators" :node-types generators}
+                {:title "Filters" :node-types filters}
+                {:title "Envelopes" :node-types envelopes}]
+               (if has-midi-support
+                 [{:title "MIDI" :node-types midi-nodes}]
+                 [])
+               [{:title "Analysers" :node-types analysers}]
+               [{:title "Interfaces" :node-types interfaces}])))))
 
 (defn get-node-type [node-type-id]
   (all-node-types node-type-id))
