@@ -440,7 +440,7 @@
       (debug "Index component creating new patch")
       (let [reply-chan (comm/create-new-patch)]
         (go
-          (let [[_ short-id] (<! reply-chan)]
+          (let [[_ {:keys [short-id]}] (<! reply-chan)]
             (routes/replace-navigation! (routes/show-patch {:short-id short-id}))))))
 
     om/IRender
@@ -467,13 +467,20 @@
     (go
       (let [{:keys [short-id]} page-args
             chan (comm/get-serialized-graph short-id)
-            [_ serialized-graph] (<! chan)
-            graph-js-obj (.parse js/JSON serialized-graph)
-            node-graph (node-graph-serialize/materialize-graph (:context @app-state)
-                                                               graph-js-obj)]
-        (swap! app-state #(merge % {:current-page page
-                                    :current-page-args page-args
-                                    :node-graph node-graph}))))
+            response (<! chan)]
+        (debug "Got response from get-patch" response)
+        (when (= :patch-data (first response))
+          (let [[_ serialized-graph] response
+                graph-js-obj (.parse js/JSON serialized-graph)
+                node-graph (node-graph-serialize/materialize-graph (:context @app-state)
+                                                                   graph-js-obj)]
+            (swap! app-state #(merge % {:current-page page
+                                        :current-page-args page-args
+                                        :node-graph node-graph}))))
+
+        (when (= :create-new (first response))
+          (let [[_ {:keys [short-id]}] response]
+            (routes/replace-navigation! (routes/show-patch {:short-id short-id}))))))
     (swap! app-state #(merge % {:current-page page
                                 :current-page-args page-args}))))
 

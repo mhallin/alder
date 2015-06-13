@@ -40,14 +40,20 @@
 
 (defmethod handle-message :create-new [_ _]
   (let [patch (db/create-patch!)]
-    [:reply :create-new (:short_id patch)]))
+    [:reply :create-new {:short-id (:short_id patch)}]))
 
 (defmethod handle-message :save-patch [_ [patch-id patch-data]]
-  (db/save-patch! patch-id patch-data)
-  [:reply :ok nil])
+  (if (db/save-patch! patch-id patch-data)
+    [:reply :ok nil]
+    [:reply :error nil]))
 
 (defmethod handle-message :get-patch [_ patch-id]
-  [:reply :patch-data (:patch_data (db/get-patch patch-id))])
+  (let [patch (db/get-patch patch-id)]
+    (if (:read_only patch)
+      (let [new-patch (db/duplicate-patch! patch-id)]
+        [:reply :create-new {:short-id (:short_id new-patch)
+                             :patch-data (:patch_data new-patch)}])
+      [:reply :patch-data (:patch_data (db/get-patch patch-id))])))
 
 (defn api-channel-handler [request]
   (with-channel request ws-ch

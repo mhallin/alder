@@ -53,11 +53,18 @@
   (let [short-id (generate-short-id)]
     (do-create-patch<! database-url short-id (jdbc/sql-value {}))))
 
-(defn save-patch! [short-id patch-data]
-  (do-save-patch! database-url (str->jsonb patch-data) short-id))
-
 (defn get-patch [short-id]
   (first (do-get-patch database-url short-id)))
 
+(defn save-patch! [short-id patch-data]
+  (let [existing-patch (get-patch short-id)]
+    (when (or (nil? existing-patch) (not (:read_only existing-patch)))
+      (do-save-patch! database-url (str->jsonb patch-data) short-id))))
+
+(defn duplicate-patch! [old-short-id]
+  (let [new-short-id (generate-short-id)]
+    (do-duplicate-patch<! database-url new-short-id old-short-id)))
+
 (defn -main []
-  (migrate))
+  (migrate)
+  (System/exit 0))

@@ -7,4 +7,13 @@ UPDATE patch SET patch_data = :patch_data WHERE short_id = :short_id;
 
 
 -- name: do-get-patch
-SELECT patch_data::varchar, created_at, updated_at FROM patch WHERE short_id = :short_id;
+SELECT short_id, patch_data::varchar, created_at, updated_at, read_only
+    FROM patch
+	WHERE short_id = :short_id;
+
+
+-- name: do-duplicate-patch<!
+INSERT INTO patch (short_id, patch_data, based_on_id)
+    SELECT :new_short_id, patch_data, id
+	    FROM patch
+		WHERE short_id = :old_short_id
