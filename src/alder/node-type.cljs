@@ -236,6 +236,43 @@
              (fn [ctx] (.call (aget ctx "createStereoPanner") ctx))
              {:constructor "context.createStereoPanner()"}))
 
+(def stereo-splitter-node-type
+  (NodeType. {:signal-in {:type :node
+                          :index 0
+                          :title "Signal in"}}
+             {:left-out {:type :node
+                         :index 0
+                         :title "Left channel out"
+                         :data-type :signal}
+              :right-out {:type :node
+                          :index 1
+                          :title "Right channel out"
+                          :data-type :signal}}
+             nil
+             false
+             "Split"
+             [70 40]
+             (fn [ctx] (.call (aget ctx "createChannelSplitter") ctx 2))
+             {:constructor "context.createChannelSplitter(2)"}))
+
+(def stereo-merger-node-type
+  (NodeType. {:left-in {:type :node
+                        :index 0
+                        :title "Left channel in"}
+              :right-in {:type :node
+                         :index 1
+                         :title "Right channel in"}}
+             {:signal-out {:type :node
+                          :index 0
+                           :title "Signal out"
+                           :data-type :signal}}
+             nil
+             false
+             "Merge"
+             [80 40]
+             (fn [ctx] (.call (aget ctx "createChannelMerger") ctx 2))
+             {:constructor "context.createChannelMerger(2)"}))
+
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
                        :name "device"
@@ -319,7 +356,9 @@
                      :const-source const-source-node-type
                      :fft fft-analyser-node-type
                      :scope scope-analyser-node-type
-                     :stereo-panner stereo-panner-node-type}
+                     :stereo-panner stereo-panner-node-type
+                     :stereo-splitter stereo-splitter-node-type
+                     :stereo-merger stereo-merger-node-type}
         midi-nodes (if has-midi-support
                      {:midi-note midi-note-node-type
                       :midi-cc midi-cc-node-type}
@@ -331,7 +370,9 @@
                     [:const-source const-source-node-type]]
         filters [[:biquad-filter biquad-filter-node-type]
                  [:gain gain-node-type]
-                 [:stereo-panner stereo-panner-node-type]]
+                 [:stereo-panner stereo-panner-node-type]
+                 [:stereo-splitter stereo-splitter-node-type]
+                 [:stereo-merger stereo-merger-node-type]]
         envelopes [[:adsr adsr-node-type]]
         midi-nodes [[:midi-note midi-note-node-type]
                     [:midi-cc midi-cc-node-type]]

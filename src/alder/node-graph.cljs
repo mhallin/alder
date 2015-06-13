@@ -37,11 +37,13 @@
         output-index (:index output-data)
 
         input-data (-> to-node node/node-type :inputs input-id)
-        input-name (:name input-data)]
+        input-name (:name input-data)
+        input-index (:index input-data)]
     (when-not (= (:type output-data) :null-node)
+      (debug "Connection indices" output-index input-index)
       (case (:type input-data)
-        :param (f from-audio-node (aget to-audio-node input-name) output-index)
-        :node (f from-audio-node to-audio-node output-index)
+        :param (f from-audio-node (aget to-audio-node input-name) output-index input-index)
+        :node (f from-audio-node to-audio-node output-index input-index)
         :gate (f from-audio-node to-audio-node output-index)
         :null-node nil))))
 
@@ -53,14 +55,14 @@
     (if (node/can-connect [from-node from-slot-id] [to-node to-slot-id])
       (do
         (debug "connect nodes" from to)
-        (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2 %3))
+        (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2 %3 %4))
         (update-in node-graph [:connections]
                    (fn [conns] (conj conns [from to]))))
       node-graph)))
 
 (defn disconnect-nodes [node-graph from to]
   (debug "disconnect nodes" from to)
-  (set-connection node-graph from to #(.call (aget %1 "disconnect") %1 %2 %3))
+  (set-connection node-graph from to #(.call (aget %1 "disconnect") %1 %2 %3 %4))
   (update-in node-graph [:connections]
              (fn [conns] (vec (remove #(= % [from to]) conns)))))
 
