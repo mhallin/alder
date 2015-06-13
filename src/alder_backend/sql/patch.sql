@@ -6,6 +6,10 @@ INSERT INTO patch (short_id, patch_data) VALUES (:short_id, :patch_data);
 UPDATE patch SET patch_data = :patch_data WHERE short_id = :short_id;
 
 
+-- name: do-update-visited-at!
+UPDATE patch SET last_visited_at = NOW() WHERE short_id = :short_id;
+
+
 -- name: do-get-patch
 SELECT short_id, patch_data::varchar, created_at, updated_at, read_only
     FROM patch

@@ -65,6 +65,9 @@
   (let [new-short-id (generate-short-id)]
     (do-duplicate-patch<! database-url new-short-id old-short-id)))
 
+(defn update-visited-at! [short-id]
+  (do-update-visited-at! database-url short-id))
+
 (defn -main []
   (migrate)
   (System/exit 0))

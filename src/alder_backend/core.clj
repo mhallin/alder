@@ -49,6 +49,7 @@
 
 (defmethod handle-message :get-patch [_ patch-id]
   (let [patch (db/get-patch patch-id)]
+    (db/update-visited-at! patch-id)
     (if (:read_only patch)
       (let [new-patch (db/duplicate-patch! patch-id)]
         [:reply :create-new {:short-id (:short_id new-patch)
