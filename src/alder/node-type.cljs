@@ -273,6 +273,26 @@
              (fn [ctx] (.call (aget ctx "createChannelMerger") ctx 2))
              {:constructor "context.createChannelMerger(2)"}))
 
+(def delay-node-type
+  (NodeType. {:signal-in {:type :node
+                          :index 0
+                          :title "Signal in"}
+              :delay-time {:type :param
+                           :name "delayTime"
+                           :data-type :number
+                           :range [0 5]
+                           :title "Delay time"}}
+             {:signal-out {:type :node
+                           :index 0
+                           :title "Signal out"
+                           :data-type :signal}}
+             nil
+             false
+             "Delay"
+             [80 40]
+             (fn [ctx] (.call (aget ctx "createDelay") ctx 5))
+             {:constructor "context.createDelay(5)"}))
+
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
                        :name "device"
@@ -358,7 +378,8 @@
                      :scope scope-analyser-node-type
                      :stereo-panner stereo-panner-node-type
                      :stereo-splitter stereo-splitter-node-type
-                     :stereo-merger stereo-merger-node-type}
+                     :stereo-merger stereo-merger-node-type
+                     :delay delay-node-type}
         midi-nodes (if has-midi-support
                      {:midi-note midi-note-node-type
                       :midi-cc midi-cc-node-type}
@@ -372,7 +393,8 @@
                  [:gain gain-node-type]
                  [:stereo-panner stereo-panner-node-type]
                  [:stereo-splitter stereo-splitter-node-type]
-                 [:stereo-merger stereo-merger-node-type]]
+                 [:stereo-merger stereo-merger-node-type]
+                 [:delay delay-node-type]]
         envelopes [[:adsr adsr-node-type]]
         midi-nodes [[:midi-note midi-note-node-type]
                     [:midi-cc midi-cc-node-type]]
