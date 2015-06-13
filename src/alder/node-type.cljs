@@ -293,6 +293,51 @@
              (fn [ctx] (.call (aget ctx "createDelay") ctx 5))
              {:constructor "context.createDelay(5)"}))
 
+(def compressor-node-type
+  (NodeType. {:signal-in {:type :node
+                          :index 0
+                          :title "Signal in"}
+              :threshold {:type :param
+                          :name "threshold"
+                          :data-type :number
+                          :default -24
+                          :title "Threshold"
+                          :range [-100 0]}
+              :knee {:type :param
+                     :name "knee"
+                     :data-type :number
+                     :default 30
+                     :range [0 40]
+                     :title "Knee"}
+              :ratio {:type :param
+                      :name "ratio"
+                      :data-type :number
+                      :default 12
+                      :range [1 20]
+                      :title "Ratio"}
+              :attack {:type :param
+                       :name "attack"
+                       :data-type :number
+                       :default 0.003
+                       :range [0 1]
+                       :title "Attack"}
+              :release {:type :param
+                        :name "release"
+                        :data-type :number
+                        :default 0.25
+                        :range [0 1]
+                        :title "Release"}}
+             {:signal-out {:type :node
+                           :index 0
+                           :title "Signal out"
+                           :data-type :signal}}
+             nil
+             false
+             "Compressor"
+             [120 100]
+             (fn [ctx] (.call (aget ctx "createDynamicsCompressor") ctx))
+             {:constructor "context.createDynamicsCompressor()"}))
+
 (def midi-note-node-type
   (NodeType. {:device {:type :accessor
                        :name "device"
@@ -379,7 +424,8 @@
                      :stereo-panner stereo-panner-node-type
                      :stereo-splitter stereo-splitter-node-type
                      :stereo-merger stereo-merger-node-type
-                     :delay delay-node-type}
+                     :delay delay-node-type
+                     :compressor compressor-node-type}
         midi-nodes (if has-midi-support
                      {:midi-note midi-note-node-type
                       :midi-cc midi-cc-node-type}
@@ -394,7 +440,8 @@
                  [:stereo-panner stereo-panner-node-type]
                  [:stereo-splitter stereo-splitter-node-type]
                  [:stereo-merger stereo-merger-node-type]
-                 [:delay delay-node-type]]
+                 [:delay delay-node-type]
+                 [:compressor compressor-node-type]]
         envelopes [[:adsr adsr-node-type]]
         midi-nodes [[:midi-note midi-note-node-type]
                     [:midi-cc midi-cc-node-type]]
