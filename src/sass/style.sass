@@ -65,10 +65,11 @@ body
   position: fixed
   right: 0
   top: 0
+  padding-top: 55px
 
 .palette__inner
-  padding: 16px 4px 16px 16px
-  height: 100vh
+  padding: 0 4px 16px 16px
+  height: calc(100vh - 55px)
   overflow: scroll
 
 .palette__node-group-title
@@ -238,3 +239,23 @@ body
 
 .github-fork-ribbon
   background: #333
+
+.navbar
+  position: absolute
+  width: 100%
+  height: 54px
+  z-index: 3
+  padding-left: 140px
+
+  background-color: #fcfcfc
+  border-bottom: 1px solid #dfdfdf
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2)
+
+.navbar__patch-name, .navbar__patch-name-editor
+  margin: 14px 0 0 0
+  font-weight: bold
+  font-size: 24px
+  padding: 0
+  border: 0
+  background: transparent
+  outline: 0

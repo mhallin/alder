@@ -14,7 +14,8 @@
 
 (defn make-node-graph []
   {:nodes {}
-   :connections []})
+   :connections []
+   :name "Untitled patch"})
 
 (defn add-node
   ([node-graph node-id node]

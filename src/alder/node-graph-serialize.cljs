@@ -1,5 +1,7 @@
 (ns alder.node-graph-serialize
-  (:require [alder.node :as node]
+  (:require [clojure.walk :as walk]
+
+            [alder.node :as node]
             [alder.node-graph :as node-graph]
             [alder.geometry :as geometry]))
 
@@ -25,7 +27,8 @@
 (defn serialize-graph [node-graph]
   (let [data {:connections (:connections node-graph)
               :nodes (into {} (map (partial serialize-node node-graph)
-                                   (:nodes node-graph)))}]
+                                   (:nodes node-graph)))
+              :name (:name node-graph)}]
     (clj->js data)))
 
 
@@ -53,9 +56,10 @@
                             [(keyword to-node) (keyword to-slot)]))
 
 (defn materialize-graph [context serialized-graph]
-  (let [{:keys [nodes connections]} (clojure.walk/keywordize-keys
-                                     (js->clj serialized-graph))
+  (let [{:keys [nodes connections name]} (walk/keywordize-keys
+                                          (js->clj serialized-graph))
         node-graph (node-graph/make-node-graph)
+        node-graph (assoc node-graph :name (or name "Untitled patch"))
         node-graph (reduce (fn [graph n] (materialize-node context graph n))
                            node-graph
                            nodes)

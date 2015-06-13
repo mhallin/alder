@@ -79,8 +79,7 @@
     (let [x (.-clientX event)
           y (.-clientY event)]
       (when-let [slot-path (:slot-path dragging-data)]
-        (swap! app-state #(update-in % [:dragging :current-pos]
-                                     (fn [_] [x y]))))
+        (swap! app-state #(assoc-in % [:dragging :current-pos] [x y])))
 
       (when-let [node-id (:node-id dragging-data)]
         (let [[offset-x offset-y] (:offset dragging-data)
@@ -94,12 +93,7 @@
           (swap! app-state
                  #(update % :node-graph
                           (fn [graph]
-                            (node-graph/nodes-move-by graph node-ids [dx dy]))))
-          ;; (swap! app-state
-          ;;        #(update-in % [:node-graph]
-          ;;                    (fn [graph]
-          ;;                      (node-graph/node-move-to graph node-id [x y]))))
-          ))
+                            (node-graph/nodes-move-by graph node-ids [dx dy]))))))
 
       (when-let [new-node (:new-node dragging-data)]
         (let [[offset-x offset-y] (:offset new-node)
@@ -117,12 +111,9 @@
               selected-nodes (node-graph/nodes-in-rect (:node-graph @app-state)
                                                        selection-rect)]
           (swap! app-state
-                 #(assoc-in %
-                            [:dragging :selection-end]
-                            selection-end))
+                 #(assoc-in % [:dragging :selection-end] selection-end))
           (swap! app-state
-                 #(assoc %
-                         :selection (set (map first selected-nodes)))))))))
+                 #(assoc % :selection (set (map first selected-nodes)))))))))
 
 (defn node-start-drag [node-id event]
   (when (zero? (.-button event))
@@ -347,6 +338,52 @@
                   :href "#"}
                  "Export"]]])))))
 
+(defn navbar-view [data owner]
+  (letfn [(start-patch-name-editor [e]
+            (.preventDefault e)
+            (om/set-state! owner [:editing-patch-name] true))
+
+          (stop-patch-name-editor []
+            (when (-> data :node-graph :name empty?)
+              (om/update! data [:node-graph :name] "Untitled patch"))
+            (om/set-state! owner [:editing-patch-name] false))
+
+          (on-name-editor-key-up [e]
+            (when (= 13 (.-keyCode e))
+              (.preventDefault e)
+              (stop-patch-name-editor)))
+
+          (update-patch-name [e]
+            (om/update! data [:node-graph :name] (.-value (.-target e))))]
+   (reify
+     om/IDisplayName
+     (display-name [_] "Navbar")
+
+     om/IDidUpdate
+     (did-update [_ _ prev-state]
+       (let [was-editing (:editing-patch-name prev-state)
+             is-editing (om/get-state owner :editing-patch-name)]
+         (when (and is-editing (not was-editing))
+           (let [editor (om/get-node owner "editor")]
+             (.select editor)
+             (debug "Editor" editor)))))
+
+     om/IRenderState
+     (render-state [_ state]
+       (html
+        [:div.navbar
+         (let [name (-> data :node-graph :name)]
+           (if (:editing-patch-name state)
+             [:input.navbar__patch-name-editor
+              {:value name
+               :on-key-up on-name-editor-key-up
+               :on-change update-patch-name
+               :on-blur stop-patch-name-editor
+               :ref "editor"}]
+             [:h2.navbar__patch-name
+              {:on-double-click start-patch-name-editor}
+              name]))])))))
+
 (defn editor-component [data owner]
   (letfn [(handle-key-up [e]
             (when (and (= (.-keyCode e) 46))
@@ -379,6 +416,7 @@
         (html [:div.alder-root
                {:on-mouse-up end-drag
                 :on-mouse-move update-drag}
+               (om/build navbar-view data)
                (om/build graph-canvas-view data)
                (om/build palette-view data)
                (when-let [new-node (-> data :dragging :new-node)]
