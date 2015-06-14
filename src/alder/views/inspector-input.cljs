@@ -3,9 +3,10 @@
             [sablono.core :as html :refer-macros [html]]
             [taoensso.timbre :refer-macros [debug]]
 
-            [alder.audio.midiapi :as midiapi]))
+            [alder.audio.midiapi :as midiapi]
+            [alder.views.audio-import :refer [audio-import-component]]))
 
-(defn render-choice-input [input value on-change]
+(defn render-choice-input [node input value on-change]
   [:select.node-inspector__input
    {:value value
     :on-change #(on-change (-> % .-target .-value))}
@@ -50,19 +51,19 @@
            :max max
            :on-change input-did-change}])))))
 
-(defn render-number-input [input value on-change]
+(defn render-number-input [node input value on-change]
   (let [[min max] (:range input)]
     (om/build number-input-component value
               {:opts {:min min
                       :max max
                       :on-change on-change}})))
 
-(defn render-string-input [input value on-change]
+(defn render-string-input [node input value on-change]
   [:input.node-inspector__input
    {:value value
     :on-change #(on-change (-> % .-target .-value))}])
 
-(defn render-gate-input [input value on-change]
+(defn render-gate-input [node input value on-change]
   [:button.node-inspector__input
    {:on-mouse-down #(on-change 1.0)
     :on-mouse-up #(on-change 0.0)}
@@ -75,7 +76,7 @@
             [(aget (.-value value) 0) (aget (.-value value) 1)])
       {})))
 
-(defn midi-device-input-component [[input value on-change] owner]
+(defn midi-device-input-component [[node input value on-change] owner]
   (letfn [(devices-loaded [devices]
             (let [inputs (aget devices "inputs")
                   entries (.call (aget inputs "entries") inputs)]
@@ -101,21 +102,25 @@
           (map (fn [[id input]] [:option {:value id} (.-name input)])
                (om/get-state owner :inputs))])))))
 
-(defn render-midi-device-input [input value on-change]
+(defn render-midi-device-input [node input value on-change]
   (om/build midi-device-input-component [input value on-change]))
 
-(defn render-boolean-input [input value on-change]
+(defn render-boolean-input [node input value on-change]
   (html
    [:input.node-inspector__checkbox-input
     {:type "checkbox"
      :checked value
      :on-change #(on-change (.-checked (.-target %)))}]))
 
-(defn render-input [input value on-change]
+(defn render-buffer-input [node input value on-change]
+  (om/build audio-import-component [node input value on-change]))
+
+(defn render-input [node input value on-change]
   (let [render-fn (cond (:choices input) render-choice-input
                         (= (:data-type input) :number) render-number-input
                         (= (:type input) :gate) render-gate-input
                         (= (:data-type input) :midi-device) render-midi-device-input
                         (= (:data-type input) :boolean) render-boolean-input
+                        (= (:data-type input) :buffer) render-buffer-input
                         :else render-string-input)]
-    (render-fn input value on-change)))
+    (render-fn node input value on-change)))

@@ -8,15 +8,16 @@
             [alder.views.inspector-input :refer [render-input]]
             [alder.views.midi-cc-learn :refer [midi-cc-learn-component]]
             [alder.views.fft-analyser :refer [fft-analyser-component]]
-            [alder.views.waveform-analyser :refer [waveform-analyser-component]]))
+            [alder.views.waveform-analyser :refer [waveform-analyser-component]]
+            [alder.views.audio-import :refer [audio-import-component]]))
 
 (def custom-inspector-component
-  {:fft fft-analyser-component
-   :waveform waveform-analyser-component
-   :midi-cc-learn midi-cc-learn-component})
+  {:fft (fn [] fft-analyser-component)
+   :waveform (fn [] waveform-analyser-component)
+   :midi-cc-learn (fn [] midi-cc-learn-component)})
 
 (defn render-inspector-field [node field-type]
-  (om/build (custom-inspector-component field-type) node))
+  (om/build ((custom-inspector-component field-type)) node))
 
 (defn inspector-component [[node-graph node-id node] owner]
   (let [node-origin (-> node :frame geometry/rectangle-origin)
@@ -35,7 +36,7 @@
               [:div.node-inspector__input-container
                [:span.node-inspector__input-title
                 (or (:inspector-title input) (:title input))]
-               (render-input input
+               (render-input node input
                              (node/current-input-value node input)
                              #(set-input-value node input %))])]
       (reify

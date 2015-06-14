@@ -3,7 +3,7 @@
             [schema.core :as s :include-macros true]))
 
 (def SignalType
-  (s/enum :boolean :number :string :midi-device))
+  (s/enum :boolean :number :string :midi-device :buffer))
 
 (def SignalRange
   [(s/one s/Num "lower") (s/one s/Num "upper")])
@@ -147,6 +147,10 @@
 (s/defn boolean-constant-in :- Input
   [name :- s/Str title :- s/Str default :- s/Bool]
   {:type :constant, :name name, :title title, :data-type :boolean, :default default})
+
+(s/defn buffer-constant-in :- Input
+  [name :- s/Str title :- s/Str]
+  {:type :constant, :name name, :title title, :data-type :buffer, :serializable false})
 
 (s/def audio-destination-node-type :- ValidNodeType
   (NodeType. {:signal (signal-in 0 "Signal")}
@@ -328,16 +332,18 @@
 
 (s/def audio-buffer-source-node-type :- ValidNodeType
   (NodeType. {:gate (gate-in "gate" "Gate")
-              :playback-rate (number-param-in "playbackRate" "Rate" 1)
-              :loop (boolean-accessor-in "loop" "Loop" false)
-              :loop-start (number-accessor-in "loopStart" "Loop start" 0)
-              :loop-end (number-accessor-in "loopEnd" "Loop end" 0)
-              :stop-on-gate-off (boolean-constant-in "stopOnGateOff" "Stop on gate off" false)}
+              :buffer (buffer-constant-in "buffer" "Buffer")
+              :playback-rate (number-constant-in "playbackRate" "Rate" 1)
+              :loop (boolean-constant-in "loop" "Loop" false)
+              :loop-start (number-constant-in "loopStart" "Loop start" 0)
+              :loop-end (number-constant-in "loopEnd" "Loop end" 0)
+              :play-mode (string-constant-in "playMode" "Play mode" "retrig-restart"
+                                             ["retrig-restart" "gate-off-stop"])}
              {:signal-out (signal-out 0 "Signal out")}
              nil
              false
              "Audio"
-             [80 100]
+             [80 120]
              #(js/BufferSourceWrapperNode. %)
              {:constructor "new BufferSourceWrapperNode(context)"
               :dependencies {"BufferSourceWrapperNode"
