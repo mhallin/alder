@@ -1,0 +1,47 @@
+.node
+  @extend .__no_user_select
+
+  position: absolute
+  border: 1px solid #ddd
+  border-radius: 4px
+
+  cursor: grab
+
+  background: #fff
+  text-align: center
+  line-height: 2.5
+  font-weight: lighter
+  box-shadow: 0 0 3px #eee
+
+  &.m-selected
+    border-color: #3fadf0
+
+.node__slot
+  position: absolute
+  background-color: #fff
+  border: 1px solid #ddd
+  border-radius: 100%
+  box-shadow: 0 0 3px #eee
+  cursor: default
+
+  transition: border-color 0.25s linear
+
+  &.m-connectable
+    border-color: #3fadf0
+
+  &.m-not-connectable
+    border-color: #f3f3f3
+
+.node__inspector-toggle-button
+  position: absolute
+  bottom: 2px
+  left: calc(50% - 8px)
+  width: 16px
+  height: 8px
+  cursor: pointer
+
+  &.m-open
+    background-image: inline('../img/inspector_close_button.svg')
+
+  &.m-closed
+    background-image: inline('../img/inspector_open_button.svg')

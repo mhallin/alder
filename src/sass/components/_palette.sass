@@ -1,0 +1,37 @@
+.palette
+  width: $palette-width
+  z-index: 1
+  background-color: #fcfcfc
+  border-left: 1px solid #dfdfdf
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2)
+  position: fixed
+  right: 0
+  top: 0
+  padding-top: 55px
+
+.palette__inner
+  padding: 0 4px 16px 16px
+  height: calc(100vh - 55px)
+  overflow: scroll
+
+.palette__node-group-title
+  @extend .__no_user_select
+
+  margin-bottom: 16px
+  padding-right: 8px
+  padding-bottom: 2px
+
+  text-align: right
+  font-weight: 300
+  font-size: 14px
+
+  border-bottom: 1px solid #979797
+  color: #4a4a4a
+
+.prototype-node
+  @extend .node
+
+  position: relative
+  margin-bottom: 16px
+  margin-right: 16px
+  display: inline-block

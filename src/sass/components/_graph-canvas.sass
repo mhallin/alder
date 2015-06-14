@@ -1,0 +1,27 @@
+.graph-canvas
+  display: flex
+  width: calc(100% - #{$palette-width})
+  margin-right: 16px
+  z-index: 2
+  position: relative
+  cursor: default
+  overflow: scroll
+
+.graph-canvas__connections
+  flex-grow: 1
+  z-index: 3
+  pointer-events: none
+
+.graph-canvas__connection
+  stroke-width: 2
+  stroke: #000
+  fill: none
+  pointer-events: visibleStroke
+  cursor: pointer
+
+.graph-canvas__selection
+  @extend .__no_user_select
+
+  background-color: rgba(128, 128, 128, 0.05)
+  border: 1px solid rgba(128, 128, 128, 0.1)
+  position: absolute

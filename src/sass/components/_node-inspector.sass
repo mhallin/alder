@@ -1,0 +1,33 @@
+.node-inspector
+  @extend .__no_user_select
+
+  position: absolute
+  border: 1px solid #ddd
+  border-radius: 4px
+
+  background: #fff
+  padding: 8px
+  box-shadow: 0 0 3px #eee
+  font-weight: lighter
+  font-size: 12px
+  z-index: 4
+
+.node-inspector__input-container
+  clear: right
+  margin-bottom: 8px
+
+  &:last-child
+    margin-bottom: 0
+
+.node-inspector__input-title
+  display: inline-block
+  margin-top: 4px
+
+.node-inspector__input
+  width: 80px
+  float: right
+  height: 20px
+
+.node-inspector__fft-line, .node-inspector__waveform-line
+  fill: none
+  stroke: #777

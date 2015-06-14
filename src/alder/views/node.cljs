@@ -7,7 +7,7 @@
 
 (defn- render-slot [node-id node slot-id slot slot-frame slot-drag-data on-mouse-down]
   (html
-   [:div.graph-canvas__node-slot
+   [:div.node__slot
     {:style (geometry/rectangle->css slot-frame)
      :class (if slot-drag-data
               [(if (node/can-connect slot-drag-data [node slot-id])
@@ -33,13 +33,13 @@
     (render [_]
       (let [frame (:frame node)
             title (-> node node/node-type :default-title)]
-        (html [:div.graph-canvas__node
+        (html [:div.node
                {:style (geometry/rectangle->css frame)
                 :key (str "node__" node-id)
                 :on-mouse-down #(on-mouse-down node-id %)
                 :class (if (selection node-id) ["m-selected"] [])}
                title
-               [:div.graph-canvas__node-inspector-toggle
+               [:div.node__inspector-toggle-button
                 {:class (if (:inspector-visible node) "m-open" "m-closed")
                  :on-click #(om/transact! node :inspector-visible (fn [x] (not x)))}]
                (render-slot-list node-id node slot-drag-data on-slot-mouse-down)])))))
