@@ -1,32 +1,54 @@
 (ns alder.node-graph
   (:require [alder.node :as node]
+            [alder.node-type :as node-type]
             [alder.geometry :as geometry]
-            [taoensso.timbre :refer-macros [debug]]))
+            [taoensso.timbre :refer-macros [debug]]
+            [schema.core :as s :include-macros true]))
 
 (defonce id-counter (atom 0))
 
-(defn next-node-id [node-graph]
+(def NodeRef [(s/one s/Keyword "node-id") (s/one node/NodeSchema "node")])
+
+(def SlotRef [(s/one s/Keyword "node-id") (s/one s/Keyword "slot-id")])
+
+(def Connection [(s/one SlotRef "from") (s/one SlotRef "to")])
+
+(def NodeGraph
+  {:nodes {s/Keyword node/NodeSchema}
+   :connections [Connection]
+   :name s/Str})
+
+(s/defn next-node-id :- s/Keyword
+  [node-graph :- NodeGraph]
   (let [next-id (swap! id-counter inc)
         node-id (keyword (str "node-" next-id))]
     (if (node-id (:nodes node-graph))
       (next-node-id node-graph)
       node-id)))
 
-(defn make-node-graph []
+(s/defn make-node-graph :- NodeGraph
+  []
   {:nodes {}
    :connections []
    :name "Untitled patch"})
 
-(defn add-node
-  ([node-graph node-id node]
+(s/defn add-node :- NodeGraph
+  ([node-graph :- NodeGraph node-id :- s/Keyword node :- node/NodeSchema]
    (assoc-in node-graph [:nodes node-id] node))
 
-  ([node-graph node-id node-type-id position context]
+  ([node-graph :- NodeGraph
+    node-id :- s/Keyword
+    node-type-id :- s/Keyword
+    position :- geometry/Point
+    context :- s/Any]
    (let [node (node/make-node context position node-type-id)
          node-graph (assoc-in node-graph [:nodes node-id] node)]
      node-graph)))
 
-(defn set-connection [node-graph [from-id output-id] [to-id input-id] f]
+(s/defn set-connection [node-graph :- NodeGraph
+                        [from-id output-id] :- SlotRef
+                        [to-id input-id] :- SlotRef
+                        f :- s/Any]
   (let [from-node (-> node-graph :nodes from-id)
         from-audio-node (:audio-node from-node)
 
@@ -47,7 +69,8 @@
         :gate (f from-audio-node to-audio-node output-index)
         :null-node nil))))
 
-(defn connect-nodes [node-graph from to]
+(s/defn connect-nodes :- NodeGraph
+  [node-graph :- NodeGraph from :- SlotRef to :- SlotRef]
   (let [[from-node-id from-slot-id] from
         [to-node-id to-slot-id] to
         from-node (-> node-graph :nodes from-node-id)
@@ -60,45 +83,55 @@
                    (fn [conns] (conj conns [from to]))))
       node-graph)))
 
-(defn disconnect-nodes [node-graph from to]
+(s/defn disconnect-nodes :- NodeGraph
+  [node-graph :- NodeGraph from :- SlotRef to :- SlotRef]
   (debug "disconnect nodes" from to)
   (set-connection node-graph from to #(.call (aget %1 "disconnect") %1 %2 %3 %4))
   (update-in node-graph [:connections]
              (fn [conns] (vec (remove #(= % [from to]) conns)))))
 
-(defn node-move-to [node-graph node-id position]
+(s/defn node-move-to :- NodeGraph
+  [node-graph :- NodeGraph node-id :- s/Keyword position :- geometry/Point]
   (update-in node-graph [:nodes node-id]
              (fn [node] (node/node-move-to node position))))
 
-(defn node-move-by [node-graph node-id offset]
+(s/defn node-move-by :- NodeGraph
+  [node-graph :- NodeGraph node-id :- s/Keyword offset :- geometry/Point]
   (update-in node-graph [:nodes node-id]
              (fn [node] (node/node-move-by node offset))))
 
-(defn nodes-move-by [node-graph node-ids offset]
+(s/defn nodes-move-by :- NodeGraph
+  [node-graph :- NodeGraph node-ids :- #{s/Keyword} offset :- geometry/Point]
   (reduce (fn [node-graph node-id]
             (node-move-by node-graph node-id offset))
           node-graph
           node-ids))
 
-(defn node-position [node-graph node-id]
+(s/defn node-position :- geometry/Point
+  [node-graph :- NodeGraph node-id :- s/Keyword]
   (-> node-graph :nodes node-id :frame geometry/rectangle-origin))
 
-(defn hit-test-slot [node-graph position]
+(s/defn hit-test-slot :- (s/maybe [(s/one s/Keyword "node-id")
+                                   (s/one s/Keyword "slot-id")])
+  [node-graph :- NodeGraph position :- geometry/Point]
   (when-let [matching (keep (fn [[id node]]
                               (when-let [slot-id (node/hit-test-slot node position)]
                                 [id slot-id]))
                             (:nodes node-graph))]
     (first matching)))
 
-(defn nodes-in-to [node-graph node-id]
+(s/defn nodes-in-to :- [Connection]
+  [node-graph :- NodeGraph node-id :- s/Keyword]
   (filter (fn [[_ [id _]]] (= id node-id))
           (:connections node-graph)))
 
-(defn nodes-out-from [node-graph node-id]
+(s/defn nodes-out-from :- [Connection]
+  [node-graph :- NodeGraph node-id :- s/Keyword]
   (filter (fn [[[id _] _]] (= id node-id))
           (:connections node-graph)))
 
-(defn remove-node [node-graph node-id]
+(s/defn remove-node :- NodeGraph
+  [node-graph :- NodeGraph node-id :- s/Keyword]
   (let [connections (filter (fn [[[from-id _] [to-id _]]]
                               (or (= from-id node-id) (= to-id node-id)))
                             (:connections node-graph))
@@ -109,18 +142,22 @@
     (update-in node-graph [:nodes]
                #(dissoc % node-id))))
 
-(defn remove-nodes [node-graph node-ids]
+(s/defn remove-nodes :- NodeGraph
+  [node-graph :- NodeGraph node-ids :- #{s/Keyword}]
   (reduce remove-node node-graph node-ids))
 
-(defn disconnected-inputs [node-graph node-id inputs]
+(s/defn disconnected-inputs :- [node-type/InputRef]
+  [node-graph :- NodeGraph node-id :- s/Keyword inputs :- [node-type/InputRef]]
   (remove (fn [[id _]] (some (fn [[[_ _] [to-node-id to-input-id]]]
                                (and (= to-node-id node-id) (= to-input-id id)))
                              (:connections node-graph)))
           inputs))
 
-(defn node-by-id [node-graph node-id]
+(s/defn node-by-id :- node/NodeSchema
+  [node-graph :- NodeGraph node-id :- s/Keyword]
   (-> node-graph :nodes node-id))
 
-(defn nodes-in-rect [node-graph rect]
+(s/defn nodes-in-rect :- [NodeRef]
+  [node-graph :- NodeGraph rect :- geometry/Rectangle]
   (filter (fn [[id n]] (geometry/rectangles-overlap? rect (:frame n)))
           (:nodes node-graph)))

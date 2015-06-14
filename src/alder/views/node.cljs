@@ -1,6 +1,7 @@
 (ns alder.views.node
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
+            [schema.core :as s :include-macros true]
 
             [alder.node :as node]
             [alder.geometry :as geometry]))

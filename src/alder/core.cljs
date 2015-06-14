@@ -4,6 +4,7 @@
               [chord.client :refer [ws-ch]]
               [cljs.core.async :refer [<! >! put! close!]]
               [taoensso.timbre :as timbre :refer-macros [info debug]]
+              [schema.core :as s :include-macros true]
 
               [alder.node :as node]
               [alder.node-type :as node-type]
@@ -504,6 +505,11 @@
 (om/root root-component
          app-state
          {:target (. js/document (getElementById "app"))})
+
+;; This ensures that Schema is always validating function
+;; calls/responses when assertions are active
+(assert
+ (do (s/set-fn-validation! true) true))
 
 (comment
 

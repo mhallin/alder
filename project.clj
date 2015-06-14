@@ -21,7 +21,8 @@
                  [yesql "0.4.2"]
                  [org.clojure/java.jdbc "0.3.7"]
                  [com.taoensso/timbre "4.0.0"]
-                 [org.clojure/tools.namespace "0.2.10"]]
+                 [org.clojure/tools.namespace "0.2.10"]
+                 [prismatic/schema "0.4.3"]]
 
   :plugins [[lein-cljsbuild "1.0.5"]
             [lein-figwheel "0.3.1"]
@@ -48,13 +49,26 @@
                                      :asset-path "cljs_compiled/out"
                                      :output-to "resources/public/cljs_compiled/alder.js"
                                      :output-dir "resources/public/cljs_compiled/out"
-                                     :source-map-timestamp true }}
+                                     :source-map-timestamp true}}
+                         {:id "dev-no-asserts"
+                          :source-paths ["src"]
+
+                          :figwheel { :on-jsload "alder.core/on-js-reload" }
+
+                          :compiler {:main alder.core
+                                     :asset-path "cljs_compiled/out-no-asserts"
+                                     :output-to "resources/public/cljs_compiled/alder.js"
+                                     :output-dir "resources/public/cljs_compiled/out-no-asserts"
+                                     :source-map-timestamp true
+                                     :elide-asserts true}
+                          :elide-asserts true}
                          {:id "min"
                           :source-paths ["src"]
                           :compiler {:output-to "resources/public/cljs_compiled/alder.js"
                                      :main alder.core
                                      :optimizations :advanced
-                                     :pretty-print false}}]}}
+                                     :pretty-print false
+                                     :elide-asserts true}}]}}
 
    :uberjar
    {:env {:production true}

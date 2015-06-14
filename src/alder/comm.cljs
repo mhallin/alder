@@ -1,14 +1,15 @@
 (ns alder.comm
   (:require [chord.client :refer [ws-ch]]
             [cljs.core.async :refer [<! >! put! close! chan alts!]]
-            [taoensso.timbre :refer-macros [debug]])
+            [taoensso.timbre :refer-macros [debug]]
+            [schema.core :as s :include-macros true])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce internal-comm (chan))
 (defonce current-connection (atom nil))
 
-(defn- websocket-url []
+(s/defn websocket-url :- s/Str []
   (let [host (.-host js/location)]
     (str "ws://" host "/alder-api-ws")))
 
@@ -56,17 +57,17 @@
     (go (>! internal-comm [reply-chan [:create-new nil]]))
     reply-chan))
 
-(defn send-serialized-graph [patch-id serialized-graph]
+(s/defn send-serialized-graph [patch-id :- s/Str serialized-graph :- s/Str]
   (let [reply-chan (chan)]
     (go (>! internal-comm [reply-chan [:save-patch [patch-id serialized-graph]]]))
     reply-chan))
 
-(defn get-serialized-graph [patch-id]
+(s/defn get-serialized-graph [patch-id :- s/Str]
   (let [reply-chan (chan)]
     (go (>! internal-comm [reply-chan [:get-patch patch-id]]))
     reply-chan))
 
-(defn create-readonly-duplicate-patch [patch-id]
+(s/defn create-readonly-duplicate-patch [patch-id :- s/Str]
   (let [reply-chan (chan)]
     (go (>! internal-comm [reply-chan [:create-readonly-duplicate patch-id]]))
     reply-chan))
