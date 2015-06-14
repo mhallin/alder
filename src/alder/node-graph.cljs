@@ -66,7 +66,7 @@
       (case (:type input-data)
         :param (f from-audio-node [(aget to-audio-node input-name) output-index])
         :node (f from-audio-node [to-audio-node output-index input-index])
-        :gate f from-audio-node [to-audio-node output-index]
+        :gate (f from-audio-node [to-audio-node output-index])
         :null-node nil))))
 
 (s/defn connect-nodes :- NodeGraph
