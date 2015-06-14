@@ -103,7 +103,7 @@
                (om/get-state owner :inputs))])))))
 
 (defn render-midi-device-input [node input value on-change]
-  (om/build midi-device-input-component [input value on-change]))
+  (om/build midi-device-input-component [node input value on-change]))
 
 (defn render-boolean-input [node input value on-change]
   (html
