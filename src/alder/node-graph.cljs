@@ -64,9 +64,9 @@
     (when-not (= (:type output-data) :null-node)
       (debug "Connection indices" output-index input-index)
       (case (:type input-data)
-        :param (f from-audio-node (aget to-audio-node input-name) output-index input-index)
-        :node (f from-audio-node to-audio-node output-index input-index)
-        :gate (f from-audio-node to-audio-node output-index)
+        :param (f from-audio-node [(aget to-audio-node input-name) output-index])
+        :node (f from-audio-node [to-audio-node output-index input-index])
+        :gate f from-audio-node [to-audio-node output-index]
         :null-node nil))))
 
 (s/defn connect-nodes :- NodeGraph
@@ -78,7 +78,7 @@
     (if (node/can-connect [from-node from-slot-id] [to-node to-slot-id])
       (do
         (debug "connect nodes" from to)
-        (set-connection node-graph from to #(.call (aget %1 "connect") %1 %2 %3 %4))
+        (set-connection node-graph from to #(.apply (aget %1 "connect") %1 (clj->js %2)))
         (update-in node-graph [:connections]
                    (fn [conns] (conj conns [from to]))))
       node-graph)))
@@ -86,7 +86,7 @@
 (s/defn disconnect-nodes :- NodeGraph
   [node-graph :- NodeGraph from :- SlotRef to :- SlotRef]
   (debug "disconnect nodes" from to)
-  (set-connection node-graph from to #(.call (aget %1 "disconnect") %1 %2 %3 %4))
+  (set-connection node-graph from to #(.apply (aget %1 "disconnect") %1 (clj->js %2)))
   (update-in node-graph [:connections]
              (fn [conns] (vec (remove #(= % [from to]) conns)))))
 
