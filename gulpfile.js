@@ -73,7 +73,7 @@ gulp.task('compress', function (callback) {
 });
 
 gulp.task('watch', function () {
-	gulp.watch('src/sass/*.sass', ['sass']);
+	gulp.watch('src/sass/**/*.sass', ['sass']);
 
 	gulp.watch('src/audio/**/*.js', ['webpack']);
 });

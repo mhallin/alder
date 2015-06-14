@@ -84,6 +84,12 @@
    :data-type :midi-device,
    :serializable false})
 
+(defn- boolean-accessor-in [name title default]
+  {:type :accessor, :name name, :title title, :data-type :boolean, :default default})
+
+(defn- boolean-constant-in [name title default]
+  {:type :constant, :name name, :title title, :data-type :boolean, :default default})
+
 (def audio-destination-node-type
   (NodeType. {:signal (signal-in 0 "Signal")}
              {}
@@ -262,6 +268,25 @@
              (fn [ctx] (.call (aget ctx "createDynamicsCompressor") ctx))
              {:constructor "context.createDynamicsCompressor()"}))
 
+(def audio-buffer-source-node-type
+  (NodeType. {:gate (gate-in "gate" "Gate")
+              :playback-rate (number-param-in "playbackRate" "Rate" 1)
+              :loop (boolean-accessor-in "loop" "Loop" false)
+              :loop-start (number-accessor-in "loopStart" "Loop start" 0)
+              :loop-end (number-accessor-in "loopEnd" "Loop end" 0)
+              :stop-on-gate-off (boolean-constant-in "stopOnGateOff" "Stop on gate off" false)}
+             {:signal-out (signal-out 0 "Signal out")}
+             nil
+             false
+             "Audio"
+             [80 100]
+             #(js/BufferSourceWrapperNode. %)
+             {:constructor "new BufferSourceWrapperNode(context)"
+              :dependencies {"BufferSourceWrapperNode"
+                             ["audio/buffer_source_wrapper_node"
+                              (str (.-origin js/location)
+                                   "/js/audio/buffer_source_wrapper_node.js")]}}))
+
 (def midi-note-node-type
   (NodeType. {:device (midi-device-accessor-in "device" "Device")
               :note-mode (string-constant-in "noteMode" "Mode" "retrig"
@@ -312,7 +337,8 @@
                      :stereo-splitter stereo-splitter-node-type
                      :stereo-merger stereo-merger-node-type
                      :delay delay-node-type
-                     :compressor compressor-node-type}
+                     :compressor compressor-node-type
+                     :audio-buffer-source audio-buffer-source-node-type}
         midi-nodes (if has-midi-support
                      {:midi-note midi-note-node-type
                       :midi-cc midi-cc-node-type}
@@ -323,7 +349,8 @@
   (letfn [(lookup [node-type-id]
             [node-type-id (all-node-types node-type-id)])]
 
-    (let [generators [:oscillator :const-source]
+    (let [generators [:oscillator :const-source
+                      :audio-buffer-source]
           filters [:biquad-filter :gain :stereo-panner
                    :stereo-splitter :stereo-merger
                    :delay :compressor]

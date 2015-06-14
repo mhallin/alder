@@ -1,6 +1,7 @@
 (ns alder.views.inspector-input
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
+            [taoensso.timbre :refer-macros [debug]]
 
             [alder.audio.midiapi :as midiapi]))
 
@@ -103,10 +104,18 @@
 (defn render-midi-device-input [input value on-change]
   (om/build midi-device-input-component [input value on-change]))
 
+(defn render-boolean-input [input value on-change]
+  (html
+   [:input.node-inspector__checkbox-input
+    {:type "checkbox"
+     :checked value
+     :on-change #(on-change (.-checked (.-target %)))}]))
+
 (defn render-input [input value on-change]
   (let [render-fn (cond (:choices input) render-choice-input
                         (= (:data-type input) :number) render-number-input
                         (= (:type input) :gate) render-gate-input
                         (= (:data-type input) :midi-device) render-midi-device-input
+                        (= (:data-type input) :boolean) render-boolean-input
                         :else render-string-input)]
     (render-fn input value on-change)))
