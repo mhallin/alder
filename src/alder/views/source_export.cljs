@@ -1,10 +1,10 @@
-(ns alder.export-render
+(ns alder.views.source-export
   (:require [om.core :as om :include-macros true]
             [sablono.core :as html :refer-macros [html]]
 
             [alder.graph-export :as graph-export]))
 
-(defn export-component [data owner {:keys [on-close]}]
+(defn source-export-component [data owner {:keys [on-close]}]
   (reify
     om/IDisplayName
     (display-name [_] "Export")

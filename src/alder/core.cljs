@@ -10,11 +10,11 @@
               [alder.node-type :as node-type]
               [alder.node-graph :as node-graph]
               [alder.node-graph-serialize :as node-graph-serialize]
-              [alder.export-render :as export-render]
               [alder.geometry :as geometry]
               [alder.routes :as routes]
               [alder.comm :as comm]
               [alder.persist :as persist]
+              [alder.views.source-export :refer [source-export-component]]
               [alder.views.inspector :refer [inspector-component]]
               [alder.views.node :refer [node-component]]
               [alder.views.prototype-node :refer [prototype-node-component]]
@@ -393,7 +393,7 @@
            "Export"]]])))))
 
 (def modal-component-map
-  {:export export-render/export-component
+  {:export source-export-component
    :share share-component})
 
 (defn editor-component [data owner]
