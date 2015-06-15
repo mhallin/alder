@@ -1,5 +1,8 @@
 (ns alder.audio.aapi)
 
+(def AudioContext (or (aget js/window "AudioContext")
+                      (aget js/window "webkitAudioContext")))
+
 (defn context [audio-node]
   (aget audio-node "context"))
 
