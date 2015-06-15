@@ -8,12 +8,12 @@
 (defn midi-cc-learn-component [node owner]
   (let [listen-token (.create js/Object #js {})]
     (letfn [(stop-learn []
-              (midiapi/remove-midi-event-listener (.device (:audio-node node))
+              (midiapi/remove-midi-event-listener (midiapi/node-device (:audio-node node))
                                                   listen-token)
               (om/set-state! owner :is-learning false))
 
             (on-midi-message [e]
-              (let [data (.-data e)]
+              (let [data (midiapi/event-data e)]
                 (when (and (= (.-length data) 3)
                            (= (bit-and 0xf0 (aget data 0)) 0xb0))
                   (let [channel (bit-and 0x7f (aget data 1))
@@ -23,7 +23,7 @@
                     (stop-learn)))))
 
             (start-learn []
-              (midiapi/add-midi-event-listener (.device (:audio-node node))
+              (midiapi/add-midi-event-listener (midiapi/node-device (:audio-node node))
                                                listen-token
                                                on-midi-message)
               (om/set-state! owner :is-learning true))]

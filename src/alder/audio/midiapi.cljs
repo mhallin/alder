@@ -18,3 +18,9 @@
          js/MIDIDispatch
          device
          token))
+
+(defn node-device [node]
+  (.call (aget node "device") node))
+
+(defn event-data [event]
+  (aget event "data"))
