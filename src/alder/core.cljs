@@ -8,6 +8,8 @@
 
               [alder.app-state :as app-state]
               [alder.selection :as selection]
+              [alder.modal :as modal]
+
               [alder.node :as node]
               [alder.node-type :as node-type]
               [alder.node-graph :as node-graph]
@@ -20,7 +22,8 @@
               [alder.views.inspector :refer [inspector-component]]
               [alder.views.node :refer [node-component]]
               [alder.views.prototype-node :refer [prototype-node-component]]
-              [alder.views.share :refer [share-component]])
+              [alder.views.share :refer [share-component]]
+              [alder.views.modal-container :refer [modal-container-component]])
 
     (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -302,14 +305,6 @@
                  slot-center (geometry/rectangle-center slot-frame)]
              (om/build temporary-connection-view [slot-center current-pos])))]]))))
 
-(defn- show-modal-window [app name event]
-  (.preventDefault event)
-  (om/transact! app #(assoc % :modal-overlay name)))
-
-(defn- hide-modal-window [app event]
-  (.preventDefault event)
-  (om/transact! app #(assoc % :modal-overlay nil)))
-
 (defn palette-view [data owner]
   (letfn [(render-palette-group [{:keys [title node-types]}]
             (html
@@ -379,16 +374,12 @@
           [:div.navbar__aux-button-container
            [:a.navbar__aux-button
             {:href "#"
-             :on-click (partial show-modal-window :share)}
+             :on-click (partial modal/show-modal-window data :share)}
             "Share"]
            [:a.navbar__aux-button
-            {:on-click (partial show-modal-window :export)
+            {:on-click (partial modal/show-modal-window data :export)
              :href "#"}
             "Export"]]])))))
-
-(def modal-component-map
-  {:export source-export-component
-   :share share-component})
 
 (defn editor-component [data owner]
   (letfn [(handle-key-up [e]
@@ -431,11 +422,7 @@
                [:div.save-data-debug
                 (.stringify js/JSON
                             (node-graph-serialize/serialize-graph (:node-graph data)))]
-               (when-let [modal-component (modal-component-map (:modal-overlay data))]
-                 [:div.modal-underlay
-                  [:div.modal-underlay__dialog
-                   (om/build modal-component data
-                             {:opts {:on-close hide-modal-window}})]])])))))
+               (om/build modal-container-component data)])))))
 
 (defn index-component [data owner]
   (reify

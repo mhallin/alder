@@ -18,4 +18,5 @@
     :current-page-args {}
 
     :selection-chan (chan)
+    :modal-window-chan (chan)
     }))
