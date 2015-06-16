@@ -25,7 +25,7 @@
                  [prismatic/schema "0.4.3"]]
 
   :plugins [[lein-cljsbuild "1.0.5"]
-            [lein-figwheel "0.3.1"]
+            [lein-figwheel "0.3.1" :exclusions [cider/cider-nrepl]]
             [lein-ring "0.9.3"]
             [ragtime/ragtime.lein "0.3.8"]
             [lein-environ "1.0.0"]]
