@@ -17,6 +17,11 @@
     :current-page :none
     :current-page-args {}
 
-    :selection-chan (chan)
+    :dragging-chan (chan)
+
     :modal-window-chan (chan)
+    :selection-chan (chan)
+    :node-drag-chan (chan)
+    :prototype-node-drag-chan (chan)
+    :slot-drag-chan (chan)
     }))

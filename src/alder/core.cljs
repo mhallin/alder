@@ -2,13 +2,15 @@
     (:require [om.core :as om :include-macros true]
               [sablono.core :as html :refer-macros [html]]
               [chord.client :refer [ws-ch]]
-              [cljs.core.async :refer [<! >! put! close!]]
-              [taoensso.timbre :as timbre :refer-macros [info debug]]
+              [cljs.core.async :refer [<! >! put! close! chan alts!]]
+              [taoensso.timbre :as timbre :refer-macros [error info debug]]
               [schema.core :as s :include-macros true]
 
               [alder.app-state :as app-state]
               [alder.selection :as selection]
               [alder.modal :as modal]
+              [alder.dragging :as dragging]
+              [alder.dom-util :as dom-util]
 
               [alder.node :as node]
               [alder.node-type :as node-type]
@@ -27,184 +29,91 @@
               [alder.views.navbar :refer [navbar-component]]
               [alder.views.index :refer [index-component]])
 
-    (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+    (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (enable-console-print!)
 
 (def palette-width 260)
 
-(defn end-drag [app event]
-  (when-let [dragging-data (:dragging @app)]
-    (persist/set-ignore-state-changes! false)
-    (let [mouse-x (.-clientX event)
-          mouse-y (.-clientY event)
-          mouse-point [mouse-x mouse-y]]
-      (when-let [slot-path (:slot-path dragging-data)]
-        (let [offset (:offset dragging-data)
-              reverse (:reverse dragging-data)
-              position (geometry/point-sub [mouse-x mouse-y] offset)]
-          (when-let [hit (-> @app :node-graph
-                             (node-graph/hit-test-slot position))]
-            (let [from (if reverse hit slot-path)
-                  to (if reverse slot-path hit)]
-              (om/transact! app
-                            #(update-in % [:node-graph]
-                                        (fn [node-graph]
-                                          (node-graph/connect-nodes node-graph
-                                                                    from
-                                                                    to))))))))
+(defn- end-drag [app event]
+  (dragging/mouse-up app (dom-util/event-mouse-pos event)))
 
-      (when-let [new-node (:new-node dragging-data)]
-        (when (< mouse-x (- (.-innerWidth js/window) 260))
-          (let [new-node-id (node-graph/next-node-id (:node-graph @app))
-                new-node (:node new-node)]
-            (om/transact! app
-                          #(update-in % [:node-graph]
-                                      (fn [node-graph]
-                                        (node-graph/add-node node-graph new-node-id new-node))))
-            (selection/set-selection! app #{new-node-id}))))))
-  (om/transact! app #(update-in % [:dragging] (fn [_] nil))))
-
-(defn update-drag [app event]
-  (when-let [dragging-data (:dragging @app)]
-    (let [x (.-clientX event)
-          y (.-clientY event)]
-      (when-let [slot-path (:slot-path dragging-data)]
-        (om/transact! app #(assoc-in % [:dragging :current-pos] [x y])))
-
-      (when-let [node-id (:node-id dragging-data)]
-        (let [[offset-x offset-y] (:offset dragging-data)
-              [node-x node-y] (node-graph/node-position (:node-graph @app)
-                                                        node-id)
-              new-node-x (- x offset-x)
-              new-node-y (- y offset-y)
-              dx (- new-node-x node-x)
-              dy (- new-node-y node-y)
-              node-ids (:selection @app)]
-          (om/transact! app
-                        #(update % :node-graph
-                                 (fn [graph]
-                                   (node-graph/nodes-move-by graph node-ids [dx dy]))))))
-
-      (when-let [new-node (:new-node dragging-data)]
-        (let [[offset-x offset-y] (:offset new-node)
-              x (- x offset-x)
-              y (- y offset-y)]
-          (om/transact! app
-                        #(update-in % [:dragging :new-node :node]
-                                    (fn [n]
-                                      (node/node-move-to n [x y]))))))
-
-      (when-let [selection-start (:selection-start dragging-data)]
-        (let [selection-end [x y]
-              selection-rect (geometry/corners->rectangle selection-start
-                                                          selection-end)
-              selected-nodes (node-graph/nodes-in-rect (:node-graph @app)
-                                                       selection-rect)]
-          (om/transact! app
-                        #(assoc-in % [:dragging :selection-end] selection-end))
-          (om/transact! app
-                        #(assoc % :selection (set (map first selected-nodes)))))))))
-
-(defn node-start-drag [app node-id event]
-  (when (zero? (.-button event))
-    (.stopPropagation event)
-    (persist/set-ignore-state-changes! true)
-    (let [mouse-x (.-clientX event)
-          mouse-y (.-clientY event)
-          elem-x (.-left (.getBoundingClientRect (.-currentTarget event)))
-          elem-y (.-top (.getBoundingClientRect (.-currentTarget event)))]
-      (om/transact! app #(update-in % [:dragging]
-                                    (fn [_] {:node-id node-id
-                                             :offset [(- mouse-x elem-x)
-                                                      (- mouse-y elem-y)]})))
-      (update-drag app event))))
-
-(defn- prototype-node-start-drag [app node-type-id event]
-  (when (zero? (.-button event))
-    (.stopPropagation event)
-    (let [node-id (node-graph/next-node-id (:node-graph @app))
-          mouse-x (.-clientX event)
-          mouse-y (.-clientY event)
-          elem-x (.-left (.getBoundingClientRect (.-currentTarget event)))
-          elem-y (.-top (.getBoundingClientRect (.-currentTarget event)))]
-      (om/transact! app
-                    (fn [state]
-                      (assoc state :dragging
-                             {:new-node {:node (node/make-node (:context @app)
-                                                               [0 0]
-                                                               node-type-id)
-                                         :offset [(- mouse-x elem-x)
-                                                  (- mouse-y elem-y)]}})))
-      (update-drag app event))))
+(defn- update-drag [app event]
+  (when (dom-util/left-button? event)
+    (dragging/mouse-drag app (dom-util/event-mouse-pos event))))
 
 (defn- start-selection-drag [app event]
-  (when (zero? (.-button event))
-    (let [mouse-x (.-clientX event)
-          mouse-y (.-clientY event)]
-      (.stopPropagation event)
-      (om/transact! app
-                    (fn [state]
-                      (assoc state :dragging
-                             {:selection-start [mouse-x mouse-y]})))
-      (update-drag app event))))
+  (when (dom-util/left-button? event)
+    (.stopPropagation event)
+    (dragging/start-selection-drag app
+                                   (dom-util/event-mouse-pos event)
+                                   (:selection-chan app))))
 
-(defn slot-start-drag
-  ([app node-id slot-id offset-source event]
-   (when (zero? (.-button event))
-     (.stopPropagation event)
-     (let [mouse-x (.-clientX event)
-           mouse-y (.-clientY event)
-           [offset-source-x offset-source-y] offset-source
-           is-input (-> @app
-                        :node-graph
-                        (node-graph/node-by-id node-id)
-                        node/node-type-inputs
-                        (contains? slot-id))]
-       (om/transact! app
-                     #(update-in % [:dragging]
-                                 (fn [_] {:slot-path [node-id slot-id]
-                                          :current-pos [mouse-x mouse-y]
-                                          :offset [(- mouse-x offset-source-x)
-                                                   (- mouse-y offset-source-y)]
-                                          :reverse is-input}))))))
-  ([app node-id slot-id event]
-   (let [node (-> @app :node-graph :nodes node-id)
-         slot-frame (node/canvas-slot-frame node slot-id)
-         slot-center (geometry/rectangle-center slot-frame)]
-     (slot-start-drag app node-id slot-id slot-center event))))
+(defn- node-start-drag [app node-id event]
+  (when (dom-util/left-button? event)
+    (.stopPropagation event)
 
-(defn slot-disconnect-and-start-drag [app
-                                      from-node-id from-slot-id
-                                      to-node-id to-slot-id event]
-  (om/transact! app
-                #(update-in % [:node-graph]
-                            (fn [node-graph]
-                              (node-graph/disconnect-nodes node-graph
-                                                           [from-node-id from-slot-id]
-                                                           [to-node-id to-slot-id]))))
-  (slot-start-drag app
-                   from-node-id
-                   from-slot-id
-                   [(- (.-clientX event) 8) (- (.-clientY event) 8)]
-                   event))
+    (let [mouse-pos (dom-util/event-mouse-pos event)
+          elem-pos (geometry/rectangle-origin
+                    (dom-util/element-viewport-frame
+                     (.-currentTarget event)))
+          offset (geometry/point-sub mouse-pos elem-pos)]
+      (dragging/start-node-drag app node-id offset (:node-drag-chan app)))))
+
+(defn- prototype-node-start-drag [app node-type-id event]
+  (when (dom-util/left-button? event)
+    (.stopPropagation event)
+
+    (let [mouse-pos (dom-util/event-mouse-pos event)
+          elem-pos (geometry/rectangle-origin
+                    (dom-util/element-viewport-frame
+                     (.-currentTarget event)))
+          offset (geometry/point-sub mouse-pos elem-pos)
+          node (node/make-node (:context app)
+                               (geometry/point-sub mouse-pos offset)
+                               node-type-id)]
+      (dragging/start-prototype-node-drag app node offset (:prototype-node-drag-chan app)))))
+
+(defn- slot-start-drag [app node-id slot-id event]
+  (.stopPropagation event)
+
+  (let [mouse-pos (dom-util/event-mouse-pos event)
+        is-input (-> @app
+                     :node-graph
+                     (node-graph/node-by-id node-id)
+                     node/node-type-inputs
+                     (contains? slot-id))]
+    (dragging/start-slot-drag app node-id slot-id mouse-pos is-input (:slot-drag-chan app))))
+
+(defn- slot-disconnect-and-start-drag [app
+                                       from-node-id from-slot-id
+                                       to-node-id to-slot-id event]
+  (.stopPropagation event)
+
+  (let [from [from-node-id from-slot-id]
+        to [to-node-id to-slot-id]]
+    (go
+      (>! (:slot-drag-chan app) [:disconnect [from to]])))
+
+  (slot-start-drag app from-node-id from-slot-id event))
 
 (defn- connection-line [[from-x from-y] [to-x to-y] on-mouse-down]
   (let [diff-x (- to-x from-x)
         diff-y (- to-y from-y)]
-    [:path.graph-canvas__connection
-     {:d (str "M " (+ 1 from-x) "," (+ 1 from-y) " "
-              "c "
-              (/ diff-x 2) ",0 "
-              (/ diff-x 2) "," diff-y " "
-              diff-x "," diff-y)
-      :on-mouse-down #(on-mouse-down %)}]))
+    (html
+     [:path.graph-canvas__connection
+      {:d (str "M " (+ 1 from-x) "," (+ 1 from-y) " "
+               "c "
+               (/ diff-x 2) ",0 "
+               (/ diff-x 2) "," diff-y " "
+               diff-x "," diff-y)
+       :on-mouse-down #(on-mouse-down %)}])))
 
 
-(defn connection-view [[app
-                        [from-node-id from-node from-slot-id]
-                        [to-node-id to-node to-slot-id]]
-                       owner]
+(defn- connection-view [[app
+                         [from-node-id from-node from-slot-id]
+                         [to-node-id to-node to-slot-id]]
+                        owner]
   (reify
     om/IDisplayName
     (display-name [_] "Connection")
@@ -218,61 +127,116 @@
             [_ to-slot-frame] (-> to-node
                                   node/node-slot-canvas-frames
                                   to-slot-id)]
-        (html
-         (connection-line (geometry/rectangle-center from-slot-frame)
-                          (geometry/rectangle-center to-slot-frame)
-                          #(slot-disconnect-and-start-drag app
-                                                           from-node-id
-                                                           from-slot-id
-                                                           to-node-id
-                                                           to-slot-id
-                                                           %)))))))
+        (connection-line (geometry/rectangle-center from-slot-frame)
+                         (geometry/rectangle-center to-slot-frame)
+                         #(slot-disconnect-and-start-drag app
+                                                          from-node-id
+                                                          from-slot-id
+                                                          to-node-id
+                                                          to-slot-id
+                                                          %))))))
 
-(defn temporary-connection-view [[from-coord to-coord] owner]
+(defn- temporary-connection-view [[from-coord to-coord] owner]
   (reify
     om/IDisplayName
     (display-name [_] "TemporaryConnection")
 
     om/IRender
     (render [_]
-      (html
-       (connection-line from-coord
-                        to-coord
-                        nil)))))
+      (connection-line from-coord
+                       to-coord
+                       nil))))
 
-(defn- current-dragging-slot [state]
-  (when-let [[node-id slot-id] (:slot-path (:dragging state))]
+(defn- current-dragging-slot [state slot-path]
+  (when-let [[node-id slot-id] slot-path]
     (let [node (-> state :node-graph :nodes node-id)]
       [node slot-id])))
 
-(defn graph-canvas-view [data owner]
+(defn- graph-canvas-view [data owner]
   (reify
     om/IDisplayName
     (display-name [_] "GraphCanvas")
 
+    om/IInitState
+    (init-state [_]
+      {:internal-chan (chan)})
+
     om/IWillMount
     (will-mount [_]
       (go-loop []
-        (when-let [[event value] (<! (:selection-chan data))]
-          (case event
-            :clear (om/update! data :selection #{})
-            :update (om/update! data :selection value))
-          (recur))))
+        (let [selection-chan (:selection-chan data)
+              node-drag-chan (:node-drag-chan data)
+              internal-chan (om/get-state owner :internal-chan)
+              slot-drag-chan (:slot-drag-chan data)
+              [msg ch] (alts! [internal-chan
+                               selection-chan
+                               node-drag-chan
+                               slot-drag-chan]
+                              :priority true)]
+          (when (= ch selection-chan)
+            (when-let [[event value] msg]
+              (case event
+                :clear (om/update! data :selection #{})
+                :update (om/update! data :selection value)
+                :set-rect (om/set-state! owner :selection-rect value)
+                :clear-rect (om/set-state! owner :selection-rect nil))
+              (recur)))
 
-    om/IRender
-    (render [_]
+          (when (= ch node-drag-chan)
+            (let [[event value] msg
+                  selection (:selection data)]
+              (case event
+                :offset
+                (om/transact! data
+                              #(update-in % [:node-graph]
+                                          (fn [node-graph]
+                                            (node-graph/nodes-move-by node-graph
+                                                                      (:selection %1)
+                                                                      value))))))
+            (recur))
+
+          (when (= ch slot-drag-chan)
+            (let [[event value] msg]
+              (case event
+                :update (om/set-state! owner :dragging-slot value)
+                :clear (om/set-state! owner :dragging-slot nil)
+                :connect
+                (let [[from to] value]
+                  (om/transact! data
+                                #(update-in % [:node-graph]
+                                            (fn [node-graph]
+                                              (node-graph/connect-nodes node-graph
+                                                                        from to)))))
+                :disconnect
+                (let [[from to] value]
+                  (om/transact! data
+                                #(update-in % [:node-graph]
+                                            (fn [node-graph]
+                                              (node-graph/disconnect-nodes node-graph
+                                                                           from to))))))
+              (recur))))))
+
+    om/IWillUnmount
+    (will-unmount [_]
+      (let [internal-chan (om/get-state owner :internal-chan)]
+        (go
+          (>! internal-chan :terminate)
+          (close! internal-chan))))
+
+    om/IRenderState
+    (render-state [_ state]
       (html
        [:div.graph-canvas
         {:on-mouse-down (partial start-selection-drag data)}
-        (when-let [selection-start (:selection-start (:dragging data))]
-          (let [selection-end (:selection-end (:dragging data))
-                selection-rect (geometry/corners->rectangle selection-start
-                                                            selection-end)]
-            [:div.graph-canvas__selection
-             {:style (geometry/rectangle->css selection-rect)}]))
+        (when-let [selection-rect (:selection-rect state)]
+          [:div.graph-canvas__selection
+           {:style (geometry/rectangle->css selection-rect)}])
         (map (fn [[id n]]
                (om/build node-component
-                         [id n (current-dragging-slot data) (:selection data)]
+                         [id n
+                          (current-dragging-slot data
+                                                 (-> state :dragging-slot :slot-path))
+                          (:selection data)]
                          {:opts {:on-mouse-down (fn [node-id e]
                                                   (selection/update-selection! data node-id)
                                                   (node-start-drag data node-id e))
@@ -295,19 +259,14 @@
                                  [from-node-id from-node from-slot-id]
                                  [to-node-id to-node to-slot-id]]))
                             (-> data :node-graph :connections)))
-         (when-let [slot-path (-> data :dragging :slot-path)]
-           (let [current-pos (-> data :dragging :current-pos)
-                 mouse-offset (-> data :dragging :offset)
-                 current-pos (geometry/point-sub current-pos mouse-offset)
-
-                 [node-id slot-id] slot-path
+         (when-let [{:keys [target-pos slot-path]} (:dragging-slot state)]
+           (let [[node-id slot-id] slot-path
                  node (-> data :node-graph :nodes node-id)
-                 node-origin (-> node :frame geometry/rectangle-origin)
                  [slot slot-frame] (-> node node/node-slot-canvas-frames slot-id)
                  slot-center (geometry/rectangle-center slot-frame)]
-             (om/build temporary-connection-view [slot-center current-pos])))]]))))
+             (om/build temporary-connection-view [slot-center target-pos])))]]))))
 
-(defn palette-view [data owner]
+(defn- palette-view [data owner]
   (letfn [(render-palette-group [{:keys [title node-types]}]
             (html
              [:div.palette__node-group
@@ -328,7 +287,150 @@
                 (map render-palette-group node-type/all-node-groups)
                 ]])))))
 
-(defn editor-component [data owner]
+(defmulti handle-dragging-sequence (fn [_ _ msg] (:type msg)))
+
+(defmethod handle-dragging-sequence :selection [app read-chan {:keys [mouse-pos reply-chan]}]
+  (let [done (chan)
+        start-mouse-pos mouse-pos]
+    (go
+      (>! reply-chan [:set-rect (geometry/corners->rectangle mouse-pos mouse-pos)])
+      (>! reply-chan [:update #{}])
+
+      (loop []
+        (let [{:keys [phase mouse-pos]} (<! read-chan)
+              rect (geometry/corners->rectangle start-mouse-pos mouse-pos)
+              nodes (set (map first (node-graph/nodes-in-rect (:node-graph app) rect)))]
+          (>! reply-chan [:update nodes])
+
+          (when (= phase :drag)
+            (>! reply-chan [:set-rect rect])
+            (recur))))
+
+      (>! reply-chan [:clear-rect nil])
+      (>! done :done))
+
+    done))
+
+(defmethod handle-dragging-sequence :node [app read-chan
+                                           {:keys [ref-node-id offset reply-chan]}]
+  (let [done (chan)]
+    (go
+      (persist/set-ignore-state-changes! true)
+      (loop [last-pos (node-graph/node-position (:node-graph app) ref-node-id)]
+        (let [{:keys [phase mouse-pos]} (<! read-chan)
+              new-node-pos (geometry/point-sub mouse-pos offset)
+              delta (geometry/point-sub new-node-pos last-pos)]
+          (>! reply-chan [:offset delta])
+
+          (when (= phase :drag)
+            (recur new-node-pos))))
+
+      (persist/set-ignore-state-changes! false)
+      (>! done :done))
+    done))
+
+(defmethod handle-dragging-sequence :prototype-node [app read-chan
+                                                     {:keys [node offset reply-chan]}]
+  (let [done (chan)]
+    (go
+      (>! reply-chan [:update node])
+
+      (loop [node node]
+        (let [{:keys [phase mouse-pos]} (<! read-chan)
+              last-pos (geometry/rectangle-origin (:frame node))
+              new-node-pos (geometry/point-sub mouse-pos offset)
+              delta (geometry/point-sub new-node-pos last-pos)
+              node (node/node-move-by node delta)]
+          (>! reply-chan [:update node])
+
+          (when (= phase :drag)
+            (recur node))
+
+          (when (and (= phase :end)
+                     (< (first mouse-pos)
+                        (- (.-innerWidth js/window) palette-width)))
+            (>! reply-chan [:commit node]))))
+
+      (>! reply-chan [:clear nil])
+      (>! done :done))
+    done))
+
+(defmethod handle-dragging-sequence :slot-drag [app read-chan
+                                                {:keys [slot-path
+                                                        reverse reply-chan
+                                                        position]}]
+  (let [done (chan)]
+    (go
+      (>! reply-chan [:update {:slot-path slot-path
+                               :target-pos position}])
+
+      (loop []
+        (let [{:keys [phase mouse-pos]} (<! read-chan)]
+          (>! reply-chan [:update {:slot-path slot-path
+                                   :target-pos mouse-pos}])
+          (when (= phase :drag)
+            (recur))
+
+          (when (= phase :end)
+            (when-let [hit (-> app :node-graph
+                               (node-graph/hit-test-slot mouse-pos))]
+              (let [from (if reverse hit slot-path)
+                    to (if reverse slot-path hit)]
+                (>! reply-chan [:connect [from to]]))))))
+
+      (>! reply-chan [:clear nil])
+      (>! done :done))
+    done))
+
+(defn- new-node-component [data owner]
+  (reify
+    om/IDisplayName
+    (display-name [_] "NewNode")
+
+    om/IInitState
+    (init-state [_]
+      {:internal-chan (chan)})
+
+    om/IWillMount
+    (will-mount [_]
+      (go
+        (loop []
+          (let [prototype-node-drag-chan (:prototype-node-drag-chan data)
+                internal-chan (om/get-state owner :internal-chan)
+                [msg ch] (alts! [internal-chan prototype-node-drag-chan]
+                                :priority true)]
+            (when (= ch prototype-node-drag-chan)
+              (let [[event value] msg]
+                (case event
+                  :update (om/set-state! owner :new-node value)
+                  :clear (om/set-state! owner :new-node nil)
+                  :commit
+                  (om/transact! data
+                                (fn [app]
+                                  (let [node-graph (:node-graph app)
+                                        node-id (node-graph/next-node-id node-graph)]
+                                    (-> app
+                                        (update-in [:node-graph]
+                                                   #(node-graph/add-node node-graph
+                                                                         node-id
+                                                                         value))
+                                        (assoc-in [:selection] #{node-id}))))))
+                (recur)))))))
+
+    om/IWillUnmount
+    (will-unmount [_]
+      (let [internal-chan (om/get-state owner :internal-chan)]
+        (go
+          (>! internal-chan :terminate)
+          (close! internal-chan))))
+
+    om/IRenderState
+    (render-state [_ state]
+      (html
+       (when-let [new-node (:new-node state)]
+         (om/build node-component [nil new-node nil #{}]))))))
+
+(defn- editor-component [data owner]
   (letfn [(handle-key-up [e]
             (when (and (= (.-keyCode e) 46))
               (debug "Removing" (:selection data))
@@ -343,17 +445,39 @@
       om/IDisplayName
       (display-name [_] "Editor")
 
-      om/IDidMount
-      (did-mount [_]
+      om/IInitState
+      (init-state [_]
+        {:internal-chan (chan)})
+
+      om/IWillMount
+      (will-mount [_]
         (.addEventListener js/document
                            "keyup"
-                           handle-key-up))
+                           handle-key-up)
+        (go
+          (loop []
+            (let [dragging-chan (:dragging-chan data)
+                  internal-chan (om/get-state owner :internal-chan)
+                  [msg ch] (alts! [internal-chan
+                                   dragging-chan]
+                                  :priority true)]
+              (when (= ch dragging-chan)
+                (when (= (:phase msg) :start)
+                  (try
+                    (<! (handle-dragging-sequence @data dragging-chan msg))
+                    (catch js/Error e
+                      (error "Caught Javascript error during drag sequence processing" e))))
+                (recur))))))
 
       om/IWillUnmount
       (will-unmount [_]
         (.removeEventListener js/document
                               "keyup"
-                              handle-key-up))
+                              handle-key-up)
+        (let [internal-chan (om/get-state owner :internal-chan)]
+          (go
+            (>! internal-chan :terminate)
+            (close! internal-chan))))
 
       om/IRender
       (render [_]
@@ -363,15 +487,14 @@
                (om/build navbar-component data)
                (om/build graph-canvas-view data)
                (om/build palette-view data)
-               (when-let [new-node (-> data :dragging :new-node)]
-                 (om/build node-component [nil (:node new-node) nil #{}]))
+               (om/build new-node-component data)
                [:div.state-debug (pr-str data)]
                [:div.save-data-debug
                 (.stringify js/JSON
                             (node-graph-serialize/serialize-graph (:node-graph data)))]
                (om/build modal-container-component data)])))))
 
-(defn root-component [data owner]
+(defn- root-component [data owner]
   (reify
     om/IDisplayName
     (display-name [_] "Root")
@@ -383,7 +506,7 @@
         :show-patch (om/build editor-component data)
         :none (html [:div])))))
 
-(defn dispatch-route [app page page-args]
+(defn- dispatch-route [app page page-args]
   (debug "Dispatching route" page page-args)
   (if (= page :show-patch)
     (go
