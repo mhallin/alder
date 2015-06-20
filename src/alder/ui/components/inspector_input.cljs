@@ -79,9 +79,11 @@
 (defn midi-device-input-component [[node input value on-change] owner]
   (letfn [(devices-loaded [devices]
             (let [inputs (aget devices "inputs")
-                  entries (.call (aget inputs "entries") inputs)]
-              (om/set-state! owner :inputs
-                             (midi-iterator->map entries))))]
+                  entries (.call (aget inputs "entries") inputs)
+                  entry-map (midi-iterator->map entries)
+                  master-device (midiapi/midi-master-device)
+                  entry-map (assoc entry-map (aget master-device "id") master-device)]
+              (om/set-state! owner :inputs entry-map)))]
     (reify
       om/IDisplayName
       (display-name [_] "MidiDeviceInput")

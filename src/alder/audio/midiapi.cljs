@@ -19,6 +19,9 @@
          device
          token))
 
+(defn midi-master-device []
+  (aget js/Alder.MIDIDispatch "masterDevice"))
+
 (defn node-device [node]
   (.call (aget node "device") node))
 

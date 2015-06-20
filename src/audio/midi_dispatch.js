@@ -1,8 +1,15 @@
 class MIDIDispatch {
 	constructor() {
-		this._devices = [];
+		this.masterDevice = {
+			id: "alder_master",
+			name: "Master MIDI Input"
+		};
+		this._currentMasterDevice = null;
+
+		this._devices = [this.masterDevice.id];
 
 		this._eventListeners = {};
+		this._eventListeners[this.masterDevice.id] = [];
 	}
 
 	_registerDevice(device) {
@@ -15,6 +22,16 @@ class MIDIDispatch {
 
 		var self = this;
 		device.onmidimessage = function(e) { self.onMIDIMessage(device, e); };
+	}
+
+	currentMasterDevice(device) {
+		if (device === undefined) {
+			return this._currentMasterDevice;
+		}
+		else {
+			this._registerDevice(device);
+			this._currentMasterDevice = device;
+		}
 	}
 
 	addMIDIMessageEventListener(device, token, callback) {
@@ -43,6 +60,10 @@ class MIDIDispatch {
 			var callback = listenerArray[i][1];
 
 			callback.call(token, event);
+		}
+
+		if (this.currentMasterDevice === device) {
+			this.onMIDIMessage(this.masterDevice, event);
 		}
 	}
 }

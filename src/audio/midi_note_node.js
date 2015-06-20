@@ -24,7 +24,7 @@ export default class MIDINoteNode {
 	device(device) {
 		if (device !== undefined) {
 			if (this._device) {
-				MIDIDispatch.removeMIDIMessageEventListener(device, this);
+				MIDIDispatch.removeMIDIMessageEventListener(this._device, this);
 				this._device = null;
 			}
 

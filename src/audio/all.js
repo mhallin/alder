@@ -1,8 +1,23 @@
-export * from 'expose?Alder.ADSRNode!./adsr_node';
-export * from 'expose?Alder.BufferSourceWrapperNode!./buffer_source_wrapper_node';
-export * from 'expose?Alder.ConstSourceNode!./const_source_node';
-export * from 'expose?Alder.MIDICCNode!./midi_cc_node';
-export * from 'expose?Alder.MIDIDispatch!./midi_dispatch';
-export * from 'expose?Alder.MIDINoteNode!./midi_note_node';
-export * from 'expose?Alder.URLBufferNode!./url_buffer_node';
-export * from 'expose?Alder.UserMediaNode!./user_media_node';
+import ADSRNode from './adsr_node';
+import BufferSourceWrapperNode from './buffer_source_wrapper_node';
+import ConstSourceNode from './const_source_node';
+import MIDICCNode from './midi_cc_node';
+import MIDIDispatch from './midi_dispatch';
+import MIDINoteNode from './midi_note_node';
+import URLBufferNode from './url_buffer_node';
+import UserMediaNode from './user_media_node';
+
+var Alder = {
+	ADSRNode,
+	BufferSourceWrapperNode,
+	ConstSourceNode,
+	MIDICCNode,
+	MIDIDispatch,
+	MIDINoteNode,
+	URLBufferNode,
+	UserMediaNode
+};
+
+window.Alder = Alder;
+
+export default Alder

@@ -143,7 +143,7 @@
   [name :- s/Str title :- s/Str]
   {:type :accessor,
    :name name,
-   :default nil,
+   :default (midiapi/midi-master-device),
    :title title,
    :data-type :midi-device,
    :serializable false})
