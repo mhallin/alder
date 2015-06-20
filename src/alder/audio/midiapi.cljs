@@ -22,6 +22,15 @@
 (defn midi-master-device []
   (aget js/Alder.MIDIDispatch "masterDevice"))
 
+(defn get-current-midi-master-device []
+  (.call (aget js/Alder.MIDIDispatch "currentMasterDevice")
+         js/Alder.MIDIDispatch))
+
+(defn set-current-midi-master-device! [device]
+  (.call (aget js/Alder.MIDIDispatch "currentMasterDevice")
+         js/Alder.MIDIDispatch
+         device))
+
 (defn node-device [node]
   (.call (aget node "device") node))
 

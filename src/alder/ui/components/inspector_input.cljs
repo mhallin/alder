@@ -4,7 +4,8 @@
             [taoensso.timbre :refer-macros [debug]]
 
             [alder.audio.midiapi :as midiapi]
-            [alder.ui.components.audio-import :refer [audio-import-component]]))
+            [alder.ui.components.audio-import :refer [audio-import-component]]
+            [alder.ui.components.midi-device-input :refer [midi-device-input-component]]))
 
 (defn render-choice-input [node input value on-change]
   [:select.node-inspector__input
@@ -69,55 +70,10 @@
     :on-mouse-up #(on-change 0.0)}
    "Trig"])
 
-(defn midi-iterator->map [iterator]
-  (let [value (.next iterator)]
-    (if (and value (not (.-done value)))
-      (conj (midi-iterator->map iterator)
-            [(aget (.-value value) 0) (aget (.-value value) 1)])
-      {})))
-
-(defn midi-device-input-component [[node input value on-change] owner]
-  (letfn [(update-inputs [inputs]
-            (let [entries (.call (aget inputs "entries") inputs)
-                  entry-map (midi-iterator->map entries)
-                  master-device (midiapi/midi-master-device)
-                  entry-map (assoc entry-map (aget master-device "id") master-device)]
-              (om/set-state! owner :inputs entry-map)))
-
-          (on-state-change [event]
-            (let [access (om/get-state owner :midi-access)]
-              (update-inputs (aget access "inputs"))))]
-    (reify
-      om/IDisplayName
-      (display-name [_] "MidiDeviceInput")
-
-      om/IWillMount
-      (will-mount [_]
-        (.then (midiapi/request-midi-access)
-               (fn [access]
-                 (om/set-state! owner :midi-access access)
-                 (update-inputs (aget access "inputs"))
-                 (.addEventListener access "statechange" on-state-change))))
-
-      om/IWillUnmount
-      (will-unmount [_]
-        (let [access (om/get-state owner :midi-access)]
-          (.removeEventListener access "statechange" on-state-change)))
-
-      om/IRender
-      (render [_]
-        (html
-         [:select.node-inspector__input
-          {:on-change (fn [event] (let [inputs (om/get-state owner :inputs)
-                                        id (.-value (.-target event))]
-                                    (on-change (inputs id))))
-           :value (when value (.-id value))}
-          [:option {:value nil} "(no input)"]
-          (map (fn [[id input]] [:option {:value id :key id} (.-name input)])
-               (sort (om/get-state owner :inputs)))])))))
-
-(defn render-midi-device-input [node input value on-change]
-  (om/build midi-device-input-component [node input value on-change]))
+(defn render-midi-device-input [_ _ value on-change]
+  (om/build midi-device-input-component [value on-change]
+            {:opts {:class "node-inspector__input"
+                    :include-master true}}))
 
 (defn render-boolean-input [node input value on-change]
   (html

@@ -10,6 +10,7 @@
             [alder.node-graph :as node-graph]
             [alder.node-graph-serialize :as node-graph-serialize]
             [alder.selection :as selection]
+            [alder.ui.components.footer :refer [footer-component]]
             [alder.ui.components.navbar :refer [navbar-component]]
             [alder.ui.components.graph-canvas :refer [graph-canvas-component]]
             [alder.ui.components.palette :refer [palette-component]]
@@ -81,6 +82,7 @@
                (om/build navbar-component data)
                (om/build graph-canvas-component data)
                (om/build palette-component data)
+               (om/build footer-component data)
                (om/build new-node-component data)
                [:div.state-debug (pr-str data)]
                [:div.save-data-debug

@@ -62,7 +62,7 @@ class MIDIDispatch {
 			callback.call(token, event);
 		}
 
-		if (this.currentMasterDevice === device) {
+		if (this._currentMasterDevice === device) {
 			this.onMIDIMessage(this.masterDevice, event);
 		}
 	}
