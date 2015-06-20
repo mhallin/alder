@@ -376,6 +376,18 @@
                                               (str (.-origin js/location)
                                                    "/js/audio/url_buffer_node.js")]}}))
 
+(s/def convolver-node-type :- ValidNodeType
+  (NodeType. {:signal-in (signal-in 0 "Signal in")
+              :buffer (buffer-constant-in "buffer" "IR")
+              :normalize (boolean-constant-in "normalize" "Normalize" true)}
+             {:signal-out (signal-out 0 "Signal out")}
+             nil
+             false
+             "Convolver"
+             [100 60]
+             (fn [ctx] (.call (aget ctx "createConvolver") ctx))
+             {:constructor "context.createConvolver()"}))
+
 (s/def midi-note-node-type :- ValidNodeType
   (NodeType. {:device (midi-device-accessor-in "device" "Device")
               :note-mode (string-constant-in "noteMode" "Mode" "retrig"
@@ -428,7 +440,8 @@
                      :delay delay-node-type
                      :compressor compressor-node-type
                      :audio-buffer-source audio-buffer-source-node-type
-                     :url-buffer url-buffer-node-type}
+                     :url-buffer url-buffer-node-type
+                     :convolver convolver-node-type}
         midi-nodes (if has-midi-support
                      {:midi-note midi-note-node-type
                       :midi-cc midi-cc-node-type}
@@ -445,7 +458,7 @@
                       :audio-buffer-source]
           filters [:biquad-filter :gain :stereo-panner
                    :stereo-splitter :stereo-merger
-                   :delay :compressor]
+                   :delay :compressor :convolver]
           envelopes [:adsr]
           buffer-sources [:url-buffer]
           midi-nodes [:midi-note :midi-cc]

@@ -15,7 +15,8 @@
   (let [data-transfer (aapi/data-transfer e)
         files (seq (aapi/files data-transfer))]
     (when-let [file (first files)]
-      (when (= (aapi/file-type file) "audio/x-m4a")
+      (debug "File type" (aapi/file-type file))
+      (when (#{"audio/x-m4a" "audio/wav"} (aapi/file-type file))
         file))))
 
 (defn- decode-array-buffer [context buffer on-state-change on-value-change]
