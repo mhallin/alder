@@ -29,7 +29,7 @@
   {:type (s/enum :node :null-node),
    :title s/Str,
    :index s/Int,
-   (s/optional-key :data-type) (s/enum :signal :param :gate :null-node)})
+   (s/optional-key :data-type) (s/enum :signal :param :gate :null-node :buffer)})
 
 (def OutputMap
   {s/Keyword Output})
@@ -111,6 +111,14 @@
    :default default,
    :choices choices})
 
+(s/defn string-accessor-in :- Input
+  [name :- s/Str title :- s/Str default :- (s/maybe s/Str)]
+  {:type :accessor,
+   :name name,
+   :title title,
+   :data-type :string,
+   :default default})
+
 (s/defn gate-in :- Input
   [name :- s/Str title :- s/Str]
   {:type :gate, :name name, :title title})
@@ -151,6 +159,10 @@
 (s/defn buffer-constant-in :- Input
   [name :- s/Str title :- s/Str]
   {:type :constant, :name name, :title title, :data-type :buffer, :serializable false})
+
+(s/defn buffer-out :- Output
+  [index :- s/Int title :- s/Str]
+  {:type :node, :title title, :index index, :data-type :buffer})
 
 (s/def audio-destination-node-type :- ValidNodeType
   (NodeType. {:signal (signal-in 0 "Signal")}
@@ -351,6 +363,19 @@
                               (str (.-origin js/location)
                                    "/js/audio/buffer_source_wrapper_node.js")]}}))
 
+(s/def url-buffer-node-type :- ValidNodeType
+  (NodeType. {:url (string-accessor-in "url" "URL" nil)}
+             {:buffer (buffer-out 0 "Buffer")}
+             nil
+             false
+             "URL"
+             [70 40]
+             #(js/Alder.URLBufferNode. %)
+             {:constructor "new URLBufferNode(context)"
+              :dependencies {"URLBufferNode" ["audio/url_buffer_node"
+                                              (str (.-origin js/location)
+                                                   "/js/audio/url_buffer_node.js")]}}))
+
 (s/def midi-note-node-type :- ValidNodeType
   (NodeType. {:device (midi-device-accessor-in "device" "Device")
               :note-mode (string-constant-in "noteMode" "Mode" "retrig"
@@ -402,7 +427,8 @@
                      :stereo-merger stereo-merger-node-type
                      :delay delay-node-type
                      :compressor compressor-node-type
-                     :audio-buffer-source audio-buffer-source-node-type}
+                     :audio-buffer-source audio-buffer-source-node-type
+                     :url-buffer url-buffer-node-type}
         midi-nodes (if has-midi-support
                      {:midi-note midi-note-node-type
                       :midi-cc midi-cc-node-type}
@@ -421,6 +447,7 @@
                    :stereo-splitter :stereo-merger
                    :delay :compressor]
           envelopes [:adsr]
+          buffer-sources [:url-buffer]
           midi-nodes [:midi-note :midi-cc]
           analysers [:scope :fft]
           interfaces [:input :output :audio-destination]]
@@ -428,7 +455,8 @@
        (fn [m] (update m :node-types (partial map lookup)))
        (concat [{:title "Generators" :node-types generators}
                 {:title "Filters" :node-types filters}
-                {:title "Envelopes" :node-types envelopes}]
+                {:title "Envelopes" :node-types envelopes}
+                {:title "Buffer Sources" :node-types buffer-sources}]
                (if has-midi-support
                  [{:title "MIDI" :node-types midi-nodes}]
                  [])

@@ -169,5 +169,7 @@
             (and (= (:data-type output) :param)
                  (= (:type input) :param))
             (and (= (:data-type output) :gate)
-                 (= (:type input) :gate))))
+                 (= (:type input) :gate))
+            (and (= (:data-type output) :buffer)
+                 (= (:data-type input) :buffer))))
       false)))
