@@ -1,50 +1,50 @@
-'use strict';
+class MIDIDispatch {
+	constructor() {
+		this._devices = [];
 
-function MIDIDispatch() {
-	this._devices = [];
-
-	this._eventListeners = {};
-}
-
-MIDIDispatch.prototype._registerDevice = function (device) {
-	if (this._devices.indexOf(device.id) !== -1) {
-		return;
+		this._eventListeners = {};
 	}
 
-	this._devices.push(device.id);
-	this._eventListeners[device.id] = [];
+	_registerDevice(device) {
+		if (this._devices.indexOf(device.id) !== -1) {
+			return;
+		}
 
-	var self = this;
-	device.onmidimessage = function(e) { self.onMIDIMessage(device, e); };
-};
+		this._devices.push(device.id);
+		this._eventListeners[device.id] = [];
 
-MIDIDispatch.prototype.addMIDIEventListener = function (device, token, callback) {
-	this._registerDevice(device);
-	this._eventListeners[device.id].push([token, callback]);
-};
+		var self = this;
+		device.onmidimessage = function(e) { self.onMIDIMessage(device, e); };
+	}
 
-MIDIDispatch.prototype.removeMIDIEventListener = function (device, token) {
-	this._registerDevice(device);
+	addMIDIEventListener(device, token, callback) {
+		this._registerDevice(device);
+		this._eventListeners[device.id].push([token, callback]);
+	}
 
-	var listenerArray = this._eventListeners[device.id];
+	removeMIDIEventListener(device, token) {
+		this._registerDevice(device);
 
-	for (var i = 0; i < listenerArray.length; ++i) {
-		if (listenerArray[i][0] === token) {
-			listenerArray.splice(i, 1);
-			break;
+		var listenerArray = this._eventListeners[device.id];
+
+		for (var i = 0; i < listenerArray.length; ++i) {
+			if (listenerArray[i][0] === token) {
+				listenerArray.splice(i, 1);
+				break;
+			}
 		}
 	}
-};
 
-MIDIDispatch.prototype.onMIDIMessage = function (device, event) {
-	var listenerArray = this._eventListeners[device.id];
+	onMIDIMessage(device, event) {
+		var listenerArray = this._eventListeners[device.id];
 
-	for (var i = 0; i < listenerArray.length; ++i) {
-		var token = listenerArray[i][0];
-		var callback = listenerArray[i][1];
+		for (var i = 0; i < listenerArray.length; ++i) {
+			var token = listenerArray[i][0];
+			var callback = listenerArray[i][1];
 
-		callback.call(token, event);
+			callback.call(token, event);
+		}
 	}
-};
+}
 
-module.exports = new MIDIDispatch();
+export default new MIDIDispatch();

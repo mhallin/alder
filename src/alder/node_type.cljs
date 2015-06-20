@@ -196,7 +196,7 @@
              false
              "ADSR"
              [70 90]
-             #(js/ADSRNode. %)
+             #(js/Alder.ADSRNode. %)
              {:constructor "new ADSRNode(context)"
               :dependencies {"ADSRNode" ["audio/adsr_node"
                                          (str (.-origin js/location)
@@ -268,7 +268,7 @@
              false
              "Const"
              [80 40]
-             (fn [ctx] (js/ConstSourceNode. ctx))
+             (fn [ctx] (js/Alder.ConstSourceNode. ctx))
              {:constructor "new ConstSourceNode(context)"}))
 
 (s/def stereo-panner-node-type :- ValidNodeType
@@ -344,7 +344,7 @@
              false
              "Audio"
              [80 120]
-             #(js/BufferSourceWrapperNode. %)
+             #(js/Alder.BufferSourceWrapperNode. %)
              {:constructor "new BufferSourceWrapperNode(context)"
               :dependencies {"BufferSourceWrapperNode"
                              ["audio/buffer_source_wrapper_node"
@@ -364,7 +364,7 @@
              false
              "MIDI Note"
              [100 80]
-             #(js/MIDINoteNode. %)
+             #(js/Alder.MIDINoteNode. %)
              {:constructor "new MIDINoteNode(context)"
               :dependencies {"MIDINoteNode" ["audio/midi_note_node"
                                              (str (.-origin js/location)
@@ -378,7 +378,7 @@
              false
              "MIDI CC"
              [100 40]
-             #(js/MIDICCNode. %)
+             #(js/Alder.MIDICCNode. %)
              {:constructor "new MIDICCNode(context)"
               :dependencies {"MIDICCNode" ["audio/midi_cc_node"
                                            (str (.-origin js/location)

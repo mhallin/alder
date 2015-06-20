@@ -24,7 +24,7 @@ var webpackConfig = {
 			{
 				test: /\.js$/,
 				exclude: /node_modules/,
-				loader: 'jshint-loader',
+				loader: 'babel',
 			},
 		],
 	},
