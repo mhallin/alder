@@ -77,20 +77,32 @@
       {})))
 
 (defn midi-device-input-component [[node input value on-change] owner]
-  (letfn [(devices-loaded [devices]
-            (let [inputs (aget devices "inputs")
-                  entries (.call (aget inputs "entries") inputs)
+  (letfn [(update-inputs [inputs]
+            (let [entries (.call (aget inputs "entries") inputs)
                   entry-map (midi-iterator->map entries)
                   master-device (midiapi/midi-master-device)
                   entry-map (assoc entry-map (aget master-device "id") master-device)]
-              (om/set-state! owner :inputs entry-map)))]
+              (om/set-state! owner :inputs entry-map)))
+
+          (on-state-change [event]
+            (let [access (om/get-state owner :midi-access)]
+              (update-inputs (aget access "inputs"))))]
     (reify
       om/IDisplayName
       (display-name [_] "MidiDeviceInput")
 
       om/IWillMount
       (will-mount [_]
-        (.then (midiapi/request-midi-access) devices-loaded))
+        (.then (midiapi/request-midi-access)
+               (fn [access]
+                 (om/set-state! owner :midi-access access)
+                 (update-inputs (aget access "inputs"))
+                 (.addEventListener access "statechange" on-state-change))))
+
+      om/IWillUnmount
+      (will-unmount [_]
+        (let [access (om/get-state owner :midi-access)]
+          (.removeEventListener access "statechange" on-state-change)))
 
       om/IRender
       (render [_]
@@ -101,8 +113,8 @@
                                     (on-change (inputs id))))
            :value (when value (.-id value))}
           [:option {:value nil} "(no input)"]
-          (map (fn [[id input]] [:option {:value id} (.-name input)])
-               (om/get-state owner :inputs))])))))
+          (map (fn [[id input]] [:option {:value id :key id} (.-name input)])
+               (sort (om/get-state owner :inputs)))])))))
 
 (defn render-midi-device-input [node input value on-change]
   (om/build midi-device-input-component [node input value on-change]))
