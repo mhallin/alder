@@ -9,7 +9,7 @@
               [alder.app-state :as app-state]
               [alder.selection :as selection]
               [alder.modal :as modal]
-              [alder.dragging :as dragging]
+              [alder.ui.dragging :as dragging]
               [alder.dom-util :as dom-util]
 
               [alder.node :as node]
@@ -20,20 +20,22 @@
               [alder.routes :as routes]
               [alder.comm :as comm]
               [alder.persist :as persist]
+              [alder.ui.interaction :as interaction]
+              [alder.views.palette :refer [palette-component]]
+              [alder.views.new-node :refer [new-node-component]]
               [alder.views.source-export :refer [source-export-component]]
               [alder.views.inspector :refer [inspector-component]]
               [alder.views.node :refer [node-component]]
-              [alder.views.prototype-node :refer [prototype-node-component]]
               [alder.views.share :refer [share-component]]
               [alder.views.modal-container :refer [modal-container-component]]
               [alder.views.navbar :refer [navbar-component]]
-              [alder.views.index :refer [index-component]])
+              [alder.views.index :refer [index-component]]
+              [alder.views.connection :refer [connection-component
+                                              temporary-connection-component]])
 
     (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (enable-console-print!)
-
-(def palette-width 260)
 
 (defn- end-drag [app event]
   (dragging/mouse-up app (dom-util/event-mouse-pos event)))
@@ -60,20 +62,6 @@
           offset (geometry/point-sub mouse-pos elem-pos)]
       (dragging/start-node-drag app node-id offset (:node-drag-chan app)))))
 
-(defn- prototype-node-start-drag [app node-type-id event]
-  (when (dom-util/left-button? event)
-    (.stopPropagation event)
-
-    (let [mouse-pos (dom-util/event-mouse-pos event)
-          elem-pos (geometry/rectangle-origin
-                    (dom-util/element-viewport-frame
-                     (.-currentTarget event)))
-          offset (geometry/point-sub mouse-pos elem-pos)
-          node (node/make-node (:context app)
-                               (geometry/point-sub mouse-pos offset)
-                               node-type-id)]
-      (dragging/start-prototype-node-drag app node offset (:prototype-node-drag-chan app)))))
-
 (defn- slot-start-drag [app node-id slot-id event]
   (.stopPropagation event)
 
@@ -85,67 +73,6 @@
                      (contains? slot-id))]
     (dragging/start-slot-drag app node-id slot-id mouse-pos is-input (:slot-drag-chan app))))
 
-(defn- slot-disconnect-and-start-drag [app
-                                       from-node-id from-slot-id
-                                       to-node-id to-slot-id event]
-  (.stopPropagation event)
-
-  (let [from [from-node-id from-slot-id]
-        to [to-node-id to-slot-id]]
-    (go
-      (>! (:slot-drag-chan app) [:disconnect [from to]])))
-
-  (slot-start-drag app from-node-id from-slot-id event))
-
-(defn- connection-line [[from-x from-y] [to-x to-y] on-mouse-down]
-  (let [diff-x (- to-x from-x)
-        diff-y (- to-y from-y)]
-    (html
-     [:path.graph-canvas__connection
-      {:d (str "M " (+ 1 from-x) "," (+ 1 from-y) " "
-               "c "
-               (/ diff-x 2) ",0 "
-               (/ diff-x 2) "," diff-y " "
-               diff-x "," diff-y)
-       :on-mouse-down #(on-mouse-down %)}])))
-
-
-(defn- connection-view [[app
-                         [from-node-id from-node from-slot-id]
-                         [to-node-id to-node to-slot-id]]
-                        owner]
-  (reify
-    om/IDisplayName
-    (display-name [_] "Connection")
-
-    om/IRender
-    (render [_]
-      (let [[_ from-slot-frame] (-> from-node
-                                    node/node-slot-canvas-frames
-                                    from-slot-id)
-
-            [_ to-slot-frame] (-> to-node
-                                  node/node-slot-canvas-frames
-                                  to-slot-id)]
-        (connection-line (geometry/rectangle-center from-slot-frame)
-                         (geometry/rectangle-center to-slot-frame)
-                         #(slot-disconnect-and-start-drag app
-                                                          from-node-id
-                                                          from-slot-id
-                                                          to-node-id
-                                                          to-slot-id
-                                                          %))))))
-
-(defn- temporary-connection-view [[from-coord to-coord] owner]
-  (reify
-    om/IDisplayName
-    (display-name [_] "TemporaryConnection")
-
-    om/IRender
-    (render [_]
-      (connection-line from-coord
-                       to-coord
-                       nil))))
 
 (defn- current-dragging-slot [state slot-path]
   (when-let [[node-id slot-id] slot-path]
@@ -251,7 +178,7 @@
              (->> data :node-graph :nodes
                   (filter (fn [[_ node]] (node :inspector-visible)))))
         [:svg.graph-canvas__connections
-         (om/build-all connection-view
+         (om/build-all connection-component
                        (map (fn [[[from-node-id from-slot-id] [to-node-id to-slot-id]]]
                               (let [from-node (-> data :node-graph :nodes from-node-id)
                                     to-node (-> data :node-graph :nodes to-node-id)]
@@ -264,171 +191,7 @@
                  node (-> data :node-graph :nodes node-id)
                  [slot slot-frame] (-> node node/node-slot-canvas-frames slot-id)
                  slot-center (geometry/rectangle-center slot-frame)]
-             (om/build temporary-connection-view [slot-center target-pos])))]]))))
-
-(defn- palette-view [data owner]
-  (letfn [(render-palette-group [{:keys [title node-types]}]
-            (html
-             [:div.palette__node-group
-              [:h3.palette__node-group-title
-               title]
-              (om/build-all prototype-node-component
-                            node-types
-                            {:opts {:on-mouse-down (partial prototype-node-start-drag data)}
-                             :key :default-title})]))]
-    (reify
-      om/IDisplayName
-      (display-name [_] "Palette")
-
-      om/IRender
-      (render [_]
-        (html [:div.palette
-               [:div.palette__inner
-                (map render-palette-group node-type/all-node-groups)
-                ]])))))
-
-(defmulti handle-dragging-sequence (fn [_ _ msg] (:type msg)))
-
-(defmethod handle-dragging-sequence :selection [app read-chan {:keys [mouse-pos reply-chan]}]
-  (let [done (chan)
-        start-mouse-pos mouse-pos]
-    (go
-      (>! reply-chan [:set-rect (geometry/corners->rectangle mouse-pos mouse-pos)])
-      (>! reply-chan [:update #{}])
-
-      (loop []
-        (let [{:keys [phase mouse-pos]} (<! read-chan)
-              rect (geometry/corners->rectangle start-mouse-pos mouse-pos)
-              nodes (set (map first (node-graph/nodes-in-rect (:node-graph app) rect)))]
-          (>! reply-chan [:update nodes])
-
-          (when (= phase :drag)
-            (>! reply-chan [:set-rect rect])
-            (recur))))
-
-      (>! reply-chan [:clear-rect nil])
-      (>! done :done))
-
-    done))
-
-(defmethod handle-dragging-sequence :node [app read-chan
-                                           {:keys [ref-node-id offset reply-chan]}]
-  (let [done (chan)]
-    (go
-      (persist/set-ignore-state-changes! true)
-      (loop [last-pos (node-graph/node-position (:node-graph app) ref-node-id)]
-        (let [{:keys [phase mouse-pos]} (<! read-chan)
-              new-node-pos (geometry/point-sub mouse-pos offset)
-              delta (geometry/point-sub new-node-pos last-pos)]
-          (>! reply-chan [:offset delta])
-
-          (when (= phase :drag)
-            (recur new-node-pos))))
-
-      (persist/set-ignore-state-changes! false)
-      (>! done :done))
-    done))
-
-(defmethod handle-dragging-sequence :prototype-node [app read-chan
-                                                     {:keys [node offset reply-chan]}]
-  (let [done (chan)]
-    (go
-      (>! reply-chan [:update node])
-
-      (loop [node node]
-        (let [{:keys [phase mouse-pos]} (<! read-chan)
-              last-pos (geometry/rectangle-origin (:frame node))
-              new-node-pos (geometry/point-sub mouse-pos offset)
-              delta (geometry/point-sub new-node-pos last-pos)
-              node (node/node-move-by node delta)]
-          (>! reply-chan [:update node])
-
-          (when (= phase :drag)
-            (recur node))
-
-          (when (and (= phase :end)
-                     (< (first mouse-pos)
-                        (- (.-innerWidth js/window) palette-width)))
-            (>! reply-chan [:commit node]))))
-
-      (>! reply-chan [:clear nil])
-      (>! done :done))
-    done))
-
-(defmethod handle-dragging-sequence :slot-drag [app read-chan
-                                                {:keys [slot-path
-                                                        reverse reply-chan
-                                                        position]}]
-  (let [done (chan)]
-    (go
-      (>! reply-chan [:update {:slot-path slot-path
-                               :target-pos position}])
-
-      (loop []
-        (let [{:keys [phase mouse-pos]} (<! read-chan)]
-          (>! reply-chan [:update {:slot-path slot-path
-                                   :target-pos mouse-pos}])
-          (when (= phase :drag)
-            (recur))
-
-          (when (= phase :end)
-            (when-let [hit (-> app :node-graph
-                               (node-graph/hit-test-slot mouse-pos))]
-              (let [from (if reverse hit slot-path)
-                    to (if reverse slot-path hit)]
-                (>! reply-chan [:connect [from to]]))))))
-
-      (>! reply-chan [:clear nil])
-      (>! done :done))
-    done))
-
-(defn- new-node-component [data owner]
-  (reify
-    om/IDisplayName
-    (display-name [_] "NewNode")
-
-    om/IInitState
-    (init-state [_]
-      {:internal-chan (chan)})
-
-    om/IWillMount
-    (will-mount [_]
-      (go
-        (loop []
-          (let [prototype-node-drag-chan (:prototype-node-drag-chan data)
-                internal-chan (om/get-state owner :internal-chan)
-                [msg ch] (alts! [internal-chan prototype-node-drag-chan]
-                                :priority true)]
-            (when (= ch prototype-node-drag-chan)
-              (let [[event value] msg]
-                (case event
-                  :update (om/set-state! owner :new-node value)
-                  :clear (om/set-state! owner :new-node nil)
-                  :commit
-                  (om/transact! data
-                                (fn [app]
-                                  (let [node-graph (:node-graph app)
-                                        node-id (node-graph/next-node-id node-graph)]
-                                    (-> app
-                                        (update-in [:node-graph]
-                                                   #(node-graph/add-node node-graph
-                                                                         node-id
-                                                                         value))
-                                        (assoc-in [:selection] #{node-id}))))))
-                (recur)))))))
-
-    om/IWillUnmount
-    (will-unmount [_]
-      (let [internal-chan (om/get-state owner :internal-chan)]
-        (go
-          (>! internal-chan :terminate)
-          (close! internal-chan))))
-
-    om/IRenderState
-    (render-state [_ state]
-      (html
-       (when-let [new-node (:new-node state)]
-         (om/build node-component [nil new-node nil #{}]))))))
+             (om/build temporary-connection-component [slot-center target-pos])))]]))))
 
 (defn- editor-component [data owner]
   (letfn [(handle-key-up [e]
@@ -464,7 +227,7 @@
               (when (= ch dragging-chan)
                 (when (= (:phase msg) :start)
                   (try
-                    (<! (handle-dragging-sequence @data dragging-chan msg))
+                    (<! (interaction/handle-dragging-sequence @data dragging-chan msg))
                     (catch js/Error e
                       (error "Caught Javascript error during drag sequence processing" e))))
                 (recur))))))
@@ -486,7 +249,7 @@
                 :on-mouse-move (partial update-drag data)}
                (om/build navbar-component data)
                (om/build graph-canvas-view data)
-               (om/build palette-view data)
+               (om/build palette-component data)
                (om/build new-node-component data)
                [:div.state-debug (pr-str data)]
                [:div.save-data-debug

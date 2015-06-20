@@ -1,4 +1,4 @@
-(ns alder.dragging
+(ns alder.ui.dragging
   (:require [om.core :as om :include-macros true]
             [schema.core :as s :include-macros true]
             [cljs.core.async :refer [>!]]
@@ -46,6 +46,22 @@
                                :slot-path [node-id slot-id]
                                :position position
                                :reverse reverse
+                               :reply-chan reply-chan})))
+
+(s/defn disconnect-and-start-slot-drag [app
+                                        from :- [(s/one s/Keyword "from-node-id")
+                                                 (s/one s/Keyword "from-slot-id")]
+                                        to :- [(s/one s/Keyword "to-node-id")
+                                               (s/one s/Keyword "to-slot-id")]
+                                        position :- geometry/Point
+                                        reply-chan]
+  (go
+    (>! (:dragging-chan @app) {:phase :start
+                               :type :slot-drag
+                               :slot-path from
+                               :disconnect-slot-path to
+                               :position position
+                               :reverse false
                                :reply-chan reply-chan})))
 
 (s/defn mouse-drag [app mouse-pos :- geometry/Point]
