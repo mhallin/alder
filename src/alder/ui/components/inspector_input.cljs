@@ -11,7 +11,7 @@
    {:value value
     :on-change #(on-change (-> % .-target .-value))}
    (map (fn [val] [:option
-                   {:value val}
+                   {:key val :value val}
                    val])
         (:choices input))])
 

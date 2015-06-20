@@ -1,6 +1,7 @@
 (ns alder.ui.components.palette
   (:require [om.core :as om :include-macros true]
             [sablono.core :refer-macros [html]]
+            [taoensso.timbre :refer-macros [debug]]
 
             [alder.ui.dragging :as dragging]
             [alder.dom-util :as dom-util]
@@ -27,12 +28,13 @@
   (letfn [(render-palette-group [{:keys [title node-types]}]
             (html
              [:div.palette__node-group
+              {:key title}
               [:h3.palette__node-group-title
                title]
               (om/build-all prototype-node-component
                             node-types
                             {:opts {:on-mouse-down (partial prototype-node-start-drag data)}
-                             :key :default-title})]))]
+                             :key 0})]))]
     (reify
       om/IDisplayName
       (display-name [_] "Palette")

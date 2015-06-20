@@ -157,7 +157,11 @@
                                 [data
                                  [from-node-id from-node from-slot-id]
                                  [to-node-id to-node to-slot-id]]))
-                            (-> data :node-graph :connections)))
+                            (-> data :node-graph :connections))
+                       {:key-fn (fn [[_ [fn _ fs] [tn _ ts]]]
+                                  (str (name fn) ":" (name  fs)
+                                       "->"
+                                       (name tn) ":" (name ts)))})
          (when-let [{:keys [target-pos slot-path]} (:dragging-slot state)]
            (let [[node-id slot-id] slot-path
                  node (-> data :node-graph :nodes node-id)

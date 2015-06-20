@@ -10,6 +10,7 @@
   (html
    [:div.node__slot
     {:style (geometry/rectangle->css slot-frame)
+     :key (str slot-id)
      :class (if slot-drag-data
               [(if (node/can-connect slot-drag-data [node slot-id])
                  "m-connectable"

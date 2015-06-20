@@ -17,7 +17,9 @@
    :midi-cc-learn (fn [] midi-cc-learn-component)})
 
 (defn render-inspector-field [node field-type]
-  (om/build ((custom-inspector-component field-type)) node))
+  (om/build ((custom-inspector-component field-type))
+            node
+            {:react-key field-type}))
 
 (defn inspector-component [[node-graph node-id node] owner]
   (let [node-origin (-> node :frame geometry/rectangle-origin)
@@ -33,12 +35,14 @@
                           (node/set-input-value node input value)))
 
             (render-input-container [input]
-              [:div.node-inspector__input-container
-               [:span.node-inspector__input-title
-                (or (:inspector-title input) (:title input))]
-               (render-input node input
-                             (node/current-input-value node input)
-                             #(set-input-value node input %))])]
+              (html
+               [:div.node-inspector__input-container
+                {:key (:name input)}
+                [:span.node-inspector__input-title
+                 (or (:inspector-title input) (:title input))]
+                (render-input node input
+                              (node/current-input-value node input)
+                              #(set-input-value node input %))]))]
       (reify
         om/IDisplayName
         (display-name [_] "NodeInspector")
