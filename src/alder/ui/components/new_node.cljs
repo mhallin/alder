@@ -1,10 +1,10 @@
-(ns alder.views.new-node
+(ns alder.ui.components.new-node
   (:require [cljs.core.async :refer [>! chan close! alts!]]
             [om.core :as om]
             [sablono.core :refer-macros [html]]
 
             [alder.node-graph :as node-graph]
-            [alder.views.node :refer [node-component]])
+            [alder.ui.components.node :refer [node-component]])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 

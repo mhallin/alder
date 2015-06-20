@@ -1,4 +1,4 @@
-(ns alder.views.palette
+(ns alder.ui.components.palette
   (:require [om.core :as om :include-macros true]
             [sablono.core :refer-macros [html]]
 
@@ -7,7 +7,7 @@
             [alder.geometry :as geometry]
             [alder.node :as node]
             [alder.node-type :as node-type]
-            [alder.views.prototype-node :refer [prototype-node-component]]))
+            [alder.ui.components.prototype-node :refer [prototype-node-component]]))
 
 (defn- prototype-node-start-drag [app node-type-id event]
   (when (dom-util/left-button? event)

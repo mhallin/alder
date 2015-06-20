@@ -1,4 +1,4 @@
-(ns alder.views.connection
+(ns alder.ui.components.connection
   (:require [cljs.core.async :refer [>!]]
             [om.core :as om :include-macros true]
             [sablono.core :refer-macros [html]]

@@ -1,4 +1,4 @@
-(ns alder.views.prototype-node
+(ns alder.ui.components.prototype-node
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]))
 

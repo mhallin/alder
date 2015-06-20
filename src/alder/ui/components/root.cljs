@@ -1,9 +1,9 @@
-(ns alder.views.root
+(ns alder.ui.components.root
   (:require [om.core :as om]
             [sablono.core :refer-macros [html]]
 
-            [alder.views.index :refer [index-component]]
-            [alder.views.editor :refer [editor-component]]))
+            [alder.ui.components.index :refer [index-component]]
+            [alder.ui.components.editor :refer [editor-component]]))
 
 (defn root-component [data owner]
   (reify

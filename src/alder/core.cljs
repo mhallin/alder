@@ -9,7 +9,7 @@
               [alder.routes :as routes]
               [alder.comm :as comm]
               [alder.persist :as persist]
-              [alder.views.root :refer [root-component]])
+              [alder.ui.components.root :refer [root-component]])
 
     (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 

@@ -1,4 +1,4 @@
-(ns alder.views.audio-import
+(ns alder.ui.components.audio-import
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
             [taoensso.timbre :refer-macros [debug]]

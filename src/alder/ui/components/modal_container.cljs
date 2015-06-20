@@ -1,12 +1,12 @@
-(ns alder.views.modal-container
+(ns alder.ui.components.modal-container
   (:require [om.core :as om :include-macros true]
             [sablono.core :refer-macros [html]]
             [taoensso.timbre :refer-macros [debug]]
             [cljs.core.async :refer [<! >! chan]]
 
             [alder.modal :as modal]
-            [alder.views.share :refer [share-component]]
-            [alder.views.source-export :refer [source-export-component]])
+            [alder.ui.components.share :refer [share-component]]
+            [alder.ui.components.source-export :refer [source-export-component]])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 

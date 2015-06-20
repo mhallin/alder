@@ -1,4 +1,4 @@
-(ns alder.views.node
+(ns alder.ui.components.node
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
             [schema.core :as s :include-macros true]

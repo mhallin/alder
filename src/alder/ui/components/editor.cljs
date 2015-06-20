@@ -1,4 +1,4 @@
-(ns alder.views.editor
+(ns alder.ui.components.editor
   (:require [cljs.core.async :refer [alts! >! close! chan]]
             [om.core :as om]
             [sablono.core :refer-macros [html]]
@@ -10,11 +10,11 @@
             [alder.node-graph :as node-graph]
             [alder.node-graph-serialize :as node-graph-serialize]
             [alder.selection :as selection]
-            [alder.views.navbar :refer [navbar-component]]
-            [alder.views.graph-canvas :refer [graph-canvas-component]]
-            [alder.views.palette :refer [palette-component]]
-            [alder.views.new-node :refer [new-node-component]]
-            [alder.views.modal-container :refer [modal-container-component]])
+            [alder.ui.components.navbar :refer [navbar-component]]
+            [alder.ui.components.graph-canvas :refer [graph-canvas-component]]
+            [alder.ui.components.palette :refer [palette-component]]
+            [alder.ui.components.new-node :refer [new-node-component]]
+            [alder.ui.components.modal-container :refer [modal-container-component]])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 

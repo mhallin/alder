@@ -1,15 +1,15 @@
-(ns alder.views.inspector
+(ns alder.ui.components.inspector
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
 
             [alder.geometry :as geometry]
             [alder.node :as node]
             [alder.node-graph :as node-graph]
-            [alder.views.inspector-input :refer [render-input]]
-            [alder.views.midi-cc-learn :refer [midi-cc-learn-component]]
-            [alder.views.fft-analyser :refer [fft-analyser-component]]
-            [alder.views.waveform-analyser :refer [waveform-analyser-component]]
-            [alder.views.audio-import :refer [audio-import-component]]))
+            [alder.ui.components.inspector-input :refer [render-input]]
+            [alder.ui.components.midi-cc-learn :refer [midi-cc-learn-component]]
+            [alder.ui.components.fft-analyser :refer [fft-analyser-component]]
+            [alder.ui.components.waveform-analyser :refer [waveform-analyser-component]]
+            [alder.ui.components.audio-import :refer [audio-import-component]]))
 
 (def custom-inspector-component
   {:fft (fn [] fft-analyser-component)

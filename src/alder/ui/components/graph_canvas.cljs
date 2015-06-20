@@ -1,4 +1,4 @@
-(ns alder.views.graph-canvas
+(ns alder.ui.components.graph-canvas
   (:require [cljs.core.async :refer [chan alts! >! close!]]
             [om.core :as om]
             [sablono.core :refer-macros [html]]
@@ -9,10 +9,10 @@
             [alder.node :as node]
             [alder.node-graph :as node-graph]
             [alder.selection :as selection]
-            [alder.views.node :refer [node-component]]
-            [alder.views.inspector :refer [inspector-component]]
-            [alder.views.connection :refer [connection-component
-                                            temporary-connection-component]])
+            [alder.ui.components.node :refer [node-component]]
+            [alder.ui.components.inspector :refer [inspector-component]]
+            [alder.ui.components.connection :refer [connection-component
+                                                    temporary-connection-component]])
 
   (:require-macros [cljs.core.async.macros :refer [go-loop go]]))
 

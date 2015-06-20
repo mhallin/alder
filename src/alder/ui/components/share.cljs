@@ -1,4 +1,4 @@
-(ns alder.views.share
+(ns alder.ui.components.share
   (:require [om.core :as om :include-macros true]
             [sablono.core :as html :refer-macros [html]]
             [taoensso.timbre :refer-macros [debug]]

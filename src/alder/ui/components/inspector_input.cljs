@@ -1,10 +1,10 @@
-(ns alder.views.inspector-input
+(ns alder.ui.components.inspector-input
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
             [taoensso.timbre :refer-macros [debug]]
 
             [alder.audio.midiapi :as midiapi]
-            [alder.views.audio-import :refer [audio-import-component]]))
+            [alder.ui.components.audio-import :refer [audio-import-component]]))
 
 (defn render-choice-input [node input value on-change]
   [:select.node-inspector__input

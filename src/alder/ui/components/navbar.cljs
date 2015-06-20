@@ -1,4 +1,4 @@
-(ns alder.views.navbar
+(ns alder.ui.components.navbar
   (:require [om.core :as om :include-macros true]
             [sablono.core :refer-macros [html]]
             [taoensso.timbre :refer-macros [debug]]

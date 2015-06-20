@@ -1,4 +1,4 @@
-(ns alder.views.midi-cc-learn
+(ns alder.ui.components.midi-cc-learn
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
 

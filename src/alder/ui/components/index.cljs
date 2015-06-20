@@ -1,4 +1,4 @@
-(ns alder.views.index
+(ns alder.ui.components.index
   (:require [om.core :as om :include-macros true]
             [sablono.core :refer-macros [html]]
             [taoensso.timbre :refer-macros [debug]]

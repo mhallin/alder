@@ -1,4 +1,4 @@
-(ns alder.views.fft-analyser
+(ns alder.ui.components.fft-analyser
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
             [clojure.string :as string]

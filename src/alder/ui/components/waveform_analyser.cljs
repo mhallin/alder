@@ -1,4 +1,4 @@
-(ns alder.views.waveform-analyser
+(ns alder.ui.components.waveform-analyser
   (:require [om.core :as om]
             [sablono.core :as html :refer-macros [html]]
             [clojure.string :as string]
