@@ -17,12 +17,12 @@ class MIDIDispatch {
 		device.onmidimessage = function(e) { self.onMIDIMessage(device, e); };
 	}
 
-	addMIDIEventListener(device, token, callback) {
+	addMIDIMessageEventListener(device, token, callback) {
 		this._registerDevice(device);
 		this._eventListeners[device.id].push([token, callback]);
 	}
 
-	removeMIDIEventListener(device, token) {
+	removeMIDIMessageEventListener(device, token) {
 		this._registerDevice(device);
 
 		var listenerArray = this._eventListeners[device.id];

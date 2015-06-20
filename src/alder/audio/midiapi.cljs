@@ -6,15 +6,15 @@
 (defn request-midi-access []
   (.call (aget js/navigator "requestMIDIAccess") js/navigator))
 
-(defn add-midi-event-listener [device token callback]
-  (.call (aget js/Alder.MIDIDispatch "addMIDIEventListener")
+(defn add-midi-message-event-listener [device token callback]
+  (.call (aget js/Alder.MIDIDispatch "addMIDIMessageEventListener")
          js/Alder.MIDIDispatch
          device
          token
          callback))
 
-(defn remove-midi-event-listener [device token]
-  (.call (aget js/Alder.MIDIDispatch "removeMIDIEventListener")
+(defn remove-midi-message-event-listener [device token]
+  (.call (aget js/Alder.MIDIDispatch "removeMIDIMessageEventListener")
          js/Alder.MIDIDispatch
          device
          token))

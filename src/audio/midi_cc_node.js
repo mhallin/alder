@@ -12,14 +12,14 @@ export default class MIDICCNode {
 	device(device) {
 		if (device !== undefined) {
 			if (this._device) {
-				MIDIDispatch.removeMIDIEventListener(this._device, this);
+				MIDIDispatch.removeMIDIMessageEventListener(this._device, this);
 				this._device = null;
 			}
 
 			this._device = device;
 
 			if (this._device) {
-				MIDIDispatch.addMIDIEventListener(device, this, this.onmidimessage);
+				MIDIDispatch.addMIDIMessageEventListener(device, this, this.onMIDIMessage);
 			}
 		}
 		else {
@@ -43,7 +43,7 @@ export default class MIDICCNode {
 		}
 	}
 
-	onmidimessage(event) {
+	onMIDIMessage(event) {
 		var data = event.data;
 
 		if (data.length < 3) {
