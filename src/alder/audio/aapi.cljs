@@ -61,3 +61,15 @@
 
 (defn read-as-array-buffer [file-reader file]
   (.call (aget file-reader "readAsArrayBuffer") file-reader file))
+
+
+(defn- get-user-media-ctor []
+  (let [nav js/navigator]
+
+    (or (aget nav "getUserMedia")
+        (aget nav "webkitGetUserMedia")
+        (aget nav "mozGetUserMedia")
+        (aget nav "msGetUserMedia"))))
+
+(defn has-user-media-support []
+  (boolean (get-user-media-ctor)))

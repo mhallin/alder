@@ -388,6 +388,20 @@
              (fn [ctx] (.call (aget ctx "createConvolver") ctx))
              {:constructor "context.createConvolver()"}))
 
+(s/def user-media-node-type :- ValidNodeType
+  (NodeType. {:gate (gate-in "gate" "Gate")}
+             {:signal (signal-out 0 "Signal")}
+             nil
+             false
+             "Mic"
+             [80 40]
+             #(js/Alder.UserMediaNode. %)
+             {:constructor "new UserMediaNode(context)"
+              :dependencies {"UserMediaNode"
+                             ["audio/user_media_node",
+                              (str (.-origin js/location)
+                                   "/js/audio/user_media_node.js")]}}))
+
 (s/def midi-note-node-type :- ValidNodeType
   (NodeType. {:device (midi-device-accessor-in "device" "Device")
               :note-mode (string-constant-in "noteMode" "Mode" "retrig"
@@ -441,7 +455,8 @@
                      :compressor compressor-node-type
                      :audio-buffer-source audio-buffer-source-node-type
                      :url-buffer url-buffer-node-type
-                     :convolver convolver-node-type}
+                     :convolver convolver-node-type
+                     :user-media user-media-node-type}
         midi-nodes (if has-midi-support
                      {:midi-note midi-note-node-type
                       :midi-cc midi-cc-node-type}
@@ -455,7 +470,8 @@
             [node-type-id (all-node-types node-type-id)])]
 
     (let [generators [:oscillator :const-source
-                      :audio-buffer-source]
+                      :audio-buffer-source
+                      :user-media]
           filters [:biquad-filter :gain :stereo-panner
                    :stereo-splitter :stereo-merger
                    :delay :compressor :convolver]
