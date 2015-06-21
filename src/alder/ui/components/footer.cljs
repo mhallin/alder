@@ -7,11 +7,16 @@
             [alder.ui.components.midi-device-input :refer [midi-device-input-component]]))
 
 (defn footer-component [data owner]
-  (letfn [(on-state-change [e]
-            (debug "State change" e))]
+  (letfn [(toggle-screen-keyboard [e]
+            (.preventDefault e)
+            (om/transact! data :screen-keyboard-visible not))]
     (reify
       om/IDisplayName
       (display-name [_] "Footer")
+
+      om/IInitState
+      (init-state [_]
+        {:screen-keyboard-visible false})
 
       om/IRenderState
       (render-state [_ state]
@@ -23,4 +28,8 @@
              (om/build midi-device-input-component
                        [(midiapi/get-current-midi-master-device)
                         midiapi/set-current-midi-master-device!]
-                       {:opts {:class "footer__midi-master-dropdown"}})])])))))
+                       {:opts {:class "footer__midi-master-dropdown"}})])
+          [:a.footer__aux-button
+           {:on-click toggle-screen-keyboard
+            :href "#"}
+           "Keyboard"]])))))

@@ -15,7 +15,8 @@
             [alder.ui.components.graph-canvas :refer [graph-canvas-component]]
             [alder.ui.components.palette :refer [palette-component]]
             [alder.ui.components.new-node :refer [new-node-component]]
-            [alder.ui.components.modal-container :refer [modal-container-component]])
+            [alder.ui.components.modal-container :refer [modal-container-component]]
+            [alder.ui.components.screen-keyboard :refer [screen-keyboard-component]])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -83,6 +84,8 @@
                (om/build graph-canvas-component data)
                (om/build palette-component data)
                (om/build footer-component data)
+               (when (:screen-keyboard-visible data)
+                 (om/build screen-keyboard-component nil))
                (om/build new-node-component data)
                [:div.state-debug (pr-str data)]
                [:div.save-data-debug

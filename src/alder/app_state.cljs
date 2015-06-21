@@ -13,6 +13,7 @@
 
     :dragging nil
     :modal-overlay nil
+    :screen-keyboard-visible true
 
     :current-page :none
     :current-page-args {}

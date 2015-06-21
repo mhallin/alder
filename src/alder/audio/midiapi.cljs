@@ -36,3 +36,9 @@
 
 (defn event-data [event]
   (aget event "data"))
+
+(defn emit-midi-master-device-event [e]
+  (.call (aget js/Alder.MIDIDispatch "onMIDIMessage")
+         js/Alder.MIDIDispatch
+         (midi-master-device)
+         (clj->js e)))
