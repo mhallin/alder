@@ -208,7 +208,7 @@
              false
              "ADSR"
              [70 90]
-             #(js/Alder.ADSRNode. %)
+             #(let [ctor (aget (midiapi/alder-ns-obj) "ADSRNode")] (ctor. %))
              {:constructor "new ADSRNode(context)"
               :dependencies {"ADSRNode" ["audio/adsr_node"
                                          (str (.-origin js/location)
@@ -280,7 +280,7 @@
              false
              "Const"
              [80 40]
-             (fn [ctx] (js/Alder.ConstSourceNode. ctx))
+             #(let [ctor (aget (midiapi/alder-ns-obj) "ConstSourceNode")] (ctor. %))
              {:constructor "new ConstSourceNode(context)"}))
 
 (s/def stereo-panner-node-type :- ValidNodeType
@@ -356,7 +356,7 @@
              false
              "Audio"
              [80 120]
-             #(js/Alder.BufferSourceWrapperNode. %)
+             #(let [ctor (aget (midiapi/alder-ns-obj) "BufferSourceWrapperNode")] (ctor. %))
              {:constructor "new BufferSourceWrapperNode(context)"
               :dependencies {"BufferSourceWrapperNode"
                              ["audio/buffer_source_wrapper_node"
@@ -370,7 +370,7 @@
              false
              "URL"
              [70 40]
-             #(js/Alder.URLBufferNode. %)
+             #(let [ctor (aget (midiapi/alder-ns-obj) "URLBufferNode")] (ctor. %))
              {:constructor "new URLBufferNode(context)"
               :dependencies {"URLBufferNode" ["audio/url_buffer_node"
                                               (str (.-origin js/location)
@@ -395,7 +395,7 @@
              false
              "Mic"
              [80 40]
-             #(js/Alder.UserMediaNode. %)
+             #(let [ctor (aget (midiapi/alder-ns-obj) "UserMediaNode")] (ctor. %))
              {:constructor "new UserMediaNode(context)"
               :dependencies {"UserMediaNode"
                              ["audio/user_media_node",
@@ -415,7 +415,7 @@
              false
              "MIDI Note"
              [100 80]
-             #(js/Alder.MIDINoteNode. %)
+             #(let [ctor (aget (midiapi/alder-ns-obj) "MIDINoteNode")] (ctor. %))
              {:constructor "new MIDINoteNode(context)"
               :dependencies {"MIDINoteNode" ["audio/midi_note_node"
                                              (str (.-origin js/location)
@@ -429,7 +429,7 @@
              false
              "MIDI CC"
              [100 40]
-             #(js/Alder.MIDICCNode. %)
+             #(let [ctor (aget (midiapi/alder-ns-obj) "MIDICCNode")] (ctor. %))
              {:constructor "new MIDICCNode(context)"
               :dependencies {"MIDICCNode" ["audio/midi_cc_node"
                                            (str (.-origin js/location)
