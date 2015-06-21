@@ -22,7 +22,9 @@
                  [org.clojure/java.jdbc "0.3.7"]
                  [com.taoensso/timbre "4.0.0"]
                  [org.clojure/tools.namespace "0.2.10"]
-                 [prismatic/schema "0.4.3"]]
+                 [prismatic/schema "0.4.3"]
+                 [com.taoensso/carmine "2.11.1"]
+                 [jarohen/chime "0.1.6"]]
 
   :plugins [[lein-cljsbuild "1.0.5"]
             [lein-figwheel "0.3.1" :exclusions [cider/cider-nrepl]]

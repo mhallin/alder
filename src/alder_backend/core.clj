@@ -1,6 +1,8 @@
 (ns alder-backend.core
   (:require [alder-backend.db :as db]
             [alder-backend.views :as views]
+            [alder-backend.periodic :as periodic]
+            [alder-backend.tasks :as tasks]
 
             [clojure.string :as string]
             [clojure.core.async :refer [<! >! put! close! go]]
@@ -97,6 +99,12 @@
 
 (defn -main [& args]
   (db/migrate)
+  (tasks/start-worker)
+
+  (when (env :periodic-runner)
+    (periodic/start-periodic-tasks)
+    (info "Periodic task runner started"))
+
   (let [port (or (env :alder-port) 3449)
         instance (run-server app {:port port})]
     (info "Application started on port" port)

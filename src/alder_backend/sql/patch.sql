@@ -25,3 +25,10 @@ INSERT INTO patch (short_id, patch_data, based_on_id)
 
 -- name: do-mark-patch-read-only!
 UPDATE patch SET read_only = TRUE WHERE short_id = :short_id;
+
+
+-- name: do-garbage-collect-patches!
+DELETE FROM patch p1
+    WHERE read_only = FALSE
+	  AND NOW() - last_visited_at >= '5 days'::interval
+	  AND NOT EXISTS (SELECT id FROM patch p2 WHERE p2.based_on_id = p1.id);

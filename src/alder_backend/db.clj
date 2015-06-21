@@ -71,6 +71,9 @@
 (defn mark-patch-read-only! [short-id]
   (do-mark-patch-read-only! database-url short-id))
 
+(defn garbage-collect-patches! []
+  (do-garbage-collect-patches! database-url))
+
 (defn -main []
   (migrate)
   (System/exit 0))
