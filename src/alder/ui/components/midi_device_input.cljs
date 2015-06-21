@@ -31,17 +31,23 @@
       om/IDisplayName
       (display-name [_] "MidiDeviceInput")
 
+      om/IInitState
+      (init-state [_]
+        (let [master-device (midiapi/midi-master-device)]
+          {:inputs {(aget master-device "id") master-device}}))
+
       om/IWillMount
       (will-mount [_]
-        (.then (midiapi/request-midi-access)
-               (fn [access]
-                 (om/set-state! owner :midi-access access)
-                 (update-inputs (aget access "inputs"))
-                 (.addEventListener access "statechange" on-state-change))))
+        (when (midiapi/has-midi-access)
+          (.then (midiapi/request-midi-access)
+                 (fn [access]
+                   (om/set-state! owner :midi-access access)
+                   (update-inputs (aget access "inputs"))
+                   (.addEventListener access "statechange" on-state-change)))))
 
       om/IWillUnmount
       (will-unmount [_]
-        (let [access (om/get-state owner :midi-access)]
+        (when-let [access (om/get-state owner :midi-access)]
           (.removeEventListener access "statechange" on-state-change)))
 
       om/IRender

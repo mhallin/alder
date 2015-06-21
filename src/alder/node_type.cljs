@@ -435,33 +435,28 @@
                                            (str (.-origin js/location)
                                                 "/js/audio/midi_cc_node.js")]}}))
 
-(def has-midi-support (midiapi/has-midi-access))
-
 (s/def all-node-types :- {s/Keyword ValidNodeType}
-  (let [basic-nodes {:audio-destination audio-destination-node-type
-                     :output output-node-type
-                     :input input-node-type
-                     :oscillator oscillator-node-type
-                     :gain gain-node-type
-                     :biquad-filter biquad-filter-node-type
-                     :adsr adsr-node-type
-                     :const-source const-source-node-type
-                     :fft fft-analyser-node-type
-                     :scope scope-analyser-node-type
-                     :stereo-panner stereo-panner-node-type
-                     :stereo-splitter stereo-splitter-node-type
-                     :stereo-merger stereo-merger-node-type
-                     :delay delay-node-type
-                     :compressor compressor-node-type
-                     :audio-buffer-source audio-buffer-source-node-type
-                     :url-buffer url-buffer-node-type
-                     :convolver convolver-node-type
-                     :user-media user-media-node-type}
-        midi-nodes (if has-midi-support
-                     {:midi-note midi-note-node-type
-                      :midi-cc midi-cc-node-type}
-                     {})]
-    (merge basic-nodes midi-nodes)))
+  {:audio-destination audio-destination-node-type
+   :output output-node-type
+   :input input-node-type
+   :oscillator oscillator-node-type
+   :gain gain-node-type
+   :biquad-filter biquad-filter-node-type
+   :adsr adsr-node-type
+   :const-source const-source-node-type
+   :fft fft-analyser-node-type
+   :scope scope-analyser-node-type
+   :stereo-panner stereo-panner-node-type
+   :stereo-splitter stereo-splitter-node-type
+   :stereo-merger stereo-merger-node-type
+   :delay delay-node-type
+   :compressor compressor-node-type
+   :audio-buffer-source audio-buffer-source-node-type
+   :url-buffer url-buffer-node-type
+   :convolver convolver-node-type
+   :user-media user-media-node-type
+   :midi-note midi-note-node-type
+   :midi-cc midi-cc-node-type})
 
 (s/def all-node-groups :- [{:title s/Str
                             :node-types [[(s/one s/Keyword "key")
@@ -482,15 +477,13 @@
           interfaces [:input :output :audio-destination]]
       (map
        (fn [m] (update m :node-types (partial map lookup)))
-       (concat [{:title "Generators" :node-types generators}
-                {:title "Filters" :node-types filters}
-                {:title "Envelopes" :node-types envelopes}
-                {:title "Buffer Sources" :node-types buffer-sources}]
-               (if has-midi-support
-                 [{:title "MIDI" :node-types midi-nodes}]
-                 [])
-               [{:title "Analysers" :node-types analysers}]
-               [{:title "Interfaces" :node-types interfaces}])))))
+       [{:title "Generators" :node-types generators}
+        {:title "Filters" :node-types filters}
+        {:title "Envelopes" :node-types envelopes}
+        {:title "Buffer Sources" :node-types buffer-sources}
+        {:title "MIDI" :node-types midi-nodes}
+        {:title "Analysers" :node-types analysers}
+        {:title "Interfaces" :node-types interfaces}]))))
 
 (s/defn get-node-type :- ValidNodeType
   [node-type-id :- s/Keyword]
