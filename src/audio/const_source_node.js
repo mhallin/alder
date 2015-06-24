@@ -23,9 +23,9 @@ export default class ConstSourceNode {
 		}
 	}
 
-	disconnect(output) {
+	disconnect(destination, output, input) {
 		if (output === 0) {
-			this.node.disconnect();
+			this.node.disconnect(destination, input);
 		}
 	}
 }
