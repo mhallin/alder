@@ -25,7 +25,7 @@
     (>!! @current-cancel-chan :terminate))
 
   (let [cancel-chan (a/chan)
-        garbage-collect-chan (chime-ch (periodic-seq (t/now) (-> 5 t/secs))
+        garbage-collect-chan (chime-ch (periodic-seq (t/now) (-> 1 t/days))
                                        {:ch (a/chan (a/sliding-buffer 1))})]
     (reset! current-cancel-chan cancel-chan)
     (go-loop []
