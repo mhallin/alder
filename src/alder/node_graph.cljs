@@ -158,6 +158,21 @@
   [node-graph :- NodeGraph node-id :- s/Keyword]
   (-> node-graph :nodes node-id))
 
+(s/defn editable-inputs :- [node-type/InputRef]
+  [node-graph :- NodeGraph node-id :- s/Keyword]
+  (filter (fn [[id s]]
+            (and
+             (not= (:type s) :node)
+             (not-any? (fn [[[from-node-id from-output-id] [to-node-id to-input-id]]]
+                         (and (= to-node-id node-id)
+                              (= to-input-id id)
+                              (= (-> (node-by-id node-graph from-node-id)
+                                     (node/node-output from-output-id)
+                                     :data-type)
+                                    :param)))
+                       (:connections node-graph))))
+          (-> node-graph :nodes node-id node/node-type :inputs)))
+
 (s/defn nodes-in-rect :- [NodeRef]
   [node-graph :- NodeGraph rect :- geometry/Rectangle]
   (filter (fn [[id n]] (geometry/rectangles-overlap? rect (:frame n)))

@@ -26,6 +26,10 @@
   [node :- NodeSchema]
   (-> node node-type :outputs))
 
+(s/defn node-output :- node-type/Output
+  [node :- NodeSchema output-id :- s/Keyword]
+  (output-id (node-type-outputs node)))
+
 (s/defn set-input-value :- NodeSchema
   [node :- NodeSchema input :- node-type/Input value :- s/Any]
   (let [audio-node (:audio-node node)
@@ -129,13 +133,6 @@
   (let [[_ slot-local-frame] (slot-id (node-slot-frames node))
         node-origin (-> node :frame geometry/rectangle-origin)]
     (geometry/rectangle-move-by slot-local-frame node-origin)))
-
-
-(s/defn editable-inputs :- [[(s/one s/Keyword "id")
-                             (s/one node-type/Input "input")]]
-  [node :- NodeSchema]
-  (remove (fn [[_ i]] (= (:type i) :node))
-          (-> node node-type :inputs)))
 
 
 (s/defn current-input-value :- s/Any

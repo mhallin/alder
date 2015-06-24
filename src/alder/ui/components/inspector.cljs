@@ -54,8 +54,7 @@
             {:style {:left (str inspector-x "px")
                      :top (str inspector-y "px")
                      :width (str inspector-width "px")}}
-            (->> (node/editable-inputs node)
-                 (node-graph/disconnected-inputs node-graph node-id)
+            (->> (node-graph/editable-inputs node-graph node-id)
                  (map second)
                  (map render-input-container))
             (map #(render-inspector-field node %)
