@@ -2,7 +2,8 @@
   (:require [cljs.core.async :refer [chan]]
 
             [alder.node-graph :refer [make-node-graph]]
-            [alder.audio.aapi :refer [AudioContext]]))
+            [alder.audio.aapi :refer [AudioContext]]
+            [alder.math :as math]))
 
 (defonce app-state
   (atom
@@ -25,4 +26,8 @@
     :node-drag-chan (chan)
     :prototype-node-drag-chan (chan)
     :slot-drag-chan (chan)
+
+    :scroll-offset [0 0]
+    :graph-xform {:matrix math/identity-matrix
+                  :inv math/identity-matrix}
     }))

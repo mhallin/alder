@@ -3,6 +3,7 @@
             [sablono.core :as html :refer-macros [html]]
 
             [alder.geometry :as geometry]
+            [alder.math :as math]
             [alder.node :as node]
             [alder.node-graph :as node-graph]
             [alder.ui.components.inspector-input :refer [render-input]]
@@ -21,7 +22,7 @@
             node
             {:react-key field-type}))
 
-(defn inspector-component [[node-graph node-id node] owner]
+(defn inspector-component [[node-graph node-id node graph-xform] owner]
   (let [node-origin (-> node :frame geometry/rectangle-origin)
         node-width (-> node :frame :width)
         node-height (-> node :frame :height)
@@ -29,6 +30,7 @@
         inspector-origin (geometry/point-add node-origin
                                              [(- (/ node-width 2) (/ inspector-width 2))
                                               (- node-height 4)])
+        inspector-origin (math/mult-point (:matrix graph-xform) inspector-origin)
         [inspector-x inspector-y] inspector-origin]
     (letfn [(set-input-value [node input value]
               (om/update! node

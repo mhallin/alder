@@ -2,6 +2,7 @@
   (:require [cljs.core.async :refer [<! >! chan]]
 
             [alder.geometry :as geometry]
+            [alder.math :as math]
             [alder.node :as node]
             [alder.node-graph :as node-graph]
             [alder.persist :as persist])
@@ -22,7 +23,9 @@
 
       (loop []
         (let [{:keys [phase mouse-pos]} (<! read-chan)
-              rect (geometry/corners->rectangle start-mouse-pos mouse-pos)
+              rect (geometry/rectangle-transform
+                    (geometry/corners->rectangle start-mouse-pos mouse-pos)
+                    (-> app :graph-xform :inv))
               nodes (set (map first (node-graph/nodes-in-rect (:node-graph app) rect)))]
           (>! reply-chan [:update nodes])
 
@@ -42,6 +45,7 @@
       (persist/set-ignore-state-changes! true)
       (loop [last-pos (node-graph/node-position (:node-graph app) ref-node-id)]
         (let [{:keys [phase mouse-pos]} (<! read-chan)
+              mouse-pos (math/mult-point (-> app :graph-xform :inv) mouse-pos)
               new-node-pos (geometry/point-sub mouse-pos offset)
               delta (geometry/point-sub new-node-pos last-pos)]
           (>! reply-chan [:offset delta])
@@ -61,6 +65,7 @@
 
       (loop [node node]
         (let [{:keys [phase mouse-pos]} (<! read-chan)
+              mouse-pos (math/mult-point (-> app :graph-xform :inv) mouse-pos)
               last-pos (geometry/rectangle-origin (:frame node))
               new-node-pos (geometry/point-sub mouse-pos offset)
               delta (geometry/point-sub new-node-pos last-pos)
@@ -84,7 +89,8 @@
                                                         disconnect-slot-path
                                                         reverse reply-chan
                                                         position]}]
-  (let [done (chan)]
+  (let [done (chan)
+        position (math/mult-point (-> app :graph-xform :inv) position)]
     (go
       (when disconnect-slot-path
         (>! reply-chan [:disconnect [slot-path disconnect-slot-path]]))
@@ -92,7 +98,9 @@
                                :target-pos position}])
 
       (loop []
-        (let [{:keys [phase mouse-pos]} (<! read-chan)]
+        (let [{:keys [phase mouse-pos]} (<! read-chan)
+              mouse-pos (math/mult-point (-> app :graph-xform :inv) mouse-pos)
+              ]
           (>! reply-chan [:update {:slot-path slot-path
                                    :target-pos mouse-pos}])
           (when (= phase :drag)

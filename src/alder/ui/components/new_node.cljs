@@ -3,6 +3,7 @@
             [om.core :as om]
             [sablono.core :refer-macros [html]]
 
+            [alder.math :as math]
             [alder.node-graph :as node-graph]
             [alder.ui.components.node :refer [node-component]])
 
@@ -54,4 +55,4 @@
     (render-state [_ state]
       (html
        (when-let [new-node (:new-node state)]
-         (om/build node-component [nil new-node nil #{}]))))))
+         (om/build node-component [nil new-node nil #{} (:graph-xform data)]))))))

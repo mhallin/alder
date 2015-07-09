@@ -81,7 +81,7 @@
                {:on-mouse-up (partial end-drag data)
                 :on-mouse-move (partial update-drag data)}
                (om/build navbar-component data)
-               (om/build graph-canvas-component data)
+               (om/build graph-canvas-component data {:opts {:ref "graph-canvas"}})
                (om/build palette-component data)
                (om/build footer-component data)
                (when (:screen-keyboard-visible data)

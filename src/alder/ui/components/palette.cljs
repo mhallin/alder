@@ -6,6 +6,7 @@
             [alder.ui.dragging :as dragging]
             [alder.dom-util :as dom-util]
             [alder.geometry :as geometry]
+            [alder.math :as math]
             [alder.node :as node]
             [alder.node-type :as node-type]
             [alder.ui.components.prototype-node :refer [prototype-node-component]]))
@@ -15,9 +16,11 @@
     (.stopPropagation event)
 
     (let [mouse-pos (dom-util/event-mouse-pos event)
+          mouse-pos (math/mult-point (-> app :graph-xform :inv) mouse-pos)
           elem-pos (geometry/rectangle-origin
                     (dom-util/element-viewport-frame
                      (.-currentTarget event)))
+          elem-pos (math/mult-point (-> app :graph-xform :inv) elem-pos)
           offset (geometry/point-sub mouse-pos elem-pos)
           node (node/make-node (:context app)
                                (geometry/point-sub mouse-pos offset)

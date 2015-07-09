@@ -25,7 +25,7 @@
            (render-slot node-id node slot-id slot slot-frame slot-drag-data on-mouse-down))
          slot-frames)))
 
-(defn node-component [[node-id node slot-drag-data selection] owner
+(defn node-component [[node-id node slot-drag-data selection graph-xform] owner
                       {:keys [on-mouse-down on-slot-mouse-down]}]
   (reify
     om/IDisplayName
@@ -36,7 +36,9 @@
       (let [frame (:frame node)
             title (-> node node/node-type :default-title)]
         (html [:div.node
-               {:style (geometry/rectangle->css frame)
+               {:style (geometry/rectangle->css
+                        (geometry/rectangle-transform frame
+                                                      (:matrix graph-xform)))
                 :key (str "node__" node-id)
                 :on-mouse-down #(on-mouse-down node-id %)
                 :class (if (selection node-id) ["m-selected"] [])}

@@ -1,5 +1,7 @@
 (ns alder.geometry
-  (:require [schema.core :as s :include-macros true]))
+  (:require [schema.core :as s :include-macros true]
+
+            [alder.math :as math]))
 
 (defrecord Rectangle [x y width height])
 
@@ -39,6 +41,15 @@
     (Rectangle. min-x min-y
                 (- max-x min-x)
                 (- max-y min-y))))
+
+(s/defn rectangle-transform :- ValidRectangle
+  [rectangle :- ValidRectangle matrix]
+  (let [{:keys [x y width height]} rectangle
+        p1 [x y]
+        p2 [(+ x width) (+ y height)]
+        p1' (math/mult-point matrix p1)
+        p2' (math/mult-point matrix p2)]
+    (corners->rectangle p1' p2')))
 
 (s/defn rectangle-move-to :- ValidRectangle
   [rectangle :- ValidRectangle position :- Point]
@@ -97,8 +108,11 @@
 
 
 (s/defn point-sub :- Point
-  [p1 :- Point p2 :- Point]
-  (let [[x1 y1] p1
-        [x2 y2] p2]
-    [(- x1 x2)
-     (- y1 y2)]))
+  ([p :- Point]
+   (let [[x y] p]
+     [(- x) (- y)]))
+  ([p1 :- Point p2 :- Point]
+   (let [[x1 y1] p1
+         [x2 y2] p2]
+     [(- x1 x2)
+      (- y1 y2)])))
