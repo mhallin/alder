@@ -36,7 +36,9 @@
                title]
               (om/build-all prototype-node-component
                             node-types
-                            {:opts {:on-mouse-down (partial prototype-node-start-drag data)}
+                            {:opts {:on-mouse-down #(prototype-node-start-drag
+                                                     (om/get-props owner)
+                                                     %1 %2)}
                              :key 0})]))]
     (reify
       om/IDisplayName
