@@ -33,8 +33,8 @@
         inspector-origin (math/mult-point (:matrix graph-xform) inspector-origin)
         [inspector-x inspector-y] inspector-origin]
     (letfn [(set-input-value [node input value]
-              (om/update! node
-                          (node/set-input-value node input value)))
+              (om/transact! node
+                            (fn [n] (node/set-input-value n input value))))
 
             (render-input-container [input]
               (html
