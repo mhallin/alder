@@ -65,6 +65,7 @@
 
       (loop [node node]
         (let [{:keys [phase mouse-pos]} (<! read-chan)
+              abs-mouse-pos mouse-pos
               mouse-pos (math/mult-point (-> app :graph-xform :inv) mouse-pos)
               last-pos (geometry/rectangle-origin (:frame node))
               new-node-pos (geometry/point-sub mouse-pos offset)
@@ -76,7 +77,7 @@
             (recur node))
 
           (when (and (= phase :end)
-                     (< (first mouse-pos)
+                     (< (first abs-mouse-pos)
                         (- (.-innerWidth js/window) palette-width)))
             (>! reply-chan [:commit node]))))
 
