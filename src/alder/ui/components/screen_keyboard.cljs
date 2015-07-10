@@ -30,7 +30,12 @@
                {:data [0x80 index 0x00]}))
 
             (on-key-down [e]
-              (when-not (.-repeat e)
+              (when-not (or (.-altKey e)
+                            (.-ctrlKey e)
+                            (.-metaKey e)
+                            (.-shiftKey e)
+                            (.-repeat e)
+                            (not= (.toLowerCase (.-tagName (.-target e))) "body"))
                 (when-let [index (key-name->index (om/get-state owner :root-note)
                                                   (char (.-keyCode e)))]
                   (on-key-mouse-down index e))))
