@@ -26,6 +26,10 @@
   [node :- NodeSchema]
   (-> node node-type :outputs))
 
+(s/defn node-input :- node-type/Input
+  [node :- NodeSchema input-id :- s/Keyword]
+  (input-id (node-type-inputs node)))
+
 (s/defn node-output :- node-type/Output
   [node :- NodeSchema output-id :- s/Keyword]
   (output-id (node-type-outputs node)))
@@ -168,5 +172,7 @@
             (and (= (:data-type output) :gate)
                  (= (:type input) :gate))
             (and (= (:data-type output) :buffer)
-                 (= (:data-type input) :buffer))))
+                 (= (:data-type input) :buffer))
+            (and (= (:data-type output) :function)
+                 (= (:data-type input) :function))))
       false)))

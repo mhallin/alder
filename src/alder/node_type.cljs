@@ -3,7 +3,7 @@
             [schema.core :as s :include-macros true]))
 
 (def SignalType
-  (s/enum :boolean :number :string :midi-device :buffer))
+  (s/enum :boolean :number :string :midi-device :buffer :function))
 
 (def SignalRange
   [(s/one s/Num "lower") (s/one s/Num "upper")])
@@ -29,7 +29,7 @@
   {:type (s/enum :node :null-node),
    :title s/Str,
    :index s/Int,
-   (s/optional-key :data-type) (s/enum :signal :param :gate :null-node :buffer)})
+   (s/optional-key :data-type) (s/enum :signal :param :gate :null-node :buffer :function)})
 
 (def OutputMap
   {s/Keyword Output})
@@ -163,6 +163,15 @@
 (s/defn buffer-out :- Output
   [index :- s/Int title :- s/Str]
   {:type :node, :title title, :index index, :data-type :buffer})
+
+(s/defn function-accessor-in :- Input
+  [name :- s/Str title :- s/Str]
+  {:type :accessor, :name name, :title title, :data-type :function, :default nil,
+   :serializable false})
+
+(s/defn function-out :- Output
+  [index :- s/Int title :- s/Str]
+  {:type :node, :title title, :index index, :data-type :function})
 
 (s/def audio-destination-node-type :- ValidNodeType
   (NodeType. {:signal (signal-in 0 "Signal")}
@@ -402,6 +411,55 @@
                               (str (.-origin js/location)
                                    "/js/audio/user_media_node.js")]}}))
 
+(s/def programmable-node-type :- ValidNodeType
+  (NodeType. {:render-callback (function-accessor-in "renderCallback" "Callback")}
+             {:signal-out (signal-out 0 "Signal out")}
+             {:inspector-hide-fields #{:render-callback}}
+             false
+             "Exec"
+             [70 40]
+             #(let [ctor (aget (midiapi/alder-ns-obj) "ProgrammableNode")] (ctor. %))
+             {:constructor "new ProgrammableNode(context)"
+              :dependencies {"ProgrammableNode"
+                             ["audio/programmable_node",
+                              (str (.-origin js/location)
+                                   "/js/audio/programmable_node.js")]}}))
+
+(def default-js-source
+  "'use strict';
+
+function Node(context) {
+  this.context = context;
+}
+
+Node.prototype.onaudioprocess = function (event) {
+  var inputBuf = event.inputBuffer;
+  var inputChan = inputBuf.getChannelData(0);
+  var outputBuf = event.outputBuffer;
+  var outputChan = outputBuf.getChannelData(0);
+
+  for (var i = 0; i < outputBuf.length; ++i) {
+  }
+}
+
+module.exports = Node;
+")
+
+(s/def js-source-node-type :- ValidNodeType
+  (NodeType. {:source (string-accessor-in "source" "Source" default-js-source)}
+             {:function (function-out 0 "Function")}
+             {:inspector-fields [:js-editor]
+              :inspector-hide-fields #{:source}}
+             false
+             "JavaScript"
+             [110 40]
+             #(let [ctor (aget (midiapi/alder-ns-obj) "JSSourceNode")] (ctor. %))
+             {:constructor "new JSSourceNode(context)"
+              :dependencies {"JSSourceNode"
+                             ["audio/js_source_node"
+                              (str (.-origin js/location)
+                                   "/js/audio/js_source_node.js")]}}))
+
 (s/def midi-note-node-type :- ValidNodeType
   (NodeType. {:device (midi-device-accessor-in "device" "Device")
               :note-mode (string-constant-in "noteMode" "Mode" "retrig"
@@ -455,6 +513,8 @@
    :url-buffer url-buffer-node-type
    :convolver convolver-node-type
    :user-media user-media-node-type
+   :programmable programmable-node-type
+   :js-source js-source-node-type
    :midi-note midi-note-node-type
    :midi-cc midi-cc-node-type})
 
@@ -467,6 +527,7 @@
     (let [generators [:oscillator :const-source
                       :audio-buffer-source
                       :user-media]
+          custom-nodes [:programmable :js-source]
           filters [:biquad-filter :gain :stereo-panner
                    :stereo-splitter :stereo-merger
                    :delay :compressor :convolver]
@@ -478,6 +539,7 @@
       (map
        (fn [m] (update m :node-types (partial map lookup)))
        [{:title "Generators" :node-types generators}
+        {:title "Custom" :node-types custom-nodes}
         {:title "Filters" :node-types filters}
         {:title "Envelopes" :node-types envelopes}
         {:title "Buffer Sources" :node-types buffer-sources}

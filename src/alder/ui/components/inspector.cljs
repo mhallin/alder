@@ -10,12 +10,14 @@
             [alder.ui.components.midi-cc-learn :refer [midi-cc-learn-component]]
             [alder.ui.components.fft-analyser :refer [fft-analyser-component]]
             [alder.ui.components.waveform-analyser :refer [waveform-analyser-component]]
-            [alder.ui.components.audio-import :refer [audio-import-component]]))
+            [alder.ui.components.audio-import :refer [audio-import-component]]
+            [alder.ui.components.js-editor :refer [js-editor-component]]))
 
 (def custom-inspector-component
   {:fft (fn [] fft-analyser-component)
    :waveform (fn [] waveform-analyser-component)
-   :midi-cc-learn (fn [] midi-cc-learn-component)})
+   :midi-cc-learn (fn [] midi-cc-learn-component)
+   :js-editor (fn [] js-editor-component)})
 
 (defn render-inspector-field [node field-type]
   (om/build ((custom-inspector-component field-type))
@@ -57,6 +59,11 @@
                      :top (str inspector-y "px")
                      :width (str inspector-width "px")}}
             (->> (node-graph/editable-inputs node-graph node-id)
+                 (remove (fn [[id _]]
+                           (when-let [hide-fields (-> (node/node-type node)
+                                                      :extra-data
+                                                      :inspector-hide-fields)]
+                             (hide-fields id))))
                  (map second)
                  (map render-input-container))
             (map #(render-inspector-field node %)

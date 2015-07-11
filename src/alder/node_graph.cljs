@@ -68,6 +68,7 @@
         :node (f from-audio-node [to-audio-node output-index input-index])
         :gate (f from-audio-node [to-audio-node output-index])
         :constant (f from-audio-node [to-audio-node output-index input-name])
+        :accessor (f from-audio-node [to-audio-node output-index input-name])
         :null-node nil))))
 
 (s/defn connect-nodes :- NodeGraph
