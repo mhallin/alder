@@ -23,12 +23,13 @@
         (html
          [:div.footer
           (when (midiapi/has-midi-access)
-            [:div.footer__midi-master
-             [:span.footer__midi-master-label "MIDI Master Device"]
-             (om/build midi-device-input-component
-                       [(midiapi/get-current-midi-master-device)
-                        midiapi/set-current-midi-master-device!]
-                       {:opts {:class "footer__midi-master-dropdown"}})])
+            (html
+             [:div.footer__midi-master
+              [:span.footer__midi-master-label "MIDI Master Device"]
+              (om/build midi-device-input-component
+                        [(midiapi/get-current-midi-master-device)
+                         midiapi/set-current-midi-master-device!]
+                        {:opts {:class "footer__midi-master-dropdown"}})]))
           [:a.footer__aux-button
            {:on-click toggle-screen-keyboard
             :href "#"}
