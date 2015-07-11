@@ -449,7 +449,8 @@ module.exports = Node;
   (NodeType. {:source (string-accessor-in "source" "Source" default-js-source)}
              {:function (function-out 0 "Function")}
              {:inspector-fields [:js-editor]
-              :inspector-hide-fields #{:source}}
+              :inspector-hide-fields #{:source}
+              :inspector-width 420}
              false
              "JavaScript"
              [110 40]

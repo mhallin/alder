@@ -28,7 +28,7 @@
   (let [node-origin (-> node :frame geometry/rectangle-origin)
         node-width (-> node :frame :width)
         node-height (-> node :frame :height)
-        inspector-width 180
+        inspector-width (or (-> node node/node-type :extra-data :inspector-width) 180)
         inspector-origin (geometry/point-add node-origin
                                              [(- (/ node-width 2) (/ inspector-width 2))
                                               (- node-height 4)])
