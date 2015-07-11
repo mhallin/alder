@@ -2,6 +2,7 @@ import ADSRNode from './adsr_node';
 import BufferSourceWrapperNode from './buffer_source_wrapper_node';
 import ConstSourceNode from './const_source_node';
 import JSSourceNode from './js_source_node';
+import LatchNode from './latch_node';
 import MIDICCNode from './midi_cc_node';
 import MIDIDispatch from './midi_dispatch';
 import MIDINoteNode from './midi_note_node';
@@ -14,6 +15,7 @@ var Alder = {
 	BufferSourceWrapperNode,
 	ConstSourceNode,
 	JSSourceNode,
+	LatchNode,
 	MIDICCNode,
 	MIDIDispatch,
 	MIDINoteNode,

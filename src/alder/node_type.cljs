@@ -494,6 +494,19 @@ module.exports = Node;
                                            (str (.-origin js/location)
                                                 "/js/audio/midi_cc_node.js")]}}))
 
+(s/def latch-node-type :- ValidNodeType
+  (NodeType. {:gate-in (gate-in "gate" "Gate in")}
+             {:gate-out (gate-out 0 "Gate out")}
+             nil
+             false
+             "Latch"
+             [90 40]
+             #(let [ctor (aget (midiapi/alder-ns-obj) "LatchNode")] (ctor. %))
+             {:constructor "new LatchNode(context)"
+              :dependencies {"LatchNode" ["audio/latch_node"
+                                          (str (.-origin js/location)
+                                               "/js/audio/latch_node.js")]}}))
+
 (s/def all-node-types :- {s/Keyword ValidNodeType}
   {:audio-destination audio-destination-node-type
    :output output-node-type
@@ -517,7 +530,8 @@ module.exports = Node;
    :programmable programmable-node-type
    :js-source js-source-node-type
    :midi-note midi-note-node-type
-   :midi-cc midi-cc-node-type})
+   :midi-cc midi-cc-node-type
+   :latch latch-node-type})
 
 (s/def all-node-groups :- [{:title s/Str
                             :node-types [[(s/one s/Keyword "key")
@@ -534,7 +548,7 @@ module.exports = Node;
                    :delay :compressor :convolver]
           envelopes [:adsr]
           buffer-sources [:url-buffer]
-          midi-nodes [:midi-note :midi-cc]
+          midi-nodes [:midi-note :midi-cc :latch]
           analysers [:scope :fft]
           interfaces [:input :output :audio-destination]]
       (map
