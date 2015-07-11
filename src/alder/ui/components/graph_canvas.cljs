@@ -55,17 +55,21 @@
   {:matrix (math/make-translate scroll-offset)
    :inv (math/make-translate (geometry/point-sub scroll-offset))})
 
+(def non-scroll-elements #{"textarea" "input" "select" "option"})
+
 (defn- handle-wheel-event [data event]
   (let [dx (.-deltaX event)
-        dy (.-deltaY event)]
-    (.stopPropagation event)
-    (.preventDefault event)
-    (om/transact! data
-                  (fn [{:keys [scroll-offset] :as data}]
-                    (let [scroll-offset (geometry/point-sub scroll-offset [dx dy])]
-                      (-> data
-                          (assoc :scroll-offset scroll-offset)
-                          (assoc :graph-xform (build-xform scroll-offset))))))))
+        dy (.-deltaY event)
+        target-name (.toLowerCase (.-tagName (.-target event)))]
+    (when-not (non-scroll-elements target-name)
+      (.stopPropagation event)
+      (.preventDefault event)
+      (om/transact! data
+                    (fn [{:keys [scroll-offset] :as data}]
+                      (let [scroll-offset (geometry/point-sub scroll-offset [dx dy])]
+                        (-> data
+                            (assoc :scroll-offset scroll-offset)
+                            (assoc :graph-xform (build-xform scroll-offset)))))))))
 
 (defn graph-canvas-component [data owner]
   (reify
