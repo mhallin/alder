@@ -9,6 +9,7 @@
               [alder.routes :as routes]
               [alder.comm :as comm]
               [alder.persist :as persist]
+              [alder.log-util :as log-util]
               [alder.ui.components.root :refer [root-component]])
 
     (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
@@ -57,6 +58,7 @@
   ;; Eval this in a REPL to disable logging for specific modules, or
   ;; change the logging configuration in any other way.
   (timbre/merge-config! {:ns-blacklist ["alder.persist"]})
+  (timbre/merge-config! {:appenders {:console (log-util/granular-console-appender)}})
 
   )
 
