@@ -39,6 +39,8 @@
     (swap! app #(merge % {:current-page page
                           :current-page-args page-args}))))
 
+(timbre/merge-config! {:appenders {:console (log-util/granular-console-appender)}})
+
 (routes/set-routing-callback! (partial dispatch-route app-state/app-state))
 (routes/dispatch!)
 (comm/start-socket-connection)
@@ -58,7 +60,6 @@
   ;; Eval this in a REPL to disable logging for specific modules, or
   ;; change the logging configuration in any other way.
   (timbre/merge-config! {:ns-blacklist ["alder.persist"]})
-  (timbre/merge-config! {:appenders {:console (log-util/granular-console-appender)}})
 
   )
 
