@@ -34,6 +34,13 @@
   audio-node)
 
 
+(defmethod node/node-inputs :builtin [{:keys [node-type-id]}]
+  (-> node-type-id node-type/get-node-type :inputs))
+
+(defmethod node/node-outputs :builtin [{:keys [node-type-id]}]
+  (-> node-type-id node-type/get-node-type :outputs))
+
+
 (s/defn make-node
   [context :- s/Any position :- geometry/Point node-type-id :- s/Keyword]
   (let [node-type (node-type/get-node-type node-type-id)

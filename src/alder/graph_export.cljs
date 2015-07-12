@@ -25,18 +25,6 @@
 (defn- node-ignores-export? [node]
   (-> node node-export-data :ignore-export))
 
-(defn- node-inputs [node]
-  (-> node node/node-type :inputs))
-
-(defn- node-outputs [node]
-  (-> node node/node-type :outputs))
-
-(defn- node-input [node input-id]
-  (-> node node-inputs input-id))
-
-(defn- node-output [node output-id]
-  (-> node node-outputs output-id))
-
 
 (defn- write-dependency [[class-name [file _]]]
   (str "var " class-name " = require('" file "');"))
@@ -68,7 +56,7 @@
 (defn- write-create-node [[node-id node]]
   (let [construct (str "  var " (node-id->var node-id)
                        " = " (node-constructor node))
-        props (->> (node-inputs node)
+        props (->> (node/node-inputs node)
                    (keep (partial write-set-input node-id))
                    (string/join "\n"))]
     (str construct "\n"
@@ -103,10 +91,10 @@
   (let [from-node-var (node-id->var from-node-id)
         to-node-var (node-id->var to-node-id)
 
-        from-slot (node-output (node-graph-node node-graph from-node-id)
-                               from-slot-id)
-        to-slot (node-input (node-graph-node node-graph from-node-id)
-                            to-slot-id)]
+        from-slot (node/node-output (node-graph-node node-graph from-node-id)
+                                    from-slot-id)
+        to-slot (node/node-input (node-graph-node node-graph from-node-id)
+                                 to-slot-id)]
 
     (when-not (= (:type from-slot) :null-node)
       (write-connect-call from-node-var from-slot to-node-var to-slot))))
@@ -122,8 +110,8 @@
 (defn- write-property-input [node-graph [from-node-id _]]
   (->> (node-graph/nodes-out-from node-graph from-node-id)
        (map (fn [[_ [to-id to-slot-id]]]
-              [to-id (node-input (node-graph-node node-graph to-id)
-                                 to-slot-id)]))
+              [to-id (node/node-input (node-graph-node node-graph to-id)
+                                      to-slot-id)]))
        (filter (fn [[_ slot]] (#{:param :node} (:type slot))))
        (map (fn [[node-id slot]]
               (str "  this." (or (:name slot) (node-id->var node-id))
@@ -236,7 +224,7 @@
   (->> from-node-id
        (node-graph/nodes-out-from node-graph)
        (map (fn [[_ [to-id to-slot-id]]]
-              [to-id (-> node-graph :nodes to-id node/node-type :inputs to-slot-id)]))
+              [to-id (-> node-graph :nodes to-id (node/node-input to-slot-id))]))
        (filter (fn [[node-id slot]] (#{:gate :accessor :constant} (:type slot))))
        (map (fn [[node-id slot]] (write-accessor-function node-id slot)))
        (string/join "\n")))

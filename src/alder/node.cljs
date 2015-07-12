@@ -16,6 +16,9 @@
 (defmulti audio-node :tag)
 (defmulti node-type-id :tag)
 
+(defmulti node-inputs :tag)
+(defmulti node-outputs :tag)
+
 (def NodeSchema {:tag s/Keyword
                  s/Keyword s/Any})
 
@@ -23,21 +26,13 @@
   [node :- NodeSchema]
   (-> node node-type-id node-type/get-node-type))
 
-(s/defn node-type-inputs :- node-type/InputMap
-  [node :- NodeSchema]
-  (-> node node-type :inputs))
-
-(s/defn node-type-outputs :- node-type/OutputMap
-  [node :- NodeSchema]
-  (-> node node-type :outputs))
-
-(s/defn node-input :- node-type/Input
+(s/defn node-input :- (s/maybe node-type/Input)
   [node :- NodeSchema input-id :- s/Keyword]
-  (input-id (node-type-inputs node)))
+  (input-id (node-inputs node)))
 
-(s/defn node-output :- node-type/Output
+(s/defn node-output :- (s/maybe node-type/Output)
   [node :- NodeSchema output-id :- s/Keyword]
-  (output-id (node-type-outputs node)))
+  (output-id (node-outputs node)))
 
 (s/defn set-input-value :- NodeSchema
   [node :- NodeSchema input :- node-type/Input value :- s/Any]
@@ -58,7 +53,7 @@
   (reduce (fn [node [_ input]]
             (set-input-value node input (:default input)))
           node
-          (-> node node-type :inputs)))
+          (node-inputs node)))
 
 (s/defn node-move-to :- NodeSchema
   [node :- NodeSchema position :- geometry/Point]
@@ -75,12 +70,12 @@
         slot-width 12
         slot-height 12
 
-        inputs (-> node node-type :inputs)
+        inputs (node-inputs node)
         input-count (count inputs)
         input-y-spacing (/ height (inc input-count))
         input-x (- (/ slot-width 2))
 
-        outputs (-> node node-type :outputs)
+        outputs (node-outputs node)
         output-count (count outputs)
         output-y-spacing (/ height (inc output-count))
         output-x (- width (/ slot-width 2))]
@@ -143,10 +138,10 @@
                                 (s/one s/Keyword "from-slot-id")]
    [to-node to-slot-id] :- [(s/one NodeSchema "to-node")
                             (s/one s/Keyword "to-slot-id")]]
-  (let [from-output (-> from-node node-type :outputs from-slot-id)
-        from-input (-> from-node node-type :inputs from-slot-id)
-        to-output (-> to-node node-type :outputs to-slot-id)
-        to-input (-> to-node node-type :inputs to-slot-id)]
+  (let [from-output (node-output from-node from-slot-id)
+        from-input (node-input from-node from-slot-id)
+        to-output (node-output to-node to-slot-id)
+        to-input (node-input to-node to-slot-id)]
     (if (or (and from-output (nil? to-output)) (and from-input (nil? to-input)))
       (let [input (or from-input to-input)
             output (or from-output to-output)]

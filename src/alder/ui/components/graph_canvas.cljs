@@ -41,7 +41,7 @@
         is-input (-> @app
                      :node-graph
                      (node-graph/node-by-id node-id)
-                     node/node-type-inputs
+                     node/node-inputs
                      (contains? slot-id))]
     (dragging/start-slot-drag app node-id slot-id mouse-pos is-input (:slot-drag-chan app))))
 

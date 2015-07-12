@@ -47,7 +47,7 @@
         node (node-id (:nodes node-graph))
         node-type (node/node-type node)]
     (doseq [[input-id value] inputs]
-      (let [input (input-id (:inputs node-type))]
+      (let [input (node/node-input node input-id)]
         (node/set-input-value node input value)))
     node-graph))
 

@@ -56,10 +56,10 @@
         to-node (-> node-graph :nodes to-id)
         to-audio-node (node/audio-node to-node)
 
-        output-data (-> from-node node/node-type :outputs output-id)
+        output-data (node/node-output from-node output-id)
         output-index (:index output-data)
 
-        input-data (-> to-node node/node-type :inputs input-id)
+        input-data (node/node-input to-node input-id)
         input-name (:name input-data)
         input-index (:index input-data)]
     (when-not (= (:type output-data) :null-node)
@@ -173,7 +173,7 @@
                                      :data-type)
                                     :param)))
                        (:connections node-graph))))
-          (-> node-graph :nodes node-id node/node-type :inputs)))
+          (-> node-graph :nodes node-id node/node-inputs)))
 
 (s/defn nodes-in-rect :- [NodeRef]
   [node-graph :- NodeGraph rect :- geometry/Rectangle]
