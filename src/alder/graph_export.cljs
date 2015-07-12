@@ -10,20 +10,17 @@
 (defn- node-graph-node [node-graph node-id]
   (-> node-graph :nodes node-id))
 
-(defn- node-export-data [node]
-  (-> node node/node-type :export-data))
-
 (defn- node-dependencies [node]
-  (-> node node-export-data :dependencies))
+  (-> node node/export-data :dependencies))
 
 (defn- node-constructor [node]
-  (-> node node-export-data :constructor))
+  (-> node node/export-data :constructor))
 
 (defn- node-export-data-type [node]
-  (-> node node-export-data :type))
+  (-> node node/export-data :type))
 
 (defn- node-ignores-export? [node]
-  (-> node node-export-data :ignore-export))
+  (-> node node/export-data :ignore-export))
 
 
 (defn- write-dependency [[class-name [file _]]]
@@ -232,7 +229,7 @@
 (defn- write-property-input-functions [node-graph]
   (->> node-graph
        :nodes
-       (filter (fn [[_ n]](-> n node/node-type :export-data :type (= :input))))
+       (filter (fn [[_ n]](-> n node-export-data-type (= :input))))
        (map (partial write-property-input-function node-graph))
        (remove string/blank?)
        (string/join "\n")))

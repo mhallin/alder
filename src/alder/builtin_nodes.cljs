@@ -40,6 +40,15 @@
 (defmethod node/node-outputs :builtin [{:keys [node-type-id]}]
   (-> node-type-id node-type/get-node-type :outputs))
 
+(defmethod node/export-data :builtin [{:keys [node-type-id]}]
+  (-> node-type-id node-type/get-node-type :export-data))
+
+(defmethod node/inspector-data :builtin [{:keys [node-type-id]}]
+  (-> node-type-id node-type/get-node-type :extra-data))
+
+(defmethod node/title :builtin [{:keys [node-type-id]}]
+  (-> node-type-id node-type/get-node-type :default-title))
+
 
 (s/defn make-node
   [context :- s/Any position :- geometry/Point node-type-id :- s/Keyword]

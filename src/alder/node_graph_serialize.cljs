@@ -21,7 +21,7 @@
                                   (filter (partial input-needs-serialization?
                                                    node-graph
                                                    node-id)
-                                          (:inputs (node/node-type node)))))
+                                          (node/node-inputs node))))
             :inspector-visible (node/inspector-visible node)}])
 
 (defn serialize-graph [node-graph]
@@ -44,8 +44,7 @@
                                         context)
         node-graph (update-in node-graph [:nodes node-id]
                               #(node/set-inspector-visible % inspector-visible))
-        node (node-id (:nodes node-graph))
-        node-type (node/node-type node)]
+        node (node-id (:nodes node-graph))]
     (doseq [[input-id value] inputs]
       (let [input (node/node-input node input-id)]
         (node/set-input-value node input value)))

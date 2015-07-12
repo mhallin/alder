@@ -34,7 +34,7 @@
     om/IRender
     (render [_]
       (let [frame (node/frame node)
-            title (-> node node/node-type :default-title)
+            title (-> node node/title)
             inspector-visible (node/inspector-visible node)]
         (html [:div.node
                {:style (geometry/rectangle->css

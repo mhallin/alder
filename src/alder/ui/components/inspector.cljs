@@ -28,7 +28,7 @@
   (let [node-origin (-> node node/frame geometry/rectangle-origin)
         node-width (-> node node/frame :width)
         node-height (-> node node/frame :height)
-        inspector-width (or (-> node node/node-type :extra-data :inspector-width) 180)
+        inspector-width (or (-> node node/inspector-data :inspector-width) 180)
         inspector-origin (geometry/point-add node-origin
                                              [(- (/ node-width 2) (/ inspector-width 2))
                                               (- node-height 4)])
@@ -60,11 +60,10 @@
                      :width (str inspector-width "px")}}
             (->> (node-graph/editable-inputs node-graph node-id)
                  (remove (fn [[id _]]
-                           (when-let [hide-fields (-> (node/node-type node)
-                                                      :extra-data
+                           (when-let [hide-fields (-> (node/inspector-data node)
                                                       :inspector-hide-fields)]
                              (hide-fields id))))
                  (map second)
                  (map render-input-container))
             (map #(render-inspector-field node %)
-                 (-> node node/node-type :extra-data :inspector-fields))]))))))
+                 (-> node node/inspector-data :inspector-fields))]))))))

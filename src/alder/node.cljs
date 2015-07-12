@@ -19,6 +19,10 @@
 (defmulti node-inputs :tag)
 (defmulti node-outputs :tag)
 
+(defmulti export-data :tag)
+(defmulti inspector-data :tag)
+(defmulti title :tag)
+
 (def NodeSchema {:tag s/Keyword
                  s/Keyword s/Any})
 
