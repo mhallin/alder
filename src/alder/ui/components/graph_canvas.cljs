@@ -41,7 +41,7 @@
         is-input (-> @app
                      :node-graph
                      (node-graph/node-by-id node-id)
-                     node/node-inputs
+                     node/inputs
                      (contains? slot-id))]
     (dragging/start-slot-drag app node-id slot-id mouse-pos is-input (:slot-drag-chan app))))
 
@@ -195,6 +195,6 @@
               (when-let [{:keys [target-pos slot-path]} (:dragging-slot state)]
                 (let [[node-id slot-id] slot-path
                       node (-> data :node-graph :nodes node-id)
-                      [slot slot-frame] (-> node node/node-slot-canvas-frames slot-id)
+                      [slot slot-frame] (-> node node/slot-canvas-frames slot-id)
                       slot-center (geometry/rectangle-center slot-frame)]
                   (om/build temporary-connection-component [slot-center target-pos])))])]])))))

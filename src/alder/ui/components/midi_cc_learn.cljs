@@ -18,9 +18,9 @@
                 (when (and (= (.-length data) 3)
                            (= (bit-and 0xf0 (aget data 0)) 0xb0))
                   (let [channel (bit-and 0x7f (aget data 1))
-                        channel-input (node/node-input node :channel)]
+                        channel-input (node/input node :channel)]
                     (om/update! node
-                                (node/set-input-value node channel-input channel))
+                                (node/set-input node channel-input channel))
                     (stop-learn)))))
 
             (start-learn []

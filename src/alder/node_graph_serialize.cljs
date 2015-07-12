@@ -21,7 +21,7 @@
                                   (filter (partial input-needs-serialization?
                                                    node-graph
                                                    node-id)
-                                          (node/node-inputs node))))
+                                          (node/inputs node))))
             :inspector-visible (node/inspector-visible node)}])
 
 (defn serialize-graph [node-graph]
@@ -46,8 +46,8 @@
                               #(node/set-inspector-visible % inspector-visible))
         node (node-id (:nodes node-graph))]
     (doseq [[input-id value] inputs]
-      (let [input (node/node-input node input-id)]
-        (node/set-input-value node input value)))
+      (let [input (node/input node input-id)]
+        (node/set-input node input value)))
     node-graph))
 
 (defn- materialize-connection [node-graph [[from-node from-slot] [to-node to-slot]]]

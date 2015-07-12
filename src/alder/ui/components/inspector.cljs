@@ -34,9 +34,9 @@
                                               (- node-height 4)])
         inspector-origin (math/mult-point (:matrix graph-xform) inspector-origin)
         [inspector-x inspector-y] inspector-origin]
-    (letfn [(set-input-value [node input value]
+    (letfn [(set-input [node input value]
               (om/transact! node
-                            (fn [n] (node/set-input-value n input value))))
+                            (fn [n] (node/set-input n input value))))
 
             (render-input-container [input]
               (html
@@ -46,7 +46,7 @@
                  (or (:inspector-title input) (:title input))]
                 (render-input node input
                               (node/current-input-value node input)
-                              #(set-input-value node input %))]))]
+                              #(set-input node input %))]))]
       (reify
         om/IDisplayName
         (display-name [_] "NodeInspector")

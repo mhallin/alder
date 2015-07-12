@@ -20,7 +20,7 @@
      :on-mouse-down #(on-mouse-down node-id slot-id %)}]))
 
 (defn- render-slot-list [node-id node slot-drag-data on-mouse-down]
-  (let [slot-frames (node/node-slot-frames node)]
+  (let [slot-frames (node/slot-frames node)]
     (map (fn [[slot-id [slot slot-frame]]]
            (render-slot node-id node slot-id slot slot-frame slot-drag-data on-mouse-down))
          slot-frames)))

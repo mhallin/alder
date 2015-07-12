@@ -4,6 +4,9 @@
             [taoensso.timbre :refer-macros [debug]]
             [schema.core :as s :include-macros true]))
 
+(def NodeSchema {:tag s/Keyword
+                 s/Keyword s/Any})
+
 (defmulti frame :tag)
 (defmulti set-frame (fn [m _] (:tag m)))
 
@@ -16,29 +19,22 @@
 (defmulti audio-node :tag)
 (defmulti node-type-id :tag)
 
-(defmulti node-inputs :tag)
-(defmulti node-outputs :tag)
+(defmulti inputs :tag)
+(defmulti outputs :tag)
 
 (defmulti export-data :tag)
 (defmulti inspector-data :tag)
 (defmulti title :tag)
 
-(def NodeSchema {:tag s/Keyword
-                 s/Keyword s/Any})
-
-(s/defn node-type :- node-type/ValidNodeType
-  [node :- NodeSchema]
-  (-> node node-type-id node-type/get-node-type))
-
-(s/defn node-input :- (s/maybe node-type/Input)
+(s/defn input :- (s/maybe node-type/Input)
   [node :- NodeSchema input-id :- s/Keyword]
-  (input-id (node-inputs node)))
+  (input-id (inputs node)))
 
-(s/defn node-output :- (s/maybe node-type/Output)
+(s/defn output :- (s/maybe node-type/Output)
   [node :- NodeSchema output-id :- s/Keyword]
-  (output-id (node-outputs node)))
+  (output-id (outputs node)))
 
-(s/defn set-input-value :- NodeSchema
+(s/defn set-input :- NodeSchema
   [node :- NodeSchema input :- node-type/Input value :- s/Any]
   (let [audio-node (audio-node node)
         input-name (:name input)]
@@ -55,31 +51,31 @@
 (s/defn assign-default-node-inputs :- NodeSchema
   [node :- NodeSchema]
   (reduce (fn [node [_ input]]
-            (set-input-value node input (:default input)))
+            (set-input node input (:default input)))
           node
-          (node-inputs node)))
+          (inputs node)))
 
-(s/defn node-move-to :- NodeSchema
+(s/defn move-to :- NodeSchema
   [node :- NodeSchema position :- geometry/Point]
   (set-frame node (geometry/rectangle-move-to (frame node) position)))
 
-(s/defn node-move-by :- NodeSchema
+(s/defn move-by :- NodeSchema
   [node :- NodeSchema offset :- geometry/Point]
   (set-frame node (geometry/rectangle-move-by (frame node) offset)))
 
-(s/defn node-slot-frames :- {s/Keyword [(s/one node-type/Slot "slot")
-                                        (s/one geometry/Rectangle "frame")]}
+(s/defn slot-frames :- {s/Keyword [(s/one node-type/Slot "slot")
+                                   (s/one geometry/Rectangle "frame")]}
   [node :- NodeSchema]
   (let [{:keys [width height]} (frame node)
         slot-width 12
         slot-height 12
 
-        inputs (node-inputs node)
+        inputs (inputs node)
         input-count (count inputs)
         input-y-spacing (/ height (inc input-count))
         input-x (- (/ slot-width 2))
 
-        outputs (node-outputs node)
+        outputs (outputs node)
         output-count (count outputs)
         output-y-spacing (/ height (inc output-count))
         output-x (- width (/ slot-width 2))]
@@ -98,15 +94,15 @@
              (map-indexed (partial make-frame-list output-x output-y-spacing)
                           outputs))))))
 
-(s/defn node-slot-canvas-frames :- {s/Keyword [(s/one node-type/Slot "slot")
-                                               (s/one geometry/Rectangle "frame")]}
+(s/defn slot-canvas-frames :- {s/Keyword [(s/one node-type/Slot "slot")
+                                          (s/one geometry/Rectangle "frame")]}
   [node :- NodeSchema]
   (let [origin (-> node frame geometry/rectangle-origin)]
     (into {}
           (map (fn [[slot-id [slot local-frame]]]
                  (let [frame (geometry/rectangle-move-by local-frame origin)]
                    [slot-id [slot frame]]))
-               (node-slot-frames node)))))
+               (slot-frames node)))))
 
 
 (s/defn hit-test-slot :- (s/maybe s/Keyword)
@@ -116,13 +112,13 @@
                          (fn [[slot-id [_ frame]]]
                            (when (geometry/rectangle-hit-test frame position)
                              slot-id))
-                         (node-slot-canvas-frames node))]
+                         (slot-canvas-frames node))]
       (first matching))))
 
 
 (s/defn canvas-slot-frame :- geometry/Rectangle
   [node :- NodeSchema slot-id :- s/Keyword]
-  (let [[_ slot-local-frame] (slot-id (node-slot-frames node))
+  (let [[_ slot-local-frame] (slot-id (slot-frames node))
         node-origin (-> node frame geometry/rectangle-origin)]
     (geometry/rectangle-move-by slot-local-frame node-origin)))
 
@@ -142,10 +138,10 @@
                                 (s/one s/Keyword "from-slot-id")]
    [to-node to-slot-id] :- [(s/one NodeSchema "to-node")
                             (s/one s/Keyword "to-slot-id")]]
-  (let [from-output (node-output from-node from-slot-id)
-        from-input (node-input from-node from-slot-id)
-        to-output (node-output to-node to-slot-id)
-        to-input (node-input to-node to-slot-id)]
+  (let [from-output (output from-node from-slot-id)
+        from-input (input from-node from-slot-id)
+        to-output (output to-node to-slot-id)
+        to-input (input to-node to-slot-id)]
     (if (or (and from-output (nil? to-output)) (and from-input (nil? to-input)))
       (let [input (or from-input to-input)
             output (or from-output to-output)]

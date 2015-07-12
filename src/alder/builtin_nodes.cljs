@@ -34,10 +34,10 @@
   audio-node)
 
 
-(defmethod node/node-inputs :builtin [{:keys [node-type-id]}]
+(defmethod node/inputs :builtin [{:keys [node-type-id]}]
   (-> node-type-id node-type/get-node-type :inputs))
 
-(defmethod node/node-outputs :builtin [{:keys [node-type-id]}]
+(defmethod node/outputs :builtin [{:keys [node-type-id]}]
   (-> node-type-id node-type/get-node-type :outputs))
 
 (defmethod node/export-data :builtin [{:keys [node-type-id]}]

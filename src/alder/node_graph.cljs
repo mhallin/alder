@@ -56,10 +56,10 @@
         to-node (-> node-graph :nodes to-id)
         to-audio-node (node/audio-node to-node)
 
-        output-data (node/node-output from-node output-id)
+        output-data (node/output from-node output-id)
         output-index (:index output-data)
 
-        input-data (node/node-input to-node input-id)
+        input-data (node/input to-node input-id)
         input-name (:name input-data)
         input-index (:index input-data)]
     (when-not (= (:type output-data) :null-node)
@@ -96,12 +96,12 @@
 (s/defn node-move-to :- NodeGraph
   [node-graph :- NodeGraph node-id :- s/Keyword position :- geometry/Point]
   (update-in node-graph [:nodes node-id]
-             (fn [node] (node/node-move-to node position))))
+             (fn [node] (node/move-to node position))))
 
 (s/defn node-move-by :- NodeGraph
   [node-graph :- NodeGraph node-id :- s/Keyword offset :- geometry/Point]
   (update-in node-graph [:nodes node-id]
-             (fn [node] (node/node-move-by node offset))))
+             (fn [node] (node/move-by node offset))))
 
 (s/defn nodes-move-by :- NodeGraph
   [node-graph :- NodeGraph node-ids :- #{s/Keyword} offset :- geometry/Point]
@@ -169,11 +169,11 @@
                          (and (= to-node-id node-id)
                               (= to-input-id id)
                               (= (-> (node-by-id node-graph from-node-id)
-                                     (node/node-output from-output-id)
+                                     (node/output from-output-id)
                                      :data-type)
                                     :param)))
                        (:connections node-graph))))
-          (-> node-graph :nodes node-id node/node-inputs)))
+          (-> node-graph :nodes node-id node/inputs)))
 
 (s/defn nodes-in-rect :- [NodeRef]
   [node-graph :- NodeGraph rect :- geometry/Rectangle]

@@ -70,7 +70,7 @@
               last-pos (geometry/rectangle-origin (node/frame node))
               new-node-pos (geometry/point-sub mouse-pos offset)
               delta (geometry/point-sub new-node-pos last-pos)
-              node (node/node-move-by node delta)]
+              node (node/move-by node delta)]
           (>! reply-chan [:update node])
 
           (when (= phase :drag)

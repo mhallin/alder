@@ -9,7 +9,7 @@
   (letfn [(try-update-node [source node]
             (om/set-state! owner :has-error false)
             (try
-              (node/set-input-value node (node/node-input node :source) source)
+              (node/set-input node (node/input node :source) source)
               (catch js/SyntaxError e
                 (om/set-state! owner :has-error true)
                 (.info js/console "JS Compilation failed:" e)
@@ -32,7 +32,7 @@
       (render-state [_ state]
         (html
          [:textarea.node-inspector__js-editor
-          {:value (node/current-input-value node (node/node-input node :source))
+          {:value (node/current-input-value node (node/input node :source))
            :class (if (:has-error state) ["m-error"] [])
            :spell-check "false"
            :on-change on-source-change}])))))

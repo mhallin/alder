@@ -46,7 +46,7 @@
             (om/set-state! owner :file-state file-state))
 
           (on-value-change [new-value]
-            (node/set-input-value node input new-value))
+            (node/set-input node input new-value))
 
           (on-drag-enter [e]
             (.preventDefault e)

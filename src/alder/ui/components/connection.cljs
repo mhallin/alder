@@ -44,11 +44,11 @@
     om/IRender
     (render [_]
       (let [[_ from-slot-frame] (-> from-node
-                                    node/node-slot-canvas-frames
+                                    node/slot-canvas-frames
                                     from-slot-id)
 
             [_ to-slot-frame] (-> to-node
-                                  node/node-slot-canvas-frames
+                                  node/slot-canvas-frames
                                   to-slot-id)]
         (connection-line (geometry/rectangle-center from-slot-frame)
                          (geometry/rectangle-center to-slot-frame)
