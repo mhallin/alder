@@ -65,7 +65,7 @@
             (.preventDefault e)
             (when-let [file (supported-file-in-event e)]
               (om/set-state! owner :drag-state :dropped)
-              (decode-dropped-data (aapi/context (:audio-node node))
+              (decode-dropped-data (aapi/context (node/audio-node node))
                                    file
                                    on-file-state-change
                                    on-value-change)))]

@@ -3,16 +3,17 @@
             [sablono.core :as html :refer-macros [html]]
             [clojure.string :as string]
 
+            [alder.node :as node]
             [alder.audio.aapi :as aapi]))
 
 (def fft-size 256)
 
 (defn fft-analyser-component [node owner]
-  (aapi/set-fft-size! (:audio-node node) fft-size)
+  (aapi/set-fft-size! (node/audio-node node) fft-size)
   (let [width 160
         height 100
         noise-floor 90
-        analyser-node (:audio-node node)
+        analyser-node (node/audio-node node)
         data-array (js/Float32Array. (aapi/frequency-bin-count analyser-node))]
     (letfn [(update-frequency-data []
               (aapi/get-float-frequency-data analyser-node data-array)

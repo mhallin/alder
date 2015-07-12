@@ -8,6 +8,7 @@
             [alder.geometry :as geometry]
             [alder.math :as math]
             [alder.node :as node]
+            [alder.builtin-nodes :as builtin-nodes]
             [alder.node-type :as node-type]
             [alder.ui.components.prototype-node :refer [prototype-node-component]]))
 
@@ -22,9 +23,9 @@
                      (.-currentTarget event)))
           elem-pos (math/mult-point (-> app :graph-xform :inv) elem-pos)
           offset (geometry/point-sub mouse-pos elem-pos)
-          node (node/make-node (:context app)
-                               (geometry/point-sub mouse-pos offset)
-                               node-type-id)]
+          node (builtin-nodes/make-node (:context app)
+                                        (geometry/point-sub mouse-pos offset)
+                                        node-type-id)]
       (dragging/start-prototype-node-drag app node offset (:prototype-node-drag-chan app)))))
 
 (defn palette-component [data owner]

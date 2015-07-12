@@ -9,7 +9,7 @@
   (let [listen-token (.create js/Object #js {})]
     (letfn [(stop-learn []
               (midiapi/remove-midi-message-event-listener (midiapi/node-device
-                                                           (:audio-node node))
+                                                           (node/audio-node node))
                                                           listen-token)
               (om/set-state! owner :is-learning false))
 
@@ -24,7 +24,7 @@
                     (stop-learn)))))
 
             (start-learn []
-              (midiapi/add-midi-message-event-listener (midiapi/node-device (:audio-node node))
+              (midiapi/add-midi-message-event-listener (midiapi/node-device (node/audio-node node))
                                                        listen-token
                                                        on-midi-message)
               (om/set-state! owner :is-learning true))]

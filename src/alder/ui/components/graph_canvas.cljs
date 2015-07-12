@@ -175,7 +175,7 @@
                             (:graph-xform data)]
                            {:react-key (name node-id)}))
                (->> data :node-graph :nodes
-                    (filter (fn [[_ node]] (node :inspector-visible)))))
+                    (filter (fn [[_ node]] (node/inspector-visible node)))))
           [:svg.graph-canvas__connections
            (let [[m11 m12 m13 m21 m22 m23] xform]
              [:g

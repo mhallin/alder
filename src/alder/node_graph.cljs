@@ -1,6 +1,7 @@
 (ns alder.node-graph
   (:require [alder.node :as node]
             [alder.node-type :as node-type]
+            [alder.builtin-nodes :as builtin-nodes]
             [alder.geometry :as geometry]
             [taoensso.timbre :refer-macros [debug]]
             [schema.core :as s :include-macros true]))
@@ -41,7 +42,7 @@
     node-type-id :- s/Keyword
     position :- geometry/Point
     context :- s/Any]
-   (let [node (node/make-node context position node-type-id)
+   (let [node (builtin-nodes/make-node context position node-type-id)
          node-graph (assoc-in node-graph [:nodes node-id] node)]
      node-graph)))
 
@@ -50,10 +51,10 @@
                         [to-id input-id] :- SlotRef
                         f :- s/Any]
   (let [from-node (-> node-graph :nodes from-id)
-        from-audio-node (:audio-node from-node)
+        from-audio-node (node/audio-node from-node)
 
         to-node (-> node-graph :nodes to-id)
-        to-audio-node (:audio-node to-node)
+        to-audio-node (node/audio-node to-node)
 
         output-data (-> from-node node/node-type :outputs output-id)
         output-index (:index output-data)
@@ -111,7 +112,7 @@
 
 (s/defn node-position :- geometry/Point
   [node-graph :- NodeGraph node-id :- s/Keyword]
-  (-> node-graph :nodes node-id :frame geometry/rectangle-origin))
+  (-> node-graph :nodes node-id node/frame geometry/rectangle-origin))
 
 (s/defn hit-test-slot :- (s/maybe [(s/one s/Keyword "node-id")
                                    (s/one s/Keyword "slot-id")])
@@ -176,5 +177,5 @@
 
 (s/defn nodes-in-rect :- [NodeRef]
   [node-graph :- NodeGraph rect :- geometry/Rectangle]
-  (filter (fn [[id n]] (geometry/rectangles-overlap? rect (:frame n)))
+  (filter (fn [[id n]] (geometry/rectangles-overlap? rect (node/frame n)))
           (:nodes node-graph)))

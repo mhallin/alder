@@ -3,6 +3,7 @@
             [sablono.core :as html :refer-macros [html]]
             [clojure.string :as string]
 
+            [alder.node :as node]
             [alder.audio.aapi :as aapi]))
 
 (def fft-size 256)
@@ -11,7 +12,7 @@
   (let [width 160
         height 160
         data-array (js/Uint8Array. fft-size)
-        analyser-node (:audio-node node)]
+        analyser-node (node/audio-node node)]
     (aapi/set-fft-size! analyser-node fft-size)
     (letfn [(update-waveform-data []
               (aapi/get-byte-time-domain-data analyser-node data-array)

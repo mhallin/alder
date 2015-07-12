@@ -33,8 +33,9 @@
 
     om/IRender
     (render [_]
-      (let [frame (:frame node)
-            title (-> node node/node-type :default-title)]
+      (let [frame (node/frame node)
+            title (-> node node/node-type :default-title)
+            inspector-visible (node/inspector-visible node)]
         (html [:div.node
                {:style (geometry/rectangle->css
                         (geometry/rectangle-transform frame
@@ -44,6 +45,9 @@
                 :class (if (selection node-id) ["m-selected"] [])}
                title
                [:div.node__inspector-toggle-button
-                {:class (if (:inspector-visible node) "m-open" "m-closed")
-                 :on-click #(om/transact! node :inspector-visible (fn [x] (not x)))}]
+                {:class (if inspector-visible "m-open" "m-closed")
+                 :on-click #(om/transact! node
+                                          (fn [node]
+                                            (node/set-inspector-visible
+                                             node (not inspector-visible))))}]
                (render-slot-list node-id node slot-drag-data on-slot-mouse-down)])))))

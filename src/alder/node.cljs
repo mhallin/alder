@@ -4,19 +4,24 @@
             [taoensso.timbre :refer-macros [debug]]
             [schema.core :as s :include-macros true]))
 
-(defrecord Node
-    [frame node-type-id audio-node input-values inspector-visible])
+(defmulti frame :tag)
+(defmulti set-frame (fn [m _] (:tag m)))
 
-(def NodeSchema
-  {:frame geometry/ValidRectangle
-   :node-type-id s/Keyword
-   :audio-node s/Any
-   :input-values {s/Str s/Any}
-   :inspector-visible s/Bool})
+(defmulti inspector-visible :tag)
+(defmulti set-inspector-visible (fn [m _] (:tag m)))
+
+(defmulti stored-input-value :tag)
+(defmulti set-stored-input-value (fn [m _ _] (:tag m)))
+
+(defmulti audio-node :tag)
+(defmulti node-type-id :tag)
+
+(def NodeSchema {:tag s/Keyword
+                 s/Keyword s/Any})
 
 (s/defn node-type :- node-type/ValidNodeType
   [node :- NodeSchema]
-  (-> node :node-type-id node-type/get-node-type))
+  (-> node node-type-id node-type/get-node-type))
 
 (s/defn node-type-inputs :- node-type/InputMap
   [node :- NodeSchema]
@@ -36,7 +41,7 @@
 
 (s/defn set-input-value :- NodeSchema
   [node :- NodeSchema input :- node-type/Input value :- s/Any]
-  (let [audio-node (:audio-node node)
+  (let [audio-node (audio-node node)
         input-name (:name input)]
     (case (:type input)
       :param (set! (.-value (aget audio-node input-name)) value)
@@ -45,7 +50,7 @@
       :accessor (.call (aget audio-node input-name) audio-node value)
       nil)
     (if input-name
-      (assoc-in node [:input-values input-name] value)
+      (set-stored-input-value node input-name value)
       node)))
 
 (s/defn assign-default-node-inputs :- NodeSchema
@@ -55,34 +60,18 @@
           node
           (-> node node-type :inputs)))
 
-(s/defn make-node :- NodeSchema
-  [context :- s/Any position :- geometry/Point node-type-id :- s/Keyword]
-  (let [node-type (node-type/get-node-type node-type-id)
-        [width height] (:default-size node-type)
-        [x y] position
-        node (Node. (geometry/Rectangle. x y width height)
-                    node-type-id
-                    ((:constructor node-type) context)
-                    {}
-                    false)
-        node (assign-default-node-inputs node)]
-    (when (.-start (:audio-node node))
-      (debug "starting audio node" (:audio-node node) (.-start (:audio-node node)))
-      (.start (:audio-node node) 0))
-    node))
-
 (s/defn node-move-to :- NodeSchema
   [node :- NodeSchema position :- geometry/Point]
-  (update node :frame #(geometry/rectangle-move-to % position)))
+  (set-frame node (geometry/rectangle-move-to (frame node) position)))
 
 (s/defn node-move-by :- NodeSchema
   [node :- NodeSchema offset :- geometry/Point]
-  (update node :frame #(geometry/rectangle-move-by % offset)))
+  (set-frame node (geometry/rectangle-move-by (frame node) offset)))
 
 (s/defn node-slot-frames :- {s/Keyword [(s/one node-type/Slot "slot")
                                         (s/one geometry/Rectangle "frame")]}
   [node :- NodeSchema]
-  (let [{:keys [width height]} (:frame node)
+  (let [{:keys [width height]} (frame node)
         slot-width 12
         slot-height 12
 
@@ -113,7 +102,7 @@
 (s/defn node-slot-canvas-frames :- {s/Keyword [(s/one node-type/Slot "slot")
                                                (s/one geometry/Rectangle "frame")]}
   [node :- NodeSchema]
-  (let [origin (-> node :frame geometry/rectangle-origin)]
+  (let [origin (-> node frame geometry/rectangle-origin)]
     (into {}
           (map (fn [[slot-id [slot local-frame]]]
                  (let [frame (geometry/rectangle-move-by local-frame origin)]
@@ -123,7 +112,7 @@
 
 (s/defn hit-test-slot :- (s/maybe s/Keyword)
   [node :- NodeSchema position :- geometry/Point]
-  (let [origin (-> node :frame geometry/rectangle-origin)]
+  (let [origin (-> node frame geometry/rectangle-origin)]
     (when-let [matching (keep
                          (fn [[slot-id [_ frame]]]
                            (when (geometry/rectangle-hit-test frame position)
@@ -135,13 +124,13 @@
 (s/defn canvas-slot-frame :- geometry/Rectangle
   [node :- NodeSchema slot-id :- s/Keyword]
   (let [[_ slot-local-frame] (slot-id (node-slot-frames node))
-        node-origin (-> node :frame geometry/rectangle-origin)]
+        node-origin (-> node frame geometry/rectangle-origin)]
     (geometry/rectangle-move-by slot-local-frame node-origin)))
 
 
 (s/defn current-input-value :- s/Any
   [node :- NodeSchema input :- node-type/Input]
-  (let [audio-node (:audio-node node)
+  (let [audio-node (audio-node node)
         input-name (:name input)]
     (case (:type input)
       :param (.-value (aget audio-node input-name))

@@ -15,14 +15,14 @@
                  (node-graph/nodes-in-to node-graph node-id))))
 
 (defn- serialize-node [node-graph [node-id node]]
-  [node-id {:node-type-id (:node-type-id node)
-            :frame (geometry/rectangle->vec (:frame node))
+  [node-id {:node-type-id (node/node-type-id node)
+            :frame (geometry/rectangle->vec (node/frame node))
             :inputs (into {} (map (partial serialize-input node)
                                   (filter (partial input-needs-serialization?
                                                    node-graph
                                                    node-id)
                                           (:inputs (node/node-type node)))))
-            :inspector-visible (:inspector-visible node)}])
+            :inspector-visible (node/inspector-visible node)}])
 
 (defn serialize-graph [node-graph]
   (let [data {:connections (:connections node-graph)
@@ -42,7 +42,8 @@
                                         (keyword node-type-id)
                                         [x y]
                                         context)
-        node-graph (assoc-in node-graph [:nodes node-id :inspector-visible] inspector-visible)
+        node-graph (update-in node-graph [:nodes node-id]
+                              #(node/set-inspector-visible % inspector-visible))
         node (node-id (:nodes node-graph))
         node-type (node/node-type node)]
     (doseq [[input-id value] inputs]

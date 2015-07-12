@@ -67,7 +67,7 @@
         (let [{:keys [phase mouse-pos]} (<! read-chan)
               abs-mouse-pos mouse-pos
               mouse-pos (math/mult-point (-> app :graph-xform :inv) mouse-pos)
-              last-pos (geometry/rectangle-origin (:frame node))
+              last-pos (geometry/rectangle-origin (node/frame node))
               new-node-pos (geometry/point-sub mouse-pos offset)
               delta (geometry/point-sub new-node-pos last-pos)
               node (node/node-move-by node delta)]
